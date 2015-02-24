@@ -1,0 +1,37 @@
+# -*- Makefile -*-
+
+# by default, "arch" is unknown, should be specified in the command line
+arch = UNKNOWN
+#This needs to be the path to Kokkos
+KOKKOS_PATH = ../../../trilinos-master/packages/kokkos
+
+setup_file = ../setup/Make.$(arch)
+include $(setup_file)
+
+include $(KOKKOS_PATH)/Makefile.kokkos
+EXTRA_INC = $(KOKKOS_INC)
+EXTRA_LIB = $(KOKKOS_LINK)
+
+DEBUG_FLAGS = -O0 -g
+
+HPCG_DEPS =  CG.o  CG_ref.o  TestCG.o  ComputeResidual.o \
+          ExchangeHalo.o  GenerateGeometry.o  GenerateProblem.o \
+	  OptimizeProblem.o  ReadHpcgDat.o  ReportResults.o \
+	  SetupHalo.o  TestSymmetry.o  TestNorms.o  WriteProblem.o \
+          YAML_Doc.o  YAML_Element.o  ComputeDotProduct.o \
+          ComputeDotProduct_ref.o  finalize.o  init.o  mytimer.o  ComputeSPMV.o \
+          ComputeSPMV_ref.o  ComputeSYMGS.o  ComputeSYMGS_ref.o  ComputeWAXPBY.o  ComputeWAXPBY_ref.o \
+          ComputeMG_ref.o  ComputeMG.o  ComputeProlongation_ref.o  ComputeRestriction_ref.o  GenerateCoarseProblem.o \
+
+bin/xhpcg: kokkos_depend.o main.o $(HPCG_DEPS)
+	$(LINKER) $(LINKFLAGS) -O0 -g main.o $(HPCG_DEPS) $(EXTRA_LIB)  -o ../bin/xhpcg $(HPCG_LIBS)
+
+%.o:%.cpp
+	$(CXX) $(CXXFLAGS) -std=c++11 $(DEBUG_FLAGS) $(EXTRA_INC) -c $<
+
+clean:
+	rm -f $(HPCG_DEPS) ../bin/xhpcg  main.o
+	rm *.o libkokkoscore.a kokkos_depend.cpp #*.cuda
+
+.PHONY: clean
+
