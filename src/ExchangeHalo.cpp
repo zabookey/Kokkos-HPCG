@@ -65,9 +65,10 @@ void ExchangeHalo(const SparseMatrix & A, Vector & x) {
   //
   // Externals are at end of locals
   //
-  //double * x_external = (double *) xv + localNumberOfRows;
+  // double * x_external = (double *) xv + localNumberOfRows;
+   double * x_external = xv.ptr_on_device() + localNumberOfRows;
 
-	double * x_external = (double *) A.optimizationData;
+//	double * x_external = (double *) A.optimizationData;
   // Post receives first
   // TODO: Thread this loop
   for (int i = 0; i < num_neighbors; i++) {
@@ -120,10 +121,11 @@ void ExchangeHalo(const SparseMatrix & A, Vector & x) {
 		xv(x.localLength - num_neighbors + i) = x_external[i];
 	}
 */
-	for(int i = 0; i < num_neighbors; i++){
+//Irina commented out
+ /*	for(int i = 0; i < num_neighbors; i++){
 		xv(localNumberOfRows + i) = x_external[i];
 		if(rank == 0) HPCG_fout << xv(localNumberOfRows + i) << std::endl;
-	}
+	}*/
 /*	
 	Kokkos::parallel_for(num_neighbors, [=](const int & i){
 		xv(localNumberOfRows + i) = x_external[i];
