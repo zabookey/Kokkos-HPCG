@@ -57,6 +57,7 @@ void SetupHalo(SparseMatrix & A) {
   local_int_t ** mtxIndL = A.mtxIndL;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
+/*
 #ifndef HPCG_NOOPENMP
   #pragma omp parallel for
 #endif
@@ -64,6 +65,11 @@ void SetupHalo(SparseMatrix & A) {
     int cur_nnz = nonzerosInRow[i];
     for (int j=0; j<cur_nnz; j++) mtxIndL[i][j] = mtxIndG[i][j];
   }
+*/
+	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
+		int cur_nnz = nonzerosInRow[i];
+		for (int j = 0; j < cur_nnz; j++) mtxIndL[i][j] = mtxIndG[i][j];
+	});
 
 #else // Run this section if compiling for MPI
 
@@ -140,6 +146,7 @@ void SetupHalo(SparseMatrix & A) {
   }
 
   // Convert matrix indices to local IDs
+/*
 #ifndef HPCG_NOOPENMP
   #pragma omp parallel for
 #endif
@@ -154,6 +161,18 @@ void SetupHalo(SparseMatrix & A) {
       }
     }
   }
+*/
+	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
+		for (int j = 0; j < nonzerosInRow[i]; j++) {
+			global_int_t curIndex = mtxIndG[i][j];
+			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*(A.geom), curIndex);
+			if (A.geom->rank == rankIdOfColumnEntry){
+				mtxIndL[i][j] = A.globalToLocalMap[curIndex];
+			} else {
+				mtxIndL[i][j] = externalToLocalMap[curIndex];
+			}
+		}
+	});
 
   // Store contents in our matrix struct
   A.numberOfExternalValues = externalToLocalMap.size();

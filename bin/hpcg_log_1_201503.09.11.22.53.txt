@@ -1,0 +1,17 @@
+For rank = 1
+ipx = 1
+ipy = 0
+ipz = 0
+For rank = 1
+ipx = 1
+ipy = 0
+ipz = 0
+For rank = 1
+ipx = 1
+ipy = 0
+ipz = 0
+For rank = 1
+ipx = 1
+ipy = 0
+ipz = 0
+CG_REF.cpp Starts here

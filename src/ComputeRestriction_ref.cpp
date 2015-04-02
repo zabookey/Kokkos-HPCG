@@ -35,7 +35,7 @@ int ComputeRestriction_ref(const SparseMatrix & A, const Vector & rf){
 	kokkos_type rcv = A.mgData->rc->values;
 	local_int_t * f2c = A.mgData->f2cOperator;
 
-	Kokkos::parallel_for(nc, [=](const int &i){
+	Kokkos::parallel_for(nc, [&](const int &i){
 		rcv(i) = rfv(f2c[i]) - Axfv(f2c[i]);
 	});
 /*

@@ -53,7 +53,7 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
   local_int_t localNumberOfRows = nxc*nyc*nzc; // This is the size of our subblock
   // If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
   assert(localNumberOfRows>0); // Throw an exception of the number of rows is less than zero (can happen if int overflow)
-
+/*
   // Use a parallel loop to do initial assignment:
   // distributes the physical placement of arrays of pointers across the memory system
 #ifndef HPCG_NOOPENMP
@@ -62,8 +62,12 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
   for (local_int_t i=0; i< localNumberOfRows; ++i) {
     f2cOperator[i] = 0;
   }
+*/
+	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
+		f2cOperator[i] = 0;
+	});
 
-
+/*
   // TODO:  This triply nested loop could be flattened or use nested parallelism
 #ifndef HPCG_NOOPENMP
   #pragma omp parallel for
@@ -80,6 +84,19 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
 		  } // end iy loop
 	  } // end even iz if statement
   } // end iz loop
+*/
+	Kokkos::parallel_for(nzc, [&](const int & izc){
+		local_int_t izf = 2*izc;
+	  for (local_int_t iyc=0; iyc<nyc; ++iyc) {
+		  local_int_t iyf = 2*iyc;
+		  for (local_int_t ixc=0; ixc<nxc; ++ixc) {
+			  local_int_t ixf = 2*ixc;
+			  local_int_t currentCoarseRow = izc*nxc*nyc+iyc*nxc+ixc;
+			  local_int_t currentFineRow = izf*nxf*nyf+iyf*nxf+ixf;
+			  f2cOperator[currentCoarseRow] = currentFineRow;
+		  }
+		}
+	});
 
   // Construct the geometry and linear system
   Geometry * geomc = new Geometry;
