@@ -57,15 +57,7 @@ void SetupHalo(SparseMatrix & A) {
   local_int_t ** mtxIndL = A.mtxIndL;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
-/*
-#ifndef HPCG_NOOPENMP
-  #pragma omp parallel for
-#endif
-  for (local_int_t i=0; i< localNumberOfRows; i++) {
-    int cur_nnz = nonzerosInRow[i];
-    for (int j=0; j<cur_nnz; j++) mtxIndL[i][j] = mtxIndG[i][j];
-  }
-*/
+
 	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
 		int cur_nnz = nonzerosInRow[i];
 		for (int j = 0; j < cur_nnz; j++) mtxIndL[i][j] = mtxIndG[i][j];
@@ -146,22 +138,7 @@ void SetupHalo(SparseMatrix & A) {
   }
 
   // Convert matrix indices to local IDs
-/*
-#ifndef HPCG_NOOPENMP
-  #pragma omp parallel for
-#endif
-  for (local_int_t i=0; i< localNumberOfRows; i++) {
-    for (int j=0; j<nonzerosInRow[i]; j++) {
-      global_int_t curIndex = mtxIndG[i][j];
-      int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*(A.geom), curIndex);
-      if (A.geom->rank==rankIdOfColumnEntry) { // My column index, so convert to local index
-        mtxIndL[i][j] = A.globalToLocalMap[curIndex];
-      } else { // If column index is not a row index, then it comes from another processor
-        mtxIndL[i][j] = externalToLocalMap[curIndex];
-      }
-    }
-  }
-*/
+
 	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
 		for (int j = 0; j < nonzerosInRow[i]; j++) {
 			global_int_t curIndex = mtxIndG[i][j];

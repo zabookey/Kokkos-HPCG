@@ -14,10 +14,43 @@
 #endif
 
 #include <cmath>  // needed for fabs
+#include <mutex>  // needed for mutex
 #include "ComputeResidual.hpp"
 #ifdef HPCG_DETAILED_DEBUG
 #include <iostream>
 #endif
+
+static std::mutex local_residual_mutex;
+
+class FunctorforKokkos{
+  public:
+  kokkos_type v1v;
+  kokkos_type v2v;
+  mutable double local_residual;
+  //std::mutex local_residual_mutex;
+  mutable double threadlocal_residual = 0.0;
+  local_int_t loopcount;
+
+  FunctorforKokkos(kokkos_type v1, kokkos_type v2, double & shared_local_residual, 
+                      /*std::mutex & shared_mutex,*/ local_int_t n){
+    v1v = v1;
+    v2v = v2;
+    local_residual = shared_local_residual;
+    //local_residual_mutex = shared_mutex;
+    loopcount = n-1;
+   }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(local_int_t i)const{
+    double diff = std::fabs(v1v(i) - v2v(i));
+    if(diff > threadlocal_residual) threadlocal_residual = diff;
+    if(i == loopcount){
+      local_residual_mutex.lock();
+      if(threadlocal_residual > local_residual) local_residual = threadlocal_residual;
+      local_residual_mutex.unlock();
+    }
+  }
+};
 
 /*!
   Routine to compute the inf-norm difference between two vectors where:
@@ -33,29 +66,29 @@ int ComputeResidual(const local_int_t n, const Vector & v1, const Vector & v2, d
   kokkos_type v1v = v1.values;
   kokkos_type v2v = v2.values;
   double local_residual = 0.0;
+  //std::mutex local_residual_mutex;
+  //double threadlocal_residual = 0.0;
+  //int loopcount = n-1;
 
-#ifndef HPCG_NOOPENMP
-  #pragma omp parallel default(none) shared(local_residual, v1v, v2v)
-  {
-    double threadlocal_residual = 0.0;
-    #pragma omp for
-    for (local_int_t i=0; i<n; i++) {
-      double diff = std::fabs(v1v(i) - v2v(i));
-      if (diff > threadlocal_residual) threadlocal_residual = diff;
-    }
-    #pragma omp critical
-    {
-      if (threadlocal_residual>local_residual) local_residual = threadlocal_residual;
-    }
-  }
-#else // No threading
-  for (local_int_t i=0; i<n; i++) {
+  //TODO This needs to be switched to a functor so I can just copy threadlocal_residual to a variable
+  // in the functor. There doesn't seem to be a way to do this with lambda implenetation.
+/*
+  Kokkos::parallel_for(n,
+  [&v1v, &v2v, &local_residual, &local_residual_mutex, threadlocal_residual, loopcount](const int & i){
     double diff = std::fabs(v1v(i) - v2v(i));
-    if (diff > local_residual) local_residual = diff;
+    if(diff > threadlocal_residual) threadlocal_residual = diff;
+    if(i == loopcount){ //Replace this if there is a better way to tell if we are on the last iteration.
+      local_residual_mutex.lock();
+      if(threadlocal_residual>local_residual) local_residual = threadlocal_residual;
+      local_residual_mutex.unlock();
+    }
+  });
+*/
+
+  Kokkos::parallel_for(n, FunctorforKokkos(v1v, v2v, local_residual, /*local_residual_mutex,*/ n));
+
 #ifdef HPCG_DETAILED_DEBUG
     HPCG_fout << " Computed, exact, diff = " << v1v(i) << " " << v2v(i) << " " << diff << std::endl;
-#endif
-  }
 #endif
 
 #ifndef HPCG_NOMPI

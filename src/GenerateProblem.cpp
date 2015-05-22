@@ -13,6 +13,7 @@ using std::endl;
 #include "hpcg.hpp"
 #endif
 #include <cassert>
+#include <mutex>
 
 #include "GenerateProblem.hpp"
 
@@ -77,15 +78,14 @@ void GenerateProblem(SparseMatrix & A, Vector * b, Vector * x, Vector * xexact) 
 
   // Use a parallel loop to do initial assignment:
   // distributes the physical placement of arrays of pointers across the memory system
-#ifndef HPCG_NOOPENMP
-  #pragma omp parallel for
-#endif
-  for (local_int_t i=0; i< localNumberOfRows; ++i) {
+  Kokkos::parallel_for(localNumberOfRows,
+    [&](const int & i)
+  {
     matrixValues[i] = 0;
     matrixDiagonal[i] = 0;
     mtxIndG[i] = 0;
     mtxIndL[i] = 0;
-  }
+  });
   // Now allocate the arrays pointed to
   for (local_int_t i=0; i< localNumberOfRows; ++i) {
     mtxIndL[i] = new local_int_t[numberOfNonzerosPerRow];
@@ -97,62 +97,63 @@ void GenerateProblem(SparseMatrix & A, Vector * b, Vector * x, Vector * xexact) 
 
   local_int_t localNumberOfNonzeros = 0;
   // TODO:  This triply nested loop could be flattened or use nested parallelism
-#ifndef HPCG_NOOPENMP
-  #pragma omp parallel for
-#endif
-  for (local_int_t iz=0; iz<nz; iz++) {
-    global_int_t giz = ipz*nz+iz;
-    for (local_int_t iy=0; iy<ny; iy++) {
-      global_int_t giy = ipy*ny+iy;
-      for (local_int_t ix=0; ix<nx; ix++) {
-        global_int_t gix = ipx*nx+ix;
-        local_int_t currentLocalRow = iz*nx*ny+iy*nx+ix;
-        global_int_t currentGlobalRow = giz*gnx*gny+giy*gnx+gix;
-#ifndef HPCG_NOOPENMP
-// C++ std::map is not threadsafe for writing
-        #pragma omp critical
-#endif
-        A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
-
-        A.localToGlobalMap[currentLocalRow] = currentGlobalRow;
+  std::mutex globalToLocalMap_mutex;
+  std::mutex localNumberOfNonzeros_mutex;
+  Kokkos::parallel_for(nz,
+  [&](const int & iz)
+{
+  global_int_t giz = ipz * nz + iz;
+  for(local_int_t iy = 0; iy < ny; iy++){
+    global_int_t giy = ipy * ny + iy;
+    for(local_int_t ix = 0; ix < nx; ix++){
+      global_int_t gix = ipx * nx + ix;
+      local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+      global_int_t currentGlobalRow = giz * gnx *gny + giy * gnx + gix;
+      //LOCK
+      globalToLocalMap_mutex.lock();
+      A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
+      globalToLocalMap_mutex.unlock();
+      //UNLOCKED
+      A.localToGlobalMap[currentLocalRow] = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
-        HPCG_fout << " rank, globalRow, localRow = " << A.geom->rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
+      HPCG_fout << " rank, globalRow, localRow = " << A.geom -> rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
 #endif
-        char numberOfNonzerosInRow = 0;
-        double * currentValuePointer = matrixValues[currentLocalRow]; // Pointer to current value in current row
-        global_int_t * currentIndexPointerG = mtxIndG[currentLocalRow]; // Pointer to current index in current row
-        for (int sz=-1; sz<=1; sz++) {
-          if (giz+sz>-1 && giz+sz<gnz) {
-            for (int sy=-1; sy<=1; sy++) {
-              if (giy+sy>-1 && giy+sy<gny) {
-                for (int sx=-1; sx<=1; sx++) {
-                  if (gix+sx>-1 && gix+sx<gnx) {
-                    global_int_t curcol = currentGlobalRow+sz*gnx*gny+sy*gnx+sx;
-                    if (curcol==currentGlobalRow) {
-                      matrixDiagonal[currentLocalRow] = currentValuePointer;
-                      *currentValuePointer++ = 26.0;
-                    } else {
-                      *currentValuePointer++ = -1.0;
-                    }
-                    *currentIndexPointerG++ = curcol;
-                    numberOfNonzerosInRow++;
-                  } // end x bounds test
-                } // end sx loop
-              } // end y bounds test
-            } // end sy loop
-          } // end z bounds test
-        } // end sz loop
-        nonzerosInRow[currentLocalRow] = numberOfNonzerosInRow;
-#ifndef HPCG_NOOPENMP
-        #pragma omp critical
-#endif
-        localNumberOfNonzeros += numberOfNonzerosInRow; // Protect this with an atomic
-        if (b!=0)      bv(currentLocalRow) = 26.0 - ((double) (numberOfNonzerosInRow-1));
-        if (x!=0)      xv(currentLocalRow) = 0.0;
-        if (xexact!=0) xexactv(currentLocalRow) = 1.0;
-      } // end ix loop
-    } // end iy loop
-  } // end iz loop
+      char numberOfNonzerosInRow = 0;
+      double * currentValuePointer = matrixValues[currentLocalRow]; // Pointer to current value in current row
+      global_int_t * currentIndexPointerG = mtxIndG[currentLocalRow]; // Pointer to current index in current row
+      for(int sz = -1; sz <= 1; sz++){
+        if(giz + sz > -1 && giz + sz < gnz) {
+          for(int sy = -1; sy <= 1; sy++) {
+            if(giy + sy > -1 && giy + sy < gny){
+              for(int sx = -1; sx <= 1; sx++){
+                if(gix + sx > -1 && gix + sx < gnx){
+                  global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
+                  if(curcol == currentGlobalRow){
+                    matrixDiagonal[currentLocalRow] = currentValuePointer;
+                    *currentValuePointer++ = 26.0;
+                  } else {
+                    *currentValuePointer++ = -1.0;
+                  }
+                  *currentIndexPointerG++ = curcol;
+                  numberOfNonzerosInRow++;
+                } //end x bounds test
+              } // end sx loop
+            } //end y bounds test
+          } // end sy loop
+        } //end z bounds test
+      } // end sz loop
+      nonzerosInRow[currentLocalRow] = numberOfNonzerosInRow;
+      //LOCK
+      localNumberOfNonzeros_mutex.lock();
+      localNumberOfNonzeros += numberOfNonzerosInRow;
+      localNumberOfNonzeros_mutex.unlock();
+      //UNLOCKED
+      if(b != 0) bv(currentLocalRow) = 26.0 - ((double) (numberOfNonzerosInRow - 1));
+      if(x != 0) xv(currentLocalRow) = 0.0;
+      if(xexact != 0) xexactv(currentLocalRow) = 1.0; 
+    } // end ix loop
+  } // end iy loop
+}); // end iz loop
 #ifdef HPCG_DETAILED_DEBUG
   HPCG_fout     << "Process " << A.geom->rank << " of " << A.geom->size <<" has " << localNumberOfRows    << " rows."     << endl
       << "Process " << A.geom->rank << " of " << A.geom->size <<" has " << localNumberOfNonzeros<< " nonzeros." <<endl;
