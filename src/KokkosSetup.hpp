@@ -9,7 +9,7 @@ This file is for the intention of creating things needed by Kokkos.
 
 #include <Kokkos_Core.hpp>
 
-typedef Kokkos::View<double *> kokkos_type;
+//Find a way to change this at compile time.
 typedef Kokkos::OpenMP execution_space;
-
+typedef Kokkos::View<double *> kokkos_type;
 #endif

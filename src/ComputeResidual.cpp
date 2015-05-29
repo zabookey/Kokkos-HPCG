@@ -14,41 +14,26 @@
 #endif
 
 #include <cmath>  // needed for fabs
-#include <mutex>  // needed for mutex
 #include "ComputeResidual.hpp"
 #ifdef HPCG_DETAILED_DEBUG
 #include <iostream>
 #endif
 
-//TODO Try to use Atomics instead of mutex
-static std::mutex local_residual_mutex;
-
-class FunctorforKokkos{
+struct KokkosFUNctor{
   public:
-  kokkos_type v1v;
-  kokkos_type v2v;
-  mutable double local_residual;
-  //std::mutex local_residual_mutex;
+  kokkos_type v1v, v2v;
   mutable double threadlocal_residual = 0.0;
   local_int_t loopcount;
 
-  FunctorforKokkos(kokkos_type v1, kokkos_type v2, double & shared_local_residual, 
-                      /*std::mutex & shared_mutex,*/ local_int_t n){
-    v1v = v1;
-    v2v = v2;
-    local_residual = shared_local_residual;
-    //local_residual_mutex = shared_mutex;
-    loopcount = n-1;
-   }
+  KokkosFUNctor(kokkos_type v1, kokkos_type v2, local_int_t n) :
+      v1v(v1), v2v(v2), loopcount(n-1) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(local_int_t i)const{
+  void operator() (local_int_t i, double &local_residual)const{
     double diff = std::fabs(v1v(i) - v2v(i));
     if(diff > threadlocal_residual) threadlocal_residual = diff;
     if(i == loopcount){
-      local_residual_mutex.lock();
       if(threadlocal_residual > local_residual) local_residual = threadlocal_residual;
-      local_residual_mutex.unlock();
     }
   }
 };
@@ -84,7 +69,7 @@ int ComputeResidual(const local_int_t n, const Vector & v1, const Vector & v2, d
   });
 */
 
-  Kokkos::parallel_for(n, FunctorforKokkos(v1v, v2v, local_residual, /*local_residual_mutex,*/ n));
+  Kokkos::parallel_reduce(n, KokkosFUNctor(v1v, v2v, n), local_residual);
 
 #ifdef HPCG_DETAILED_DEBUG
     HPCG_fout << " Computed, exact, diff = " << v1v(i) << " " << v2v(i) << " " << diff << std::endl;

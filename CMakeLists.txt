@@ -34,6 +34,8 @@ ENDIF()
 
 set(HPCG_NOOPENMP OFF)
 
+
+
 # KokkosCore check will exit if Kokkos is not found
 message("--Looking for Kokkos:") 
 list(FIND Trilinos_PACKAGE_LIST Kokkos Kokkos_List_ID)
@@ -42,8 +44,6 @@ IF (Kokkos_List_ID GREATER -1)
 ELSE()
   message(FATAL_ERROR "Kokkos not found... CMake exiting")
 ENDIF()
-
-
 
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.

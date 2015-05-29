@@ -21,6 +21,7 @@ To Install:
   to the PREFIX you used to install trilinos.
 -For out of source build, call cmake <location_of_top_level_HPCG> 
   from the directory you'd like to build from
+-DONT FORGET THE FLAG -KOKKOS_OPENMP = ON or -KOKKOS_CUDA = ON if you forget it runs with Kokkos::Serial
 -For in source build, call cmake .
 -Then call make and this should build everything. The executable KokkosHPCG.exe
   will be located in the src directory
