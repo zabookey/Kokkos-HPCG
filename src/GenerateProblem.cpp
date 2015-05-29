@@ -97,6 +97,7 @@ void GenerateProblem(SparseMatrix & A, Vector * b, Vector * x, Vector * xexact) 
 
   local_int_t localNumberOfNonzeros = 0;
   // TODO:  This triply nested loop could be flattened or use nested parallelism
+  // TODO: Try to use Atomics instead of mutex.
   std::mutex globalToLocalMap_mutex;
   std::mutex localNumberOfNonzeros_mutex;
   Kokkos::parallel_for(nz,

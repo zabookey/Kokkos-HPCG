@@ -57,7 +57,7 @@ int main(int argc, char * argv[]) {
 
   HPCG_Init(&argc, &argv, params);
 
-	Kokkos::initialize();
+	execution_space::initialize();
 
   int size = params.comm_size, rank = params.comm_rank; // Number of MPI processes, My process ID
 
@@ -314,7 +314,7 @@ int main(int argc, char * argv[]) {
   DeleteVector(b_computed);
   delete [] testnorms_data.values;
 
-	Kokkos::finalize();
+	execution_space::finalize();
 
   HPCG_Finalize();
 

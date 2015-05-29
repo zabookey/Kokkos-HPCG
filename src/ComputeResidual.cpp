@@ -20,6 +20,7 @@
 #include <iostream>
 #endif
 
+//TODO Try to use Atomics instead of mutex
 static std::mutex local_residual_mutex;
 
 class FunctorforKokkos{
@@ -70,8 +71,6 @@ int ComputeResidual(const local_int_t n, const Vector & v1, const Vector & v2, d
   //double threadlocal_residual = 0.0;
   //int loopcount = n-1;
 
-  //TODO This needs to be switched to a functor so I can just copy threadlocal_residual to a variable
-  // in the functor. There doesn't seem to be a way to do this with lambda implenetation.
 /*
   Kokkos::parallel_for(n,
   [&v1v, &v2v, &local_residual, &local_residual_mutex, threadlocal_residual, loopcount](const int & i){

@@ -107,7 +107,9 @@ HPCG_Init(int * argc_p, char ** *argv_p, HPCG_Params & params) {
   MPI_Comm_rank( MPI_COMM_WORLD, &params.comm_rank );
   MPI_Comm_size( MPI_COMM_WORLD, &params.comm_size );
 #endif
-
+//TODO  if((Kokkos?)::hwloc::available()) =>
+//      params.numThreads = Kokkos::hwloc::get_available_numa_count() *
+//                          Kokkos::hwloc::get_available_threads_per_core()
 #ifdef HPCG_NOOPENMP
   params.numThreads = 1;
 #else
