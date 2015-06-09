@@ -2,12 +2,12 @@
 //@HEADER
 // ***************************************************
 //
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
+// Kokkos HPCG: Refactored code to replace most/all
+// allocated arrays with views.
+// 
+// 
+// 
+// 
 //
 // ***************************************************
 //@HEADER

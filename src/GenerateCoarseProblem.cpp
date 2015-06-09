@@ -1,27 +1,13 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file GenerateProblem.cpp
 
  HPCG routine
  */
-
+/*
 #ifndef HPCG_NOOPENMP
 #include <omp.h>
 #endif
-
+*/
 #include <cassert>
 #include "GenerateCoarseProblem.hpp"
 #include "GenerateGeometry.hpp"
@@ -49,7 +35,7 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
   local_int_t nxc, nyc, nzc; //Coarse nx, ny, nz
   assert(nxf%2==0); assert(nyf%2==0); assert(nzf%2==0); // Need fine grid dimensions to be divisible by 2
   nxc = nxf/2; nyc = nyf/2; nzc = nzf/2;
-  local_int_t * f2cOperator = new local_int_t[Af.localNumberOfRows];
+  local_int_1d_type f2cOperator = local_int_1d_type("f2cOperator", Af.localNumberOfRows);
   local_int_t localNumberOfRows = nxc*nyc*nzc; // This is the size of our subblock
   // If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
   assert(localNumberOfRows>0); // Throw an exception of the number of rows is less than zero (can happen if int overflow)
@@ -63,8 +49,10 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
     f2cOperator[i] = 0;
   }
 */
-	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
-		f2cOperator[i] = 0;
+
+//TODO: This might be redundant since Views are initialized with 0's but it doesn't particualarily hurt.
+	Kokkos::parallel_for(localNumberOfRows, [=](const int & i){
+		f2cOperator(i) = 0;
 	});
 
 /*
@@ -85,7 +73,7 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
 	  } // end even iz if statement
   } // end iz loop
 */
-	Kokkos::parallel_for(nzc, [&](const int & izc){
+	Kokkos::parallel_for(nzc, [=](const int & izc){
 		local_int_t izf = 2*izc;
 	  for (local_int_t iyc=0; iyc<nyc; ++iyc) {
 		  local_int_t iyf = 2*iyc;
@@ -93,28 +81,28 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
 			  local_int_t ixf = 2*ixc;
 			  local_int_t currentCoarseRow = izc*nxc*nyc+iyc*nxc+ixc;
 			  local_int_t currentFineRow = izf*nxf*nyf+iyf*nxf+ixf;
-			  f2cOperator[currentCoarseRow] = currentFineRow;
+			  f2cOperator(currentCoarseRow) = currentFineRow;
 		  }
 		}
 	});
 
   // Construct the geometry and linear system
   Geometry * geomc = new Geometry;
-  GenerateGeometry(Af.geom->size, Af.geom->rank, Af.geom->numThreads, nxc, nyc, nzc, geomc);
+  GenerateGeometry(Af.geom->size, Af.geom->rank, Af.geom->numThreads, nxc, nyc, nzc, *geomc);
 
-  SparseMatrix * Ac = new SparseMatrix;
-  InitializeSparseMatrix(*Ac, geomc);
-  GenerateProblem(*Ac, 0, 0, 0);
+  SparseMatrix * Ac = new SparseMatrix; // I don't like this but if I don't allocate it the matrix gets deleted after this method...
+  InitializeSparseMatrix(*Ac, *geomc);
+  GenerateProblem(*Ac); 
   SetupHalo(*Ac);
-  Vector *rc = new Vector;
-  Vector *xc = new Vector;
+  Vector * rc = new Vector;
+  Vector * xc = new Vector;
   Vector * Axf = new Vector;
   InitializeVector(*rc, Ac->localNumberOfRows);
   InitializeVector(*xc, Ac->localNumberOfColumns);
   InitializeVector(*Axf, Af.localNumberOfColumns);
   Af.Ac = Ac;
   MGData * mgData = new MGData;
-  InitializeMGData(f2cOperator, rc, xc, Axf, *mgData);
+  InitializeMGData(f2cOperator, *rc, *xc, *Axf, *mgData);
   Af.mgData = mgData;
 
   return;

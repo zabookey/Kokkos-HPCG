@@ -2,10 +2,11 @@
 #ifndef HPCG_NOMPI
 #include <mpi.h> // If this routine is not compiled with HPCG_NOMPI
 #endif
+/*
 #ifndef HPCG_NOOPENMP
 #include <omp.h> // If this routine is not compiled with HPCG_NOOPENMP
 #endif
-
+*/
 #include "Vector.hpp"
 
 #ifdef HPCG_DETAILED_DEBUG
@@ -18,23 +19,24 @@
 #ifdef HPCG_DETAILED_DEBUG
 #include <iostream>
 #endif
-
+/*
+FIXME This is just a temporary fix until I find a better implementation that will work on CUDA.
+This version will be slower than previous versions.
+*/
 struct KokkosFUNctor{
   public:
-  kokkos_type v1v, v2v;
-  mutable double threadlocal_residual = 0.0;
-  local_int_t loopcount;
+  double_1d_type v1v, v2v;
+  //mutable double threadlocal_residual = 0.0;
 
-  KokkosFUNctor(kokkos_type v1, kokkos_type v2, local_int_t n) :
-      v1v(v1), v2v(v2), loopcount(n-1) {}
+  KokkosFUNctor(double_1d_type v1, double_1d_type v2, local_int_t n) :
+      v1v(v1), v2v(v2) {}
 
+//TODO Find a better implementation that will work on CUDA.
   KOKKOS_INLINE_FUNCTION
   void operator() (local_int_t i, double &local_residual)const{
     double diff = std::fabs(v1v(i) - v2v(i));
-    if(diff > threadlocal_residual) threadlocal_residual = diff;
-    if(i == loopcount){
-      if(threadlocal_residual > local_residual) local_residual = threadlocal_residual;
-    }
+    //if(diff > threadlocal_residual) threadlocal_residual = diff;
+    if(/*threadlocal_residual*/ diff > local_residual) local_residual = diff;
   }
 };
 
@@ -49,8 +51,8 @@ struct KokkosFUNctor{
 */
 int ComputeResidual(const local_int_t n, const Vector & v1, const Vector & v2, double & residual) {
 
-  kokkos_type v1v = v1.values;
-  kokkos_type v2v = v2.values;
+  double_1d_type v1v = v1.values;
+  double_1d_type v2v = v2.values;
   double local_residual = 0.0;
   //std::mutex local_residual_mutex;
   //double threadlocal_residual = 0.0;

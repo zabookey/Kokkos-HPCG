@@ -5,6 +5,9 @@
 #include "ComputeSYMGS_ref.hpp"
 #include <cassert>
 
+using Kokkos::create_mirror_view;
+using Kokkos::subview;
+using Kokkos::ALL;
 /*!
   Computes one step of symmetric Gauss-Seidel:
 
@@ -32,54 +35,56 @@
 
   @see ComputeSYMGS
 */
-int ComputeSYMGS_ref( const SparseMatrix & A, const Vector & r, Vector & x) {
+int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
-  assert(x.localLength==A.localNumberOfColumns); // Make sure x contain space for halo values
+	assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
 
 #ifndef HPCG_NOMPI
-  ExchangeHalo(A,x);
+	ExchangeHalo(A,x);
 #endif
 
-  const local_int_t nrow = A.localNumberOfRows;
-  double ** matrixDiagonal = A.matrixDiagonal;  // An array of pointers to the diagonal entries A.matrixValues
-  const kokkos_type rv = r.values;
-  kokkos_type const xv = x.values;
+	const local_int_t nrow = A.localNumberOfRows;
+	host_double_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
+	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
+	const host_double_1d_type xv = create_mirror_view(x.values); // Host Mirror to x.values
+	const host_const_char_1d_type nonZerosInRow = create_mirror_view(A.nonzerosInRow); // Host Mirror to A.nonZerosInRow.
+//Easier to Mirror it once than mirror in every iteration
 
-  for (local_int_t i=0; i< nrow; i++) {
-    const double * const currentValues = A.matrixValues[i];
-    const local_int_t * const currentColIndices = A.mtxIndL[i];
-    const int currentNumberOfNonzeros = A.nonzerosInRow[i];
-    const double  currentDiagonal = matrixDiagonal[i][0]; // Current diagonal value
-    double sum = rv(i); // RHS value
+	for(local_int_t i = 0; i < nrow; i++){
+		const host_const_double_1d_type currentValues = create_mirror_view(subview(A.matrixValues, i, ALL()));
+		const host_const_local_int_1d_type currentColIndices = create_mirror_view(subview(A.mtxIndL, i, ALL()));
+		const int currentNumberOfNonzeros = nonZerosInRow(i);
+		const double currentDiagonal = currentValues((int)matrixDiagonal(i)); //This works only if matrixDiagonal is the indices of the diagonal and not the value.If its the values remove currentValues( ).
+		double sum = rv(i);
 
-    for (int j=0; j< currentNumberOfNonzeros; j++) {
-      local_int_t curCol = currentColIndices[j];
-      sum -= currentValues[j] * xv(curCol);
-    }
-    sum += xv(i)*currentDiagonal; // Remove diagonal contribution from previous loop
+		for(int j = 0; j < currentNumberOfNonzeros; j++){
+			local_int_t curCol = currentColIndices(j);
+			sum -= currentValues(j) * xv(curCol);
+		}
+		sum += xv(i)*currentDiagonal;
 
-    xv(i) = sum/currentDiagonal;
+		xv(i) = sum/currentDiagonal;
+	}
 
-  }
+	// Now the back sweep.
 
-  // Now the back sweep.
+	for(local_int_t i = nrow-1; i >= 0; i--){
+		const host_const_double_1d_type currentValues = create_mirror_view(subview(A.matrixValues, i, ALL()));
+		const host_const_local_int_1d_type currentColIndices = create_mirror_view(subview(A.mtxIndL, i, ALL()));
+		const int currentNumberOfNonzeros = nonZerosInRow(i);
+		const double currentDiagonal = currentValues((int)matrixDiagonal(i)); // Same reason as the last loop. Change if needed.
+		double sum = rv(i);
 
-  for (local_int_t i=nrow-1; i>=0; i--) {
-    const double * const currentValues = A.matrixValues[i];
-    const local_int_t * const currentColIndices = A.mtxIndL[i];
-    const int currentNumberOfNonzeros = A.nonzerosInRow[i];
-    const double  currentDiagonal = matrixDiagonal[i][0]; // Current diagonal value
-    double sum = rv(i); // RHS value
+		for(int j = 0; j < currentNumberOfNonzeros; j++){
+			local_int_t curCol = currentColIndices(j);
+			sum -= currentValues(j) * xv(curCol);
+		}
+		sum += xv(i)*currentDiagonal;
 
-    for (int j = 0; j< currentNumberOfNonzeros; j++) {
-      local_int_t curCol = currentColIndices[j];
-      sum -= currentValues[j]*xv(curCol);
-    }
-    sum += xv(i)*currentDiagonal; // Remove diagonal contribution from previous loop
+		xv(i) = sum/currentDiagonal;
+	}
 
-    xv(i) = sum/currentDiagonal;
-  }
-
-  return(0);
+	Kokkos::deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
+	// All of the mirrors should go out of scope here and deallocate themselves.
+	return(0);
 }
-

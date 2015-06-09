@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file WriteProblem.cpp
 
@@ -22,7 +8,9 @@
 #include "WriteProblem.hpp"
 #include "Geometry.hpp"
 
-
+using Kokkos::create_mirror_view;
+using Kokkos::subview;
+using Kokkos::ALL;
 /*!
   Routine to dump:
    - matrix in row, col, val format for analysis with MATLAB
@@ -69,20 +57,26 @@ int WriteProblem( const Geometry & geom, const SparseMatrix & A,
     if (fA) fclose(fA);
     return -1;
   }
-
+	//Mirrors and subviews! But mostly just mirrors here.
+	const host_const_double_2d_type host_matrixValues = create_mirror_view(A.matrixValues);
+	const host_const_global_int_2d_type host_mtxIndG = create_mirror_view(A.mtxIndG);
+	const host_const_char_1d_type host_nonzerosInRow = create_mirror_view(A.nonzerosInRow);
+	const host_const_double_1d_type host_xvalues = create_mirror_view(x.values);
+	const host_const_double_1d_type host_xexactvalues = create_mirror_view(xexact.values);
+	const host_const_double_1d_type host_bvalues = create_mirror_view(b.values);
   for (global_int_t i=0; i< nrow; i++) {
-    const double * const currentRowValues = A.matrixValues[i];
-    const global_int_t * const currentRowIndices = A.mtxIndG[i];
-    const int currentNumberOfNonzeros = A.nonzerosInRow[i];
+    auto currentRowValues = subview(host_matrixValues, i, ALL()); //TODO Should use auto
+    auto currentRowIndices = subview(host_mtxIndG, i, ALL()); //TODO Should use auto
+    const int currentNumberOfNonzeros = host_nonzerosInRow(i);
     for (int j=0; j< currentNumberOfNonzeros; j++)
 #ifdef HPCG_NO_LONG_LONG
-      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(currentRowIndices[j]+1),currentRowValues[j]);
+      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(currentRowIndices(j)+1),currentRowValues(j));
 #else
-      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(currentRowIndices[j]+1),currentRowValues[j]);
+      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(currentRowIndices(j)+1),currentRowValues(j));
 #endif
-    fprintf(fx, "%22.16e\n",x.values[i]);
-    fprintf(fxexact, "%22.16e\n",xexact.values[i]);
-    fprintf(fb, "%22.16e\n",b.values[i]);
+    fprintf(fx, "%22.16e\n",host_xvalues(i));
+    fprintf(fxexact, "%22.16e\n",host_xexactvalues(i));
+    fprintf(fb, "%22.16e\n",host_bvalues(i));
   }
 
   fclose(fA);

@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file TestNorms.hpp
 
@@ -21,9 +7,11 @@
 #ifndef TESTNORMS_HPP
 #define TESTNORMS_HPP
 
+#include "KokkosSetup.hpp"
+
 
 struct TestNormsData_STRUCT {
-  double * values; //!< sample values
+  double_1d_type values; //!< sample values
   double   mean;   //!< mean of all sampes
   double variance; //!< variance of mean
   int    samples;  //!< number of samples

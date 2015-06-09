@@ -1,11 +1,13 @@
-//Kokkos is not initialezed here since it is initialized in main.
+
 #ifndef HPCG_NOMPI
 #include <mpi.h>
 #include "mytimer.hpp"
 #endif
+/*
 #ifndef HPCG_NOOPENMP
 #include <omp.h>
 #endif
+*/
 #include <cassert>
 #include <Kokkos_Core.hpp>
 #include "ComputeDotProduct_ref.hpp"
@@ -13,12 +15,12 @@
 	class Dotproduct {
 
 		private:
-		kokkos_type  xv;
-		kokkos_type  yv;
+		double_1d_type  xv;
+		double_1d_type  yv;
 
 		public:
 		typedef double value_type;
-		Dotproduct(kokkos_type  xValues, kokkos_type  yValues){
+		Dotproduct(double_1d_type  xValues, double_1d_type  yValues){
 			xv = xValues;
 			yv = yValues;
 		}
@@ -49,4 +51,3 @@ int ComputeDotProduct_ref(const local_int_t n, const Vector & x, const Vector & 
 
 	return (0);
 }
-

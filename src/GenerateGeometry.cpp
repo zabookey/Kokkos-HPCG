@@ -1,23 +1,11 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file GenerateGeometry.cpp
 
  HPCG routine
  */
-
+/*
+I don't think I need to use views here since all of this data is used on the cpu and then thrown away except for the stuff saved in geometry at the very end.
+*/
 #include <cmath>
 #include <cstdlib>
 
@@ -200,7 +188,7 @@ gen_min_area3(int n, int * f1, int * f2, int * f3) {
   @param[in]  nx, ny, nz number of grid points for each local block in the x, y, and z dimensions, respectively
   @param[out] geom data structure that will store the above parameters and the factoring of total number of processes into three dimensions
 */
-void GenerateGeometry(int size, int rank, int numThreads, int nx, int ny, int nz, Geometry * geom) {
+void GenerateGeometry(int size, int rank, int numThreads, int nx, int ny, int nz, Geometry & geom) {
 
   int npx, npy, npz;
 
@@ -228,17 +216,17 @@ void GenerateGeometry(int size, int rank, int numThreads, int nx, int ny, int nz
 
   assert(size==npx*npy*npz);
 #endif
-  geom->size = size;
-  geom->rank = rank;
-  geom->numThreads = numThreads;
-  geom->nx = nx;
-  geom->ny = ny;
-  geom->nz = nz;
-  geom->npx = npx;
-  geom->npy = npy;
-  geom->npz = npz;
-  geom->ipx = ipx;
-  geom->ipy = ipy;
-  geom->ipz = ipz;
+  geom.size = size;
+  geom.rank = rank;
+  geom.numThreads = numThreads;
+  geom.nx = nx;
+  geom.ny = ny;
+  geom.nz = nz;
+  geom.npx = npx;
+  geom.npy = npy;
+  geom.npz = npz;
+  geom.ipx = ipx;
+  geom.ipy = ipy;
+  geom.ipz = ipz;
   return;
 }

@@ -1,17 +1,4 @@
 
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file CG_ref.cpp
 
@@ -77,7 +64,6 @@ int CG_ref(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
   Vector & Ap = data.Ap;
 
   if (!doPreconditioning && A.geom->rank==0) HPCG_fout << "WARNING: PERFORMING UNPRECONDITIONED ITERATIONS" << std::endl;
-	HPCG_fout << "CG_REF.cpp Starts here" << std::endl;
 #ifdef HPCG_DEBUG
   int print_freq = 1;
   if (print_freq>50) print_freq=50;
@@ -90,7 +76,7 @@ int CG_ref(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
   TICK(); ComputeDotProduct_ref(nrow, r, r, normr, t4);  TOCK(t1);
   normr = sqrt(normr);
 #ifdef HPCG_DEBUG
-  if (A.geom->rank==0) HPCG_fout << "Initial Residual = "<< normr << std::endl;
+  if (A.geom.rank==0) HPCG_fout << "Initial Residual = "<< normr << std::endl;
 #endif
 
   // Record initial residual for convergence testing
@@ -124,7 +110,7 @@ int CG_ref(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
     TICK(); ComputeDotProduct_ref(nrow, r, r, normr, t4); TOCK(t1);
     normr = sqrt(normr);
 #ifdef HPCG_DEBUG
-    if (A.geom->rank==0 && (k%print_freq == 0 || k == max_iter))
+    if (A.geom.rank==0 && (k%print_freq == 0 || k == max_iter))
       HPCG_fout << "Iteration = "<< k << "   Scaled Residual = "<< normr/normr0 << std::endl;
 #endif
     niters = k;
@@ -142,4 +128,3 @@ int CG_ref(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
   times[0] += mytimer() - t_begin;  // Total time. All done...
   return(0);
 }
-

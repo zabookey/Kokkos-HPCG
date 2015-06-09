@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file YAML_Doc.hpp
 
@@ -110,4 +96,3 @@ protected:
   std::string destinationFileName; //!< the filename for the generated the YAML output
 };
 #endif // YAML_DOC_HPP
-

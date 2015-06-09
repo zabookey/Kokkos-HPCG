@@ -1,17 +1,4 @@
 
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 #ifndef HPCG_NOMPI
 #include <mpi.h>
 #endif
@@ -30,6 +17,8 @@
 #include "hpcg.hpp"
 
 #include "ReadHpcgDat.hpp"
+
+#include "KokkosSetup.hpp"
 
 std::ofstream HPCG_fout; //!< output file stream for logging activities during HPCG run
 
@@ -110,13 +99,20 @@ HPCG_Init(int * argc_p, char ** *argv_p, HPCG_Params & params) {
 //TODO  if((Kokkos?)::hwloc::available()) =>
 //      params.numThreads = Kokkos::hwloc::get_available_numa_count() *
 //                          Kokkos::hwloc::get_available_threads_per_core()
+params.numThreads = 1;
+if(Kokkos::hwloc::available()){
+	params.numThreads = Kokkos::hwloc::get_available_numa_count() *
+                      Kokkos::hwloc::get_available_cores_per_numa() *
+                      Kokkos::hwloc::get_available_threads_per_core();
+}
+/*
 #ifdef HPCG_NOOPENMP
   params.numThreads = 1;
 #else
   #pragma omp parallel
   params.numThreads = omp_get_num_threads();
 #endif
-
+*/
   time ( &rawtime );
   ptm = localtime(&rawtime);
   sprintf( fname, "hpcg_log_%04d.%02d.%02d.%02d.%02d.%02d.txt",

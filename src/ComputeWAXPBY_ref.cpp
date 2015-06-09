@@ -1,21 +1,22 @@
-//Kokkos is not initialezed here since it is initialized in main.
 #include "ComputeWAXPBY_ref.hpp"
+/*
 #ifndef HPCG_NOOPENMP
 #include <omp.h>
 #endif
+*/
 #include <cassert>
 #include <Kokkos_Core.hpp>
-/*
+
 	class Waxpby {
 	private:
-	kokkos_type xv;
-	kokkos_type yv;
-	kokkos_type wv;
+	double_1d_type xv;
+	double_1d_type yv;
+	double_1d_type wv;
 	double a;
 	double b;
 
 	public:
-		Waxpby(kokkos_type xValues, kokkos_type yValues, kokkos_type wValues, double alpha, double beta){
+		Waxpby(double_1d_type xValues, double_1d_type yValues, double_1d_type wValues, double alpha, double beta){
 			xv = xValues;
 			yv = yValues;	
 			wv = wValues;
@@ -27,23 +28,23 @@
 			wv(i) = a * xv(i) + b * yv(i);
 		}
 	};
-*/
+
 int ComputeWAXPBY_ref(const local_int_t n, const double alpha, const Vector & x,
 	const double beta, const Vector & y, Vector & w) {
 
 	assert(x.localLength >= n);
 	assert(y.localLength >= n); 
 
-	kokkos_type xv = x.values;
-  kokkos_type yv = y.values;
-	kokkos_type wv = w.values;
+	double_1d_type xv = x.values;
+  double_1d_type yv = y.values;
+	double_1d_type wv = w.values;
 
 	if (alpha == 1.0){
-		Kokkos::parallel_for(n, [beta, xv, yv, wv](const int & i){
+		Kokkos::parallel_for(n, [=](const int & i){
 			wv(i) = xv(i) + beta * yv(i);
 		});}
 	else if(beta == 1.0){
-		Kokkos::parallel_for(n, [alpha, xv, yv, wv](const int & i){
+		Kokkos::parallel_for(n, [=](const int & i){
 			wv(i) = alpha * xv(i) + yv(i);
 		});}
 	else{

@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file SetupHalo.cpp
 
@@ -23,11 +9,11 @@
 #include <map>
 #include <set>
 #endif
-
+/*
 #ifndef HPCG_NOOPENMP
 #include <omp.h>
 #endif
-
+*/
 #ifdef HPCG_DETAILED_DEBUG
 #include <fstream>
 using std::endl;
@@ -38,6 +24,8 @@ using std::endl;
 #include "SetupHalo.hpp"
 #include "mytimer.hpp"
 
+using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 /*!
   Prepares system matrix data structure and creates data necessary necessary
   for communication of boundary values of this process.
@@ -50,17 +38,17 @@ using std::endl;
 void SetupHalo(SparseMatrix & A) {
 
   // Extract Matrix pieces
-
-  local_int_t localNumberOfRows = A.localNumberOfRows;
-  char  * nonzerosInRow = A.nonzerosInRow;
-  global_int_t ** mtxIndG = A.mtxIndG;
-  local_int_t ** mtxIndL = A.mtxIndL;
+	//I'm not sure whether or not I'll need to mirror these...
+	local_int_t localNumberOfRows = A.localNumberOfRows;
+	char_1d_type nonzerosInRow = A.nonzerosInRow;
+	global_int_2d_type mtxIndG = A.mtxIndG;
+	local_int_2d_type mtxIndL = A.mtxIndL;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
 
-	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
-		int cur_nnz = nonzerosInRow[i];
-		for (int j = 0; j < cur_nnz; j++) mtxIndL[i][j] = mtxIndG[i][j];
+	Kokkos::parallel_for(localNumberOfRows, [=](const int & i){
+		int cur_nnz = nonzerosInRow(i);
+		for (int j = 0; j < cur_nnz; j++) mtxIndL(i, j) = mtxIndG(i, j);
 	});
 
 #else // Run this section if compiling for MPI
@@ -76,13 +64,16 @@ void SetupHalo(SparseMatrix & A) {
   std::map< local_int_t, local_int_t > externalToLocalMap;
 
   // TODO: With proper critical and atomic regions, this loop could be threaded, but not attempting it at this time
+	// Mirror nonzerosInRow and mtxIndG and create a scope so they go away after we deep_copy them back.
+{	host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
+	host_global_int_2d_type host_mtxIndG = create_mirror_view(mtxIndG);
   for (local_int_t i=0; i< localNumberOfRows; i++) {
     global_int_t currentGlobalRow = A.localToGlobalMap[i];
-    for (int j=0; j<nonzerosInRow[i]; j++) {
-      global_int_t curIndex = mtxIndG[i][j];
-      int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*(A.geom), curIndex);
+    for (int j=0; j< host_nonzerosInRow(i); j++) {
+      global_int_t curIndex = host_mtxIndG(i, j);
+      int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 #ifdef HPCG_DETAILED_DEBUG
-      HPCG_fout << "rank, row , col, globalToLocalMap[col] = " << A.geom->rank << " " << currentGlobalRow << " "
+      HPCG_fout << "rank, row , col, globalToLocalMap[col] = " << A.geom.rank << " " << currentGlobalRow << " "
           << curIndex << " " << A.globalToLocalMap[curIndex] << endl;
 #endif
       if (A.geom->rank!=rankIdOfColumnEntry) {// If column index is not a row index, then it comes from another processor
@@ -91,7 +82,9 @@ void SetupHalo(SparseMatrix & A) {
       }
     }
   }
-
+	// deep_copy the mirrors back.
+	deep_copy(nonzerosInRow, host_nonzerosInRow);
+	deep_copy(mtxIndG, host_mtxIndG);}
   // Count number of matrix entries to send and receive
   local_int_t totalToBeSent = 0;
   for (map_iter curNeighbor = sendList.begin(); curNeighbor != sendList.end(); ++curNeighbor) {
@@ -116,37 +109,46 @@ void SetupHalo(SparseMatrix & A) {
 
   // Build the arrays and lists needed by the ExchangeHalo function.
   double * sendBuffer = new double[totalToBeSent];
-  local_int_t * elementsToSend = new local_int_t[totalToBeSent];
-  int * neighbors = new int[sendList.size()];
-  local_int_t * receiveLength = new local_int_t[receiveList.size()];
-  local_int_t * sendLength = new local_int_t[sendList.size()];
+  local_int_1d_type elementsToSend = local_int_1d_type("Matrix: elementsToSend", totalToBeSent);
+  int_1d_type neighbors = int_1d_type("Matrix: neighbors", sendList.size());
+  local_int_1d_type receiveLength = local_int_1d_type("Matrix: receiveLength", receiveList.size());
+  local_int_1d_type sendLength = local_int_1d_type("Matrix: sendLength", sendList.size());
   int neighborCount = 0;
   local_int_t receiveEntryCount = 0;
   local_int_t sendEntryCount = 0;
+	// Mirror the views used below. Create a scope so the mirrors automitically dealloacte after deep_copy
+{	host_local_int_1d_type host_elementsToSend = create_mirror_view(elementsToSend);
+	host_int_1d_type host_neighbors = create_mirror_view(neighbors);
+	host_local_int_1d_type host_receiveLength = create_mirror_view(receiveLength);
+	host_local_int_1d_type host_sendLength = create_mirror_view(sendLength);
   for (map_iter curNeighbor = receiveList.begin(); curNeighbor != receiveList.end(); ++curNeighbor, ++neighborCount) {
     int neighborId = curNeighbor->first; // rank of current neighbor we are processing
-    neighbors[neighborCount] = neighborId; // store rank ID of current neighbor
-    receiveLength[neighborCount] = receiveList[neighborId].size();
-    sendLength[neighborCount] = sendList[neighborId].size(); // Get count if sends/receives
+    host_neighbors(neighborCount) = neighborId; // store rank ID of current neighbor
+    host_receiveLength(neighborCount) = receiveList[neighborId].size();
+    host_sendLength(neighborCount) = sendList[neighborId].size(); // Get count if sends/receives
     for (set_iter i = receiveList[neighborId].begin(); i != receiveList[neighborId].end(); ++i, ++receiveEntryCount) {
       externalToLocalMap[*i] = localNumberOfRows + receiveEntryCount; // The remote columns are indexed at end of internals
     }
     for (set_iter i = sendList[neighborId].begin(); i != sendList[neighborId].end(); ++i, ++sendEntryCount) {
       //if (geom.rank==1) HPCG_fout << "*i, globalToLocalMap[*i], sendEntryCount = " << *i << " " << A.globalToLocalMap[*i] << " " << sendEntryCount << endl;
-      elementsToSend[sendEntryCount] = A.globalToLocalMap[*i]; // store local ids of entry to send
+      host_elementsToSend(sendEntryCount) = A.globalToLocalMap[*i]; // store local ids of entry to send
     }
   }
-
+	// deep_copy the mirrors back.
+	deep_copy(elementsToSend, host_elementsToSend);
+	deep_copy(neighbors, host_neighbors);
+	deep_copy(receiveLength, host_receiveLength);
+	deep_copy(sendLength, host_sendLength);}
   // Convert matrix indices to local IDs
-
-	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){
-		for (int j = 0; j < nonzerosInRow[i]; j++) {
-			global_int_t curIndex = mtxIndG[i][j];
-			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*(A.geom), curIndex);
+	//FIXME: Lambda capture list needs to be [=] Problem is A.globalToLocalMap (std::map) and externalToLocalMap (std::map)
+	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){ // This is going to have some issues due to some parts being on a different device.
+		for (int j = 0; j < nonzerosInRow(i); j++) {
+			global_int_t curIndex = mtxIndG(i, j);
+			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 			if (A.geom->rank == rankIdOfColumnEntry){
-				mtxIndL[i][j] = A.globalToLocalMap[curIndex];
+				mtxIndL(i, j) = A.globalToLocalMap[curIndex];
 			} else {
-				mtxIndL[i][j] = externalToLocalMap[curIndex];
+				mtxIndL(i, j) = externalToLocalMap[curIndex];
 			}
 		}
 	});

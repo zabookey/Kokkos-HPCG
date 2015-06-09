@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /////////////////////////////////////////////////////////////////////////
 
 // Function to return time in seconds.
@@ -26,13 +12,14 @@
 double mytimer(void) {
   return(MPI_Wtime());
 }
-
+/*
 #elif !defined(HPCG_NOOPENMP)
 
 #include <omp.h> // If this routine is compiled with HPCG_NOMPI and not compiled with HPCG_NOOPENMP then use OpenMP timer
 double mytimer(void) {
   return(omp_get_wtime());
 }
+*/
 #else
 
 #include <cstdlib>

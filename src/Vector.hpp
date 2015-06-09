@@ -1,5 +1,3 @@
-// This will be the updated vector class which contains views. 
-//Will create a copy directory of HPCG so I can maintain a working HPCG while I modify this one.
 
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
@@ -9,14 +7,18 @@
 #include "Geometry.hpp"
 #include "KokkosSetup.hpp"
 
+using Kokkos::create_mirror_view;
+
 struct Vector_STRUCT {
   local_int_t localLength;  //!< length of local portion of the vector
-  kokkos_type values;          //!< view of values
+  double_1d_type values;          //!< view of values
   /*!
    This is for storing optimized data structres created in OptimizeProblem and
    used inside optimized ComputeSPMV().
    */
   void * optimizationData;
+
+	bool isInitialized = false; // Use this variable instead of checking if the address = 0.
 
 };
 typedef struct Vector_STRUCT Vector;
@@ -29,8 +31,9 @@ typedef struct Vector_STRUCT Vector;
  */
 inline void InitializeVector(Vector & v, local_int_t localLength) {
   v.localLength = localLength;
-  v.values = kokkos_type("A", localLength);
+  v.values = double_1d_type("Vector Values", localLength);
   v.optimizationData = 0;
+	v.isInitialized = true; //Use this variable only when looking to be deleted. MIGHT NOT EVEN BE NECESSARY...
   return;
 }
 
@@ -39,11 +42,13 @@ inline void InitializeVector(Vector & v, local_int_t localLength) {
 
   @param[inout] v - On entrance v is initialized, on exit all its values are zero.
  */
-inline void ZeroVector(Vector & v) {
-  local_int_t localLength = v.localLength;
-  kokkos_type vv = v.values;
-  for (int i=0; i<localLength; ++i) vv(i) = 0.0;
-  return;
+//This whole method may be redundant since views are automatically initalized with zeros.
+inline void ZeroVector(Vector & v){
+	local_int_t localLength = v.localLength;
+	host_double_1d_type vv = create_mirror_view(v.values);
+	for(int i = 0; i < localLength; ++i) vv(i) = 0.0;
+	Kokkos::deep_copy(v.values, vv);
+	return;
 }
 /*!
   Multiply (scale) a specific vector entry by a given value.
@@ -54,20 +59,22 @@ inline void ZeroVector(Vector & v) {
  */
 inline void ScaleVectorValue(Vector & v, local_int_t index, double value) {
   assert(index>=0 && index < v.localLength);
-  kokkos_type vv = v.values;
-  vv(index) *= value;
-  return;
+  host_double_1d_type vv = create_mirror_view(v.values);
+	vv(index) *= value;
+	Kokkos::deep_copy(v.values, vv);
+	return;
 }
 /*!
   Fill the input vector with pseudo-random values.
 
   @param[in] v
  */
-inline void FillRandomVector(Vector & v) {
-  local_int_t localLength = v.localLength;
-  kokkos_type vv = v.values;
-  for (int i=0; i<localLength; ++i) vv(i) = rand() / (double)(RAND_MAX) + 1.0;
-  return;
+inline void FillRandomVector(Vector & v){
+	local_int_t localLength = v.localLength;
+	host_double_1d_type vv = create_mirror_view(v.values);
+	for(int i = 0; i < localLength; ++i) vv(i) = rand() / (double)(RAND_MAX) + 1.0;
+	Kokkos::deep_copy(v.values, vv);
+	return;
 }
 /*!
   Copy input vector to output vector.
@@ -76,15 +83,15 @@ inline void FillRandomVector(Vector & v) {
   @param[in] w Output vector
  */
 inline void CopyVector(const Vector & v, Vector & w) {
-  local_int_t localLength = v.localLength;
-  assert(w.localLength >= localLength);
-  kokkos_type vv = v.values;
-  kokkos_type wv = w.values;
-  for (int i=0; i<localLength; ++i) wv(i) = vv(i);
-  return;
+	local_int_t localLength = v.localLength;
+	assert(w.localLength >= localLength);
+	host_const_double_1d_type vv = create_mirror_view(v.values);
+	host_double_1d_type wv = create_mirror_view(w.values);
+	for(int i = 0; i < localLength; ++i) wv(i) = vv(i);
+	w.isInitialized = v.isInitialized;
+	Kokkos::deep_copy(w.values, wv);
+	return;
 }
-
-
 /*!
   Deallocates the members of the data structure of the known system matrix provided they are not 0.
 
@@ -93,6 +100,7 @@ inline void CopyVector(const Vector & v, Vector & w) {
 inline void DeleteVector(Vector & v) {
 
   v.localLength = 0;
+	v.isInitialized = false;
   return;
 }
 

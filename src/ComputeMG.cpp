@@ -1,23 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
-/*!
- @file ComputeMG.cpp
-
- HPCG routine
- */
-
 #include "ComputeMG.hpp"
 #include "ComputeMG_ref.hpp"
 
@@ -37,4 +17,3 @@ int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
   return(ComputeMG_ref(A, r, x));
 
 }
-

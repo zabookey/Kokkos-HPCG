@@ -71,6 +71,7 @@ int main(int argc, char * argv[]) {
   }
 #ifndef HPCG_NOMPI
   MPI_Barrier(MPI_COMM_WORLD);
+	std::cout << "MPI ENABLED" << std::endl;
 #endif
 #endif
 
@@ -84,19 +85,21 @@ int main(int argc, char * argv[]) {
   // Problem setup Phase //
   /////////////////////////
 
+	std::cout <<"Problem Setup Phase" << std::endl;
+
 #ifdef HPCG_DEBUG
   double t1 = mytimer();
 #endif
 
   // Construct the geometry and linear system
   Geometry * geom = new Geometry;
-  GenerateGeometry(size, rank, params.numThreads, nx, ny, nz, geom);
+  GenerateGeometry(size, rank, params.numThreads, nx, ny, nz, *geom);
 
   SparseMatrix A;
-  InitializeSparseMatrix(A, geom);
+  InitializeSparseMatrix(A, *geom);
 
   Vector b, x, xexact;
-  GenerateProblem(A, &b, &x, &xexact);
+  GenerateProblem(A, b, x, xexact);
   SetupHalo(A);
   int numberOfMgLevels = 4; // Number of levels including first
   SparseMatrix * curLevelMatrix = &A;
@@ -121,13 +124,15 @@ int main(int argc, char * argv[]) {
 #endif
 
 #ifdef HPCG_DETAILED_DEBUG
-  if (geom->size == 1) WriteProblem(*geom, A, b, x, xexact);
+  if (geom.size == 1) WriteProblem(geom, A, b, x, xexact);
 #endif
 
 
   //////////////////////////////
   // Validation Testing Phase //
   //////////////////////////////
+
+	std::cout<< "Validation Testing Phase" << std::endl;
 
 #ifdef HPCG_DEBUG
   t1 = mytimer();
@@ -150,6 +155,8 @@ int main(int argc, char * argv[]) {
   ///////////////////////////////////////
   // Reference SpMV+MG Timing Phase //
   ///////////////////////////////////////
+
+	std::cout<< "Reference SpMV+MG Timing Phase" << std::endl;
 
   // Call Reference SpMV and MG. Compute Optimization time as ratio of times in these routines
 
@@ -182,6 +189,8 @@ int main(int argc, char * argv[]) {
   // Reference CG Timing Phase //
   ///////////////////////////////
 
+	std::cout<< "Reference CG Timing Phase" << std::endl;
+
 #ifdef HPCG_DEBUG
   t1 = mytimer();
 #endif
@@ -210,6 +219,8 @@ int main(int argc, char * argv[]) {
   //////////////////////////////
   // Optimized CG Setup Phase //
   //////////////////////////////
+
+	std::cout<< "Optimized CG Setup Phase" << std::endl;
 
   niters = 0;
   normr = 0.0;
@@ -256,6 +267,8 @@ int main(int argc, char * argv[]) {
   // Optimized CG Timing Phase //
   ///////////////////////////////
 
+	std::cout<< "Optimized CG Timing Phase" << std::endl;
+
   // Here we finally run the benchmark phase
   // The variable total_runtime is the target benchmark execution time in seconds
 
@@ -275,8 +288,9 @@ int main(int argc, char * argv[]) {
   double optTolerance = 0.0;  // Force optMaxIters iterations
   TestNormsData testnorms_data;
   testnorms_data.samples = numberOfCgSets;
-  testnorms_data.values = new double[numberOfCgSets];
-
+  testnorms_data.values = double_1d_type("TestNormsData: values", numberOfCgSets);
+{ //Introduce a scope here so our mirror deallocates after being deep_copied back.
+	host_double_1d_type testnorms_values = Kokkos::create_mirror_view(testnorms_data.values);
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
@@ -284,6 +298,7 @@ int main(int argc, char * argv[]) {
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
     testnorms_data.values[i] = normr/normr0; // Record scaled residual from this run
   }
+	Kokkos::deep_copy(testnorms_data.values, testnorms_values);}
 
   // Compute difference between known exact solution and computed solution
   // All processors are needed here.
@@ -301,6 +316,8 @@ int main(int argc, char * argv[]) {
   // Report Results //
   ////////////////////
 
+	std::cout<< "Report Results" << std::endl;
+
   // Report results to YAML file
   ReportResults(A, numberOfMgLevels, numberOfCgSets, refMaxIters, optMaxIters, &times[0], testcg_data, testsymmetry_data, testnorms_data, global_failure);
 
@@ -312,7 +329,7 @@ int main(int argc, char * argv[]) {
   DeleteVector(xexact);
   DeleteVector(x_overlap);
   DeleteVector(b_computed);
-  delete [] testnorms_data.values;
+  //delete [] testnorms_data.values;
 
 	execution_space::finalize();
 

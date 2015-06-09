@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 #ifndef OPTIMIZEPROBLEM_HPP
 #define OPTIMIZEPROBLEM_HPP
 
@@ -19,6 +5,6 @@
 #include "Vector.hpp"
 #include "CGData.hpp"
 
-int OptimizeProblem(SparseMatrix & A, CGData & data,  Vector & b, Vector & x, Vector & xexact);
+int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vector & xexact);
 
-#endif  // OPTIMIZEPROBLEM_HPP
+#endif //OPTIMIZEPROBLEM_HPP

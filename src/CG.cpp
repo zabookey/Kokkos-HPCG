@@ -1,17 +1,3 @@
-
-//@HEADER
-// ***************************************************
-//
-// HPCG: High Performance Conjugate Gradient Benchmark
-//
-// Contact:
-// Michael A. Heroux ( maherou@sandia.gov)
-// Jack Dongarra     (dongarra@eecs.utk.edu)
-// Piotr Luszczek    (luszczek@eecs.utk.edu)
-//
-// ***************************************************
-//@HEADER
-
 /*!
  @file CG.cpp
 
@@ -89,7 +75,7 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
   TICK(); ComputeDotProduct(nrow, r, r, normr, t4, A.isDotProductOptimized); TOCK(t1);
   normr = sqrt(normr);
 #ifdef HPCG_DEBUG
-  if (A.geom->rank==0) HPCG_fout << "Initial Residual = "<< normr << std::endl;
+  if (A.geom.rank==0) HPCG_fout << "Initial Residual = "<< normr << std::endl;
 #endif
 
   // Record initial residual for convergence testing
@@ -123,7 +109,7 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
     TICK(); ComputeDotProduct(nrow, r, r, normr, t4, A.isDotProductOptimized); TOCK(t1);
     normr = sqrt(normr);
 #ifdef HPCG_DEBUG
-    if (A.geom->rank==0 && (k%print_freq == 0 || k == max_iter))
+    if (A.geom.rank==0 && (k%print_freq == 0 || k == max_iter))
       HPCG_fout << "Iteration = "<< k << "   Scaled Residual = "<< normr/normr0 << std::endl;
 #endif
     niters = k;
