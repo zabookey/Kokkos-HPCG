@@ -32,6 +32,7 @@ Known Issues
 Top Priority
 
 Will not function properly on Cuda, a couple of parallel functions either need to be serialized (bad)
-or have their lambdas rewritten to use [=] as their capture list.
+or have their lambdas rewritten to use [=] as their capture list. Due to this, GenerateProblem currently
+runs in serial.
 
 hwloc function doesn't seem to give me the correct number of threads.
