@@ -31,8 +31,6 @@ Known Issues
 
 Top Priority
 
-Does not produce valid results. With the change to mostly views there is an issue with validation.
-
 Will not function properly on Cuda, a couple of parallel functions either need to be serialized (bad)
 or have their lambdas rewritten to use [=] as their capture list.
 

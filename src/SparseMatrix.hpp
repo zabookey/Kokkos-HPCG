@@ -154,7 +154,6 @@ inline void DeleteMatrix(SparseMatrix & A) {
 #endif
 
   if (A.geom!=0) { delete A.geom; A.geom = 0;}
-	std::cout<< "Deleted Geometry" << std::endl;
   if (A.Ac!=0) { DeleteMatrix(*A.Ac); delete A.Ac; A.Ac = 0;} // Delete coarse matrix
 	if (A.mgData!=0) {DeleteMGData(*A.mgData); delete A.mgData; A.mgData = 0;} // Delete MG data
 

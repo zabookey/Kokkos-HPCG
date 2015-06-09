@@ -128,6 +128,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
 										cvpIndex++;
 									}
 									currentIndexPointerG(cipgIndex) = curcol;
+									cipgIndex++;
 									numberOfNonzerosInRow++;
 								} // end x bounds test
 							} // end sx loop
@@ -276,6 +277,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
 										cvpIndex++;
 									}
 									currentIndexPointerG(cipgIndex) = curcol;
+									cipgIndex++;
 									numberOfNonzerosInRow++;
 								} // end x bounds test
 							} // end sx loop
