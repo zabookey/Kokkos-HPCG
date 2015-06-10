@@ -35,6 +35,24 @@ using Kokkos::deep_copy;
 
   @see ExchangeHalo
 */
+
+class NoMPIFunctor{
+	local_int_2d_type mtxIndL;
+	const_global_int_2d_type mtxIndG;
+	const_char_1d_type nonzerosInRow;
+	
+	NoMPIFunctor(local_int_2d_type &mtxIndL_, const_global_int_2d_type &mtxIndG_,
+		const_char_1d_type nonzerosInRow_):
+		mtxIndL(mtxIndL_), mtxIndG(mtxIndG_), nonzerosInRow(nonzerosInRow_)
+		{}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i){
+		int cur_nnz = nonzerosInRow(i);
+		for(int j = 0; j < cur_nnz; j++) mtxIndL(i, j) = mtxIndG(i, j);
+	}
+};
+
 void SetupHalo(SparseMatrix & A) {
 
   // Extract Matrix pieces
@@ -47,10 +65,7 @@ void SetupHalo(SparseMatrix & A) {
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
 
-	Kokkos::parallel_for(localNumberOfRows, [=](const int & i){
-		int cur_nnz = nonzerosInRow(i);
-		for (int j = 0; j < cur_nnz; j++) mtxIndL(i, j) = mtxIndG(i, j);
-	});
+	Kokkos::parallel_for(localNumberOfRows, NoMPIFunctor(mtxIndL, mtxIndG, nonzerosInRow));
 
 #else // Run this section if compiling for MPI
 

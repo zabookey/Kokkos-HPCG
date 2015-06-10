@@ -28,7 +28,7 @@ struct KokkosFUNctor{
   double_1d_type v1v, v2v;
   //mutable double threadlocal_residual = 0.0;
 
-  KokkosFUNctor(double_1d_type v1, double_1d_type v2, local_int_t n) :
+  KokkosFUNctor(double_1d_type &v1, double_1d_type &v2, local_int_t n) :
       v1v(v1), v2v(v2) {}
 
 //TODO Find a better implementation that will work on CUDA.

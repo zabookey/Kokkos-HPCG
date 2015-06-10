@@ -14,7 +14,7 @@ class Restriction{
 		double_1d_type rcv;
 		local_int_1d_type f2c;
 
-		Restriction(double_1d_type AxfValues, double_1d_type rfValues, double_1d_type rcValues, local_int_1d_type f2cO){
+		Restriction(double_1d_type &AxfValues, double_1d_type &rfValues, double_1d_type &rcValues, local_int_1d_type &f2cO){
 			Axfv = AxfValues;
 			rfv = rfValues;
 			rcv = rcValues;

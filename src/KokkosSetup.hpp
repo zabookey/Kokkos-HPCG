@@ -26,6 +26,7 @@ typedef Kokkos::View<char *> char_1d_type;
 typedef Kokkos::View<const double *> const_double_1d_type;
 typedef Kokkos::View<const double **> const_double_2d_type;
 typedef Kokkos::View<const local_int_t *> const_local_int_1d_type;
+typedef Kokkos::View<const local_int_t **> const_local_int_2d_type;
 typedef Kokkos::View<const global_int_t **> const_global_int_2d_type;
 typedef Kokkos::View<const char *> const_char_1d_type;
 //Mirrors
@@ -41,6 +42,7 @@ typedef char_1d_type::HostMirror host_char_1d_type;
 typedef const_double_1d_type::HostMirror host_const_double_1d_type;
 typedef const_double_2d_type::HostMirror host_const_double_2d_type;
 typedef const_local_int_1d_type::HostMirror host_const_local_int_1d_type;
+typedef const_local_int_2d_type::HostMirror host_const_local_int_2d_type;
 typedef const_global_int_2d_type::HostMirror host_const_global_int_2d_type;
 typedef const_char_1d_type::HostMirror host_const_char_1d_type;
 #endif

@@ -24,6 +24,31 @@
 
 */
 
+class KokkosFunctor{
+	public:
+	local_int_1d_type f2cOperator;
+	global_int_t nxf, nyf;
+	local_int_t nxc, nyc;
+	KokkosFunctor(const local_int_1d_type &f2cOperator_, global_int_t nxf_, global_int_t nyf_,
+								local_int_t nxc_, local_int_t nyc_) :
+								f2cOperator(f2cOperator_), nxf(nxf_), nyf(nyf_), nxc(nxc_), nyc(nyc_) 
+								{}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator () (const int izc) const{
+		local_int_t izf = 2 * izc;
+		for(local_int_t iyc = 0; iyc < nyc; ++iyc) {
+			local_int_t iyf = 2 * iyc; 
+			for(local_int_t ixc = 0; ixc < nxc; ++ixc){
+				local_int_t ixf = 2 * ixc;
+				local_int_t currentCoarseRow = izc * nxc* nyc + iyc * nxc + ixc;
+				local_int_t currentFineRow = izf * nxf * nyf + iyf * nxf + ixf;
+				f2cOperator(currentCoarseRow) = currentFineRow;
+			}
+		}
+	}
+};
+
 void GenerateCoarseProblem(const SparseMatrix & Af) {
 
   // Make local copies of geometry information.  Use global_int_t since the RHS products in the calculations
@@ -35,7 +60,7 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
   local_int_t nxc, nyc, nzc; //Coarse nx, ny, nz
   assert(nxf%2==0); assert(nyf%2==0); assert(nzf%2==0); // Need fine grid dimensions to be divisible by 2
   nxc = nxf/2; nyc = nyf/2; nzc = nzf/2;
-  local_int_1d_type f2cOperator = local_int_1d_type("f2cOperator", Af.localNumberOfRows);
+  local_int_1d_type f2cOperator = local_int_1d_type("f2cOperator", Af.localNumberOfRows); //Should be initiallized with all 0's
   local_int_t localNumberOfRows = nxc*nyc*nzc; // This is the size of our subblock
   // If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
   assert(localNumberOfRows>0); // Throw an exception of the number of rows is less than zero (can happen if int overflow)
@@ -49,11 +74,6 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
     f2cOperator[i] = 0;
   }
 */
-
-//TODO: This might be redundant since Views are initialized with 0's but it doesn't particualarily hurt.
-	Kokkos::parallel_for(localNumberOfRows, [=](const int & i){
-		f2cOperator(i) = 0;
-	});
 
 /*
   // TODO:  This triply nested loop could be flattened or use nested parallelism
@@ -73,18 +93,8 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
 	  } // end even iz if statement
   } // end iz loop
 */
-	Kokkos::parallel_for(nzc, [=](const int & izc){
-		local_int_t izf = 2*izc;
-	  for (local_int_t iyc=0; iyc<nyc; ++iyc) {
-		  local_int_t iyf = 2*iyc;
-		  for (local_int_t ixc=0; ixc<nxc; ++ixc) {
-			  local_int_t ixf = 2*ixc;
-			  local_int_t currentCoarseRow = izc*nxc*nyc+iyc*nxc+ixc;
-			  local_int_t currentFineRow = izf*nxf*nyf+iyf*nxf+ixf;
-			  f2cOperator(currentCoarseRow) = currentFineRow;
-		  }
-		}
-	});
+
+	Kokkos::parallel_for(nzc, KokkosFunctor(f2cOperator, nxf, nyf, nxc, nyc));
 
   // Construct the geometry and linear system
   Geometry * geomc = new Geometry;

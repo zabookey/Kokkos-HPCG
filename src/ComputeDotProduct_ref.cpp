@@ -15,12 +15,12 @@
 	class Dotproduct {
 
 		private:
-		double_1d_type  xv;
-		double_1d_type  yv;
+		const_double_1d_type  xv;
+		const_double_1d_type  yv;
 
 		public:
 		typedef double value_type;
-		Dotproduct(double_1d_type  xValues, double_1d_type  yValues){
+		Dotproduct(const double_1d_type  & xValues,const double_1d_type  & yValues){
 			xv = xValues;
 			yv = yValues;
 		}
