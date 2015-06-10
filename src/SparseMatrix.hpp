@@ -27,7 +27,8 @@ struct SparseMatrix_STRUCT {
 	double_2d_type matrixValues; //!< values of matrix entries
 	double_1d_type matrixDiagonal; //!< Indices of matrix diagonal values.
 	std::map< global_int_t, local_int_t > globalToLocalMap; //!< global-to-local mapping
-	std::vector< global_int_t > localToGlobalMap; //!< local-to-global mapping
+//	std::vector< global_int_t > localToGlobalMap; //!< local-to-global mapping
+	global_int_1d_type localToGlobalMap;
 	mutable bool isDotProductOptimized;
 	mutable bool isSpmvOptimized;
 	mutable bool isMgOptimized;

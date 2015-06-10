@@ -78,7 +78,8 @@ void GenerateProblem(SparseMatrix & A, Vector & b, Vector & x, Vector & xexact){
 	double_1d_type bv = b.values;
 	double_1d_type xv = x.values;
 	double_1d_type xexactv = xexact.values;
-	A.localToGlobalMap.resize(localNumberOfRows);
+//	A.localToGlobalMap.resize(localNumberOfRows);
+	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
@@ -91,6 +92,7 @@ host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
 host_global_int_2d_type host_mtxIndG = create_mirror_view(mtxIndG);
 host_local_int_2d_type host_mtxIndL = create_mirror_view(mtxIndL);
 host_double_2d_type host_matrixValues = create_mirror_view(matrixValues);
+host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
 for(local_int_t iz = 0; iz < nx; iz++){
 /*	Kokkos::parallel_for(nz, [&](const int & iz)
 {*/
@@ -103,7 +105,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
 			A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
-			A.localToGlobalMap[currentLocalRow] = currentGlobalRow;
+			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
 			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
 #endif
@@ -152,6 +154,7 @@ Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
 Kokkos::deep_copy(mtxIndG, host_mtxIndG);
 Kokkos::deep_copy(mtxIndL, host_mtxIndL);
 Kokkos::deep_copy(matrixValues, host_matrixValues);
+Kokkos::deep_copy(localToGlobalMap, host_localToGlobalMap);
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;
@@ -184,6 +187,7 @@ Kokkos::deep_copy(matrixValues, host_matrixValues);
 	A.mtxIndL = mtxIndL;
 	A.matrixValues = matrixValues;
 	A.matrixDiagonal = matrixDiagonal;
+	A.localToGlobalMap = localToGlobalMap;
 
 	return;
 }
@@ -227,7 +231,8 @@ void GenerateProblem(SparseMatrix & A){
 	local_int_2d_type mtxIndL = local_int_2d_type("Matrix: mtxIndL", localNumberOfRows, numberOfNonzerosPerRow);
 	double_2d_type matrixValues = double_2d_type("Matrix: matrixValues", localNumberOfRows, numberOfNonzerosPerRow);
 
-	A.localToGlobalMap.resize(localNumberOfRows);
+//	A.localToGlobalMap.resize(localNumberOfRows);
+	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
@@ -240,6 +245,7 @@ host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
 host_global_int_2d_type host_mtxIndG = create_mirror_view(mtxIndG);
 host_local_int_2d_type host_mtxIndL = create_mirror_view(mtxIndL);
 host_double_2d_type host_matrixValues = create_mirror_view(matrixValues);
+host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
 for(local_int_t iz = 0; iz < nx; iz++){
 /*	Kokkos::parallel_for(nz, [&](const int & iz)
 {*/
@@ -252,7 +258,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //			Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow);
 			A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
-			A.localToGlobalMap[currentLocalRow] = currentGlobalRow;
+			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
 			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
 #endif
@@ -298,6 +304,7 @@ Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
 Kokkos::deep_copy(mtxIndG, host_mtxIndG);
 Kokkos::deep_copy(mtxIndL, host_mtxIndL);
 Kokkos::deep_copy(matrixValues, host_matrixValues);
+Kokkos::deep_copy(localToGlobalMap, host_localToGlobalMap);
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;
@@ -330,6 +337,7 @@ Kokkos::deep_copy(matrixValues, host_matrixValues);
 	A.mtxIndL = mtxIndL;
 	A.matrixValues = matrixValues;
 	A.matrixDiagonal = matrixDiagonal;
+	A.localToGlobalMap = localToGlobalMap;
 
 	return;
 }

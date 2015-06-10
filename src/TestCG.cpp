@@ -51,8 +51,9 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
 
   // Modify the matrix diagonal to greatly exaggerate diagonal values.
   // CG should converge in about 10 iterations for this problem, regardless of problem size
+	host_global_int_1d_type host_localToGlobalMap = Kokkos::create_mirror_view(A.localToGlobalMap);
   for (local_int_t i=0; i< A.localNumberOfRows; ++i) {
-    global_int_t globalRowID = A.localToGlobalMap[i];
+    global_int_t globalRowID = host_localToGlobalMap(i);
     if (globalRowID<9) {
       double scale = (globalRowID+2)*1.0e6;
       ScaleVectorValue(exaggeratedDiagA, i, scale);

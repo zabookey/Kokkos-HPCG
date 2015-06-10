@@ -43,6 +43,7 @@ void SetupHalo(SparseMatrix & A) {
 	char_1d_type nonzerosInRow = A.nonzerosInRow;
 	global_int_2d_type mtxIndG = A.mtxIndG;
 	local_int_2d_type mtxIndL = A.mtxIndL;
+	global_int_1d_type localToGlobalMap = A.localToGlobalMap;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
 
@@ -67,8 +68,9 @@ void SetupHalo(SparseMatrix & A) {
 	// Mirror nonzerosInRow and mtxIndG and create a scope so they go away after we deep_copy them back.
 {	host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 	host_global_int_2d_type host_mtxIndG = create_mirror_view(mtxIndG);
+	host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
   for (local_int_t i=0; i< localNumberOfRows; i++) {
-    global_int_t currentGlobalRow = A.localToGlobalMap[i];
+    global_int_t currentGlobalRow = host_localToGlobalMap(i);
     for (int j=0; j< host_nonzerosInRow(i); j++) {
       global_int_t curIndex = host_mtxIndG(i, j);
       int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
