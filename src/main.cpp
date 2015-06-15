@@ -289,6 +289,7 @@ int main(int argc, char * argv[]) {
   TestNormsData testnorms_data;
   testnorms_data.samples = numberOfCgSets;
   testnorms_data.values = double_1d_type("TestNormsData: values", numberOfCgSets);
+	Kokkos::deep_copy(testnorms_data.values, 0.0);
 { //Introduce a scope here so our mirror deallocates after being deep_copied back.
 	host_double_1d_type testnorms_values = Kokkos::create_mirror_view(testnorms_data.values);
   for (int i=0; i< numberOfCgSets; ++i) {

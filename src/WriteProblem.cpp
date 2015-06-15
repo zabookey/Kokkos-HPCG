@@ -9,6 +9,7 @@
 #include "Geometry.hpp"
 
 using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 using Kokkos::subview;
 using Kokkos::ALL;
 /*!
@@ -64,6 +65,12 @@ int WriteProblem( const Geometry & geom, const SparseMatrix & A,
 	const host_const_double_1d_type host_xvalues = create_mirror_view(x.values);
 	const host_const_double_1d_type host_xexactvalues = create_mirror_view(xexact.values);
 	const host_const_double_1d_type host_bvalues = create_mirror_view(b.values);
+	deep_copy(host_matrixValues, A.matrixValues);
+	deep_copy(host_mtxIndG, A.mtxIndG);
+	deep_copy(host_nonzerosInRow, A.nonzerosInRow);
+	deep_copy(host_xvalues, x.values);
+	deep_copy(host_xexactvalues, xexact.values);
+	deep_copy(host_bvalues, b.values);
   for (global_int_t i=0; i< nrow; i++) {
     auto currentRowValues = subview(host_matrixValues, i, ALL()); //TODO Should use auto
     auto currentRowIndices = subview(host_mtxIndG, i, ALL()); //TODO Should use auto

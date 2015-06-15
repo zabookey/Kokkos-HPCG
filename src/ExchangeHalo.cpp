@@ -14,6 +14,7 @@
 #include "hpcg.hpp"
 
 using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 /*!
   Communicates data that is at the border of the part of the domain assigned to this processor.
 
@@ -27,13 +28,18 @@ void ExchangeHalo(const SparseMatrix & A, Vector & x) {
 	local_int_t localNumberOfRows = A.localNumberOfRows;
 	int num_neighbors = A.numberOfSendNeighbors;
 	host_local_int_1d_type receiveLength = create_mirror_view(A.receiveLength);
+	deep_copy(receiveLength, A.receiveLength);
 	host_local_int_1d_type sendLength = create_mirror_view(A.sendLength);
-	host_int_1d_type neighbors = A.neighbors;
+	deep_copy(sendLength, A.sendLength);
+	host_int_1d_type neighbors = create_mirror_view(A.neighbors);
+	deep_copy(neighbors, A.neighbors);
 	double * sendBuffer = A.sendBuffer;
 	local_int_t totalToBeSent = A.totalToBeSent;
 	host_local_int_1d_type elementsToSend = create_mirror_view(A.elementsToSend);
+	deep_copy(elementsToSend, A.elementsToSend);
 	
-	double_1d_type xv = create_mirror_view(x.values);
+	host_double_1d_type xv = create_mirror_view(x.values);
+	deep_copy(xv, x.values);
 
 	int size, rank; // Number of MPI process, My process ID
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -94,7 +100,7 @@ void ExchangeHalo(const SparseMatrix & A, Vector & x) {
 
 	delete [] request;
 	
-	Kokkos::deep_copy(x.values, xv);
+	deep_copy(x.values, xv);
 
 	return;
 }

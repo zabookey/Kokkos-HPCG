@@ -8,6 +8,7 @@
 #include "KokkosSetup.hpp"
 
 using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 
 struct Vector_STRUCT {
   local_int_t localLength;  //!< length of local portion of the vector
@@ -44,10 +45,7 @@ inline void InitializeVector(Vector & v, local_int_t localLength) {
  */
 //This whole method may be redundant since views are automatically initalized with zeros.
 inline void ZeroVector(Vector & v){
-	local_int_t localLength = v.localLength;
-	host_double_1d_type vv = create_mirror_view(v.values);
-	for(int i = 0; i < localLength; ++i) vv(i) = 0.0;
-	Kokkos::deep_copy(v.values, vv);
+	deep_copy(v.values, 0.0);	// This should zero out v.values.
 	return;
 }
 /*!
@@ -60,8 +58,9 @@ inline void ZeroVector(Vector & v){
 inline void ScaleVectorValue(Vector & v, local_int_t index, double value) {
   assert(index>=0 && index < v.localLength);
   host_double_1d_type vv = create_mirror_view(v.values);
+	deep_copy(vv, v.values);
 	vv(index) *= value;
-	Kokkos::deep_copy(v.values, vv);
+	deep_copy(v.values, vv);
 	return;
 }
 /*!
@@ -73,7 +72,7 @@ inline void FillRandomVector(Vector & v){
 	local_int_t localLength = v.localLength;
 	host_double_1d_type vv = create_mirror_view(v.values);
 	for(int i = 0; i < localLength; ++i) vv(i) = rand() / (double)(RAND_MAX) + 1.0;
-	Kokkos::deep_copy(v.values, vv);
+	deep_copy(v.values, vv);
 	return;
 }
 /*!
@@ -85,8 +84,11 @@ inline void FillRandomVector(Vector & v){
 inline void CopyVector(const Vector & v, Vector & w) {
 	local_int_t localLength = v.localLength;
 	assert(w.localLength >= localLength);
+	// Because it's not a guarantee that v and w are the same length I can't just deep_copy.
 	host_const_double_1d_type vv = create_mirror_view(v.values);
 	host_double_1d_type wv = create_mirror_view(w.values);
+	deep_copy(vv, v.values);
+	deep_copy(wv, w.values); //Have to copy the whole thing in case w is longer than v, this way we retain the end that v can't touch.
 	for(int i = 0; i < localLength; ++i) wv(i) = vv(i);
 	w.isInitialized = v.isInitialized;
 	Kokkos::deep_copy(w.values, wv);

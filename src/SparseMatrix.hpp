@@ -107,6 +107,8 @@ inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	host_const_double_2d_type valuesA = create_mirror_view(A.matrixValues);
 	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_double_1d_type dv = create_mirror_view(diagonal.values);
+	deep_copy(valuesA, A.matrixValues); // Copy the values into the mirror.
+	deep_copy(curDiagA, A.matrixDiagonal);
 	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) dv(i) = valuesA(i, curDiagA(i));
 	deep_copy(diagonal.values, dv);
 	return;
@@ -122,6 +124,8 @@ inline void ReplaceMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	host_double_2d_type valuesA = create_mirror_view(A.matrixValues);
 	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_const_double_1d_type dv = create_mirror_view(diagonal.values);
+	deep_copy(curDiagA, A.matrixDiagonal);
+	deep_copy(dv, diagonal.values);
 	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) valuesA(i, curDiagA(i)) = dv(i);
 	deep_copy(A.matrixValues, valuesA);
 	return;

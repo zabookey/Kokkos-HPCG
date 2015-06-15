@@ -6,6 +6,7 @@
 #include <cassert>
 
 using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 using Kokkos::subview;
 using Kokkos::ALL;
 /*!
@@ -48,7 +49,12 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
 	const host_double_1d_type xv = create_mirror_view(x.values); // Host Mirror to x.values
 	const host_const_char_1d_type nonZerosInRow = create_mirror_view(A.nonzerosInRow); // Host Mirror to A.nonZerosInRow.
-//Easier to Mirror it once than mirror in every iteration
+//	Easier to Mirror it once than mirror in every iteration
+//	Deep Copy the values into the mirrors... Because mirrors don't do that...
+	deep_copy(matrixDiagonal, A.matrixDiagonal);
+	deep_copy(rv, r.values);
+	deep_copy(xv, x.values);
+	deep_copy(nonZerosInRow, A.nonzerosInRow);
 
 	for(local_int_t i = 0; i < nrow; i++){
 		const host_const_double_1d_type currentValues = create_mirror_view(subview(A.matrixValues, i, ALL()));
@@ -84,7 +90,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		xv(i) = sum/currentDiagonal;
 	}
 
-	Kokkos::deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
+	deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
 	// All of the mirrors should go out of scope here and deallocate themselves.
 	return(0);
 }

@@ -60,7 +60,8 @@ void GenerateCoarseProblem(const SparseMatrix & Af) {
   local_int_t nxc, nyc, nzc; //Coarse nx, ny, nz
   assert(nxf%2==0); assert(nyf%2==0); assert(nzf%2==0); // Need fine grid dimensions to be divisible by 2
   nxc = nxf/2; nyc = nyf/2; nzc = nzf/2;
-  local_int_1d_type f2cOperator = local_int_1d_type("f2cOperator", Af.localNumberOfRows); //Should be initiallized with all 0's
+  local_int_1d_type f2cOperator = local_int_1d_type("f2cOperator", Af.localNumberOfRows); 
+	Kokkos::deep_copy(f2cOperator, 0.0); // Initialized f2cOperator to have all 0's
   local_int_t localNumberOfRows = nxc*nyc*nzc; // This is the size of our subblock
   // If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
   assert(localNumberOfRows>0); // Throw an exception of the number of rows is less than zero (can happen if int overflow)

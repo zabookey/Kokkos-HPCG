@@ -84,6 +84,9 @@ void SetupHalo(SparseMatrix & A) {
 {	host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 	host_global_int_2d_type host_mtxIndG = create_mirror_view(mtxIndG);
 	host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
+	deep_copy(host_nonzerosInRow, nonzerosInRow);
+	deep_copy(host_mtxIndG, mtxIndG);
+	deep_copy(host_localToGlobalMap, localToGlobalMap);
   for (local_int_t i=0; i< localNumberOfRows; i++) {
     global_int_t currentGlobalRow = host_localToGlobalMap(i);
     for (int j=0; j< host_nonzerosInRow(i); j++) {
@@ -99,9 +102,8 @@ void SetupHalo(SparseMatrix & A) {
       }
     }
   }
-	// deep_copy the mirrors back.
-	deep_copy(nonzerosInRow, host_nonzerosInRow);
-	deep_copy(mtxIndG, host_mtxIndG);}
+// No need to deep_copy mirrors back since they are read only.
+}
   // Count number of matrix entries to send and receive
   local_int_t totalToBeSent = 0;
   for (map_iter curNeighbor = sendList.begin(); curNeighbor != sendList.end(); ++curNeighbor) {
@@ -134,7 +136,7 @@ void SetupHalo(SparseMatrix & A) {
   local_int_t receiveEntryCount = 0;
   local_int_t sendEntryCount = 0;
 	// Mirror the views used below. Create a scope so the mirrors automitically dealloacte after deep_copy
-{	host_local_int_1d_type host_elementsToSend = create_mirror_view(elementsToSend);
+	host_local_int_1d_type host_elementsToSend = create_mirror_view(elementsToSend);
 	host_int_1d_type host_neighbors = create_mirror_view(neighbors);
 	host_local_int_1d_type host_receiveLength = create_mirror_view(receiveLength);
 	host_local_int_1d_type host_sendLength = create_mirror_view(sendLength);
@@ -155,7 +157,7 @@ void SetupHalo(SparseMatrix & A) {
 	deep_copy(elementsToSend, host_elementsToSend);
 	deep_copy(neighbors, host_neighbors);
 	deep_copy(receiveLength, host_receiveLength);
-	deep_copy(sendLength, host_sendLength);}
+	deep_copy(sendLength, host_sendLength);
   // Convert matrix indices to local IDs
 	//FIXME: Lambda capture list needs to be [=] Problem is A.globalToLocalMap (std::map) and externalToLocalMap (std::map)
 	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){ // This is going to have some issues due to some parts being on a different device.
@@ -185,9 +187,9 @@ void SetupHalo(SparseMatrix & A) {
 #ifdef HPCG_DETAILED_DEBUG
   HPCG_fout << " For rank " << A.geom->rank << " of " << A.geom->size << ", number of neighbors = " << A.numberOfSendNeighbors << endl;
   for (int i = 0; i < A.numberOfSendNeighbors; i++) {
-    HPCG_fout << "     rank " << A.geom->rank << " neighbor " << neighbors[i] << " send/recv length = " << sendLength[i] << "/" << receiveLength[i] << endl;
-    for (local_int_t j = 0; j<sendLength[i]; ++j)
-      HPCG_fout << "       rank " << A.geom->rank << " elementsToSend[" << j << "] = " << elementsToSend[j] << endl;
+    HPCG_fout << "     rank " << A.geom->rank << " neighbor " << host_neighbors(i) << " send/recv length = " << host_sendLength(i) << "/" << host_receiveLength(i) << endl;
+    for (local_int_t j = 0; j<host_sendLength(i); ++j)
+      HPCG_fout << "       rank " << A.geom->rank << " elementsToSend[" << j << "] = " << host_elementsToSend(j) << endl;
   }
 #endif
 

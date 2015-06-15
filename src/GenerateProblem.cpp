@@ -14,13 +14,13 @@ using std::endl;
 #include "hpcg.hpp"
 #endif
 #include <cassert>
-#include <mutex>
 
 #include "GenerateProblem.hpp"
 
 #include <iostream>
 
 using Kokkos::create_mirror_view;
+using Kokkos::deep_copy;
 using Kokkos::subview;
 using Kokkos::ALL;
 
@@ -71,13 +71,23 @@ void GenerateProblem(SparseMatrix & A, Vector & b, Vector & x, Vector & xexact){
 	local_int_2d_type mtxIndL = local_int_2d_type("Matrix: mtxIndL", localNumberOfRows, numberOfNonzerosPerRow);
 	double_2d_type matrixValues = double_2d_type("Matrix: matrixValues", localNumberOfRows, numberOfNonzerosPerRow);
 
+	//Initialize Views to be all 0's.
+	deep_copy(matrixDiagonal, 0.0);
+	deep_copy(mtxIndG, 0.0);
+	deep_copy(mtxIndL, 0.0);
+	deep_copy(matrixValues, 0.0);
+
 	// Vectors, Becuase vectors won't have address 0 since I'm not using poniters I can ignore the != 0
 	InitializeVector(b, localNumberOfRows);
 	InitializeVector(x, localNumberOfRows);
 	InitializeVector(xexact, localNumberOfRows);
-	double_1d_type bv = b.values;
-	double_1d_type xv = x.values;
-	double_1d_type xexactv = xexact.values;
+	// The mirrors are only temporary while we run this method in serial.
+	host_double_1d_type bv = create_mirror_view(b.values);
+	host_double_1d_type xv = create_mirror_view(x.values);
+	host_double_1d_type xexactv = create_mirror_view(xexact.values);
+	deep_copy(bv, b.values);
+	deep_copy(xv, x.values);
+	deep_copy(xexactv, xexact.values);
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 
@@ -149,12 +159,15 @@ for(local_int_t iz = 0; iz < nx; iz++){
 	}
 }//);
 //Copy back the temp mirrors.
-Kokkos::deep_copy(nonzerosInRow, host_nonzerosInRow);
-Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
-Kokkos::deep_copy(mtxIndG, host_mtxIndG);
-Kokkos::deep_copy(mtxIndL, host_mtxIndL);
-Kokkos::deep_copy(matrixValues, host_matrixValues);
-Kokkos::deep_copy(localToGlobalMap, host_localToGlobalMap);
+deep_copy(nonzerosInRow, host_nonzerosInRow);
+deep_copy(matrixDiagonal, host_matrixDiagonal);
+deep_copy(mtxIndG, host_mtxIndG);
+deep_copy(mtxIndL, host_mtxIndL);
+deep_copy(matrixValues, host_matrixValues);
+deep_copy(localToGlobalMap, host_localToGlobalMap);
+deep_copy(x.values, xv);
+deep_copy(b.values, bv);
+deep_copy(xexact.values, xexactv);
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;
@@ -231,6 +244,11 @@ void GenerateProblem(SparseMatrix & A){
 	local_int_2d_type mtxIndL = local_int_2d_type("Matrix: mtxIndL", localNumberOfRows, numberOfNonzerosPerRow);
 	double_2d_type matrixValues = double_2d_type("Matrix: matrixValues", localNumberOfRows, numberOfNonzerosPerRow);
 
+//	Initialize Views to be all 0's
+	deep_copy(matrixDiagonal, 0.0);
+	deep_copy(mtxIndG, 0.0);
+	deep_copy(mtxIndL, 0.0);
+	deep_copy(matrixValues, 0.0);
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 
@@ -299,12 +317,12 @@ for(local_int_t iz = 0; iz < nx; iz++){
 	}
 }//);
 //Copy back the temp mirrors.
-Kokkos::deep_copy(nonzerosInRow, host_nonzerosInRow);
-Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
-Kokkos::deep_copy(mtxIndG, host_mtxIndG);
-Kokkos::deep_copy(mtxIndL, host_mtxIndL);
-Kokkos::deep_copy(matrixValues, host_matrixValues);
-Kokkos::deep_copy(localToGlobalMap, host_localToGlobalMap);
+deep_copy(nonzerosInRow, host_nonzerosInRow);
+deep_copy(matrixDiagonal, host_matrixDiagonal);
+deep_copy(mtxIndG, host_mtxIndG);
+deep_copy(mtxIndL, host_mtxIndL);
+deep_copy(matrixValues, host_matrixValues);
+deep_copy(localToGlobalMap, host_localToGlobalMap);
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;

@@ -23,12 +23,15 @@
 FIXME This is just a temporary fix until I find a better implementation that will work on CUDA.
 This version will be slower than previous versions.
 */
+typedef Kokkos::View<double> double_0d_type;
+
 struct KokkosFUNctor{
   public:
-  double_1d_type v1v, v2v;
+  const_double_1d_type v1v, v2v;
   //mutable double threadlocal_residual = 0.0;
+	double_0d_type threadlocal_residual;
 
-  KokkosFUNctor(double_1d_type &v1, double_1d_type &v2, local_int_t n) :
+  KokkosFUNctor(const double_1d_type &v1, const double_1d_type &v2, local_int_t n) :
       v1v(v1), v2v(v2) {}
 
 //TODO Find a better implementation that will work on CUDA.
