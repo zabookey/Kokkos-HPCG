@@ -15,25 +15,21 @@
 
 class SPMV{
 	public:
-	const_double_2d_type matrixValues;
-	const_local_int_2d_type mtxIndL;
-	const_char_1d_type nonzerosInRow;
-	double_1d_type xv;
+	const matrix_type localMatrix;
+	const_double_1d_type xv;
 	double_1d_type yv;
 	
-	SPMV(const const_double_2d_type &matrixValues_,const const_local_int_2d_type &mtxIndL_, 
-		const const_char_1d_type &nonzerosInRow_, double_1d_type &xv_, double_1d_type &yv_):
-		matrixValues(matrixValues_), mtxIndL(mtxIndL_), nonzerosInRow(nonzerosInRow_), xv(xv_), yv(yv_)
+	SPMV(const matrix_type &localMatrix_, double_1d_type &xv_, double_1d_type &yv_):
+		localMatrix(localMatrix_), xv(xv_), yv(yv_)
 		{}
 
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i) const{
 		double sum = 0.0;
-		const auto cur_vals = Kokkos::subview(matrixValues, i, Kokkos::ALL());
-		const auto cur_inds = Kokkos::subview(mtxIndL, i, Kokkos::ALL());
-		const int cur_nnz = nonzerosInRow(i);
-		for(int j = 0; j < cur_nnz; j++)
-			sum += cur_vals(j) * xv(cur_inds(j));
+		int start = localMatrix.graph.row_map(i);
+		int end = localMatrix.graph.row_map(i+1);
+		for(int j = start; j < end; j++)
+			sum += localMatrix.values(j) * xv(localMatrix.graph.entries(j));
 		yv(i) = sum;
 	}
 };
@@ -47,7 +43,7 @@ int ComputeSPMV_ref(const SparseMatrix & A, Vector & x, Vector & y){
 	ExchangeHalo(A,x);
 #endif
 
-	Kokkos::parallel_for(A.localNumberOfRows, SPMV(A.matrixValues, A.mtxIndL, A.nonzerosInRow, x.values, y.values));
-
+	Kokkos::parallel_for(A.localNumberOfRows, SPMV(A.localMatrix, x.values, y.values));
+//	KokkosSparse::spmv("SPMV", 1.0, A.localMatrix, x.values, 0.0, y.values);
 return (0);
 }

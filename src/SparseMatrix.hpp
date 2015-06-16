@@ -22,12 +22,14 @@ struct SparseMatrix_STRUCT {
 	local_int_t localNumberOfColumns;  //!< number of columns local to this process
 	local_int_t localNumberOfNonzeros;  //!< number of nonzeros local to this process
 	char_1d_type nonzerosInRow;  //!< The number of nonzeros in a row will always be 27 or fewer
-	global_int_2d_type mtxIndG; //!< matrix indices as global values
-	local_int_2d_type mtxIndL; //!< matrix indices as local values
-	double_2d_type matrixValues; //!< values of matrix entries
+	global_int_1d_type mtxIndG; //!< matrix indices as global values 
 	double_1d_type matrixDiagonal; //!< Indices of matrix diagonal values.
 	std::map< global_int_t, local_int_t > globalToLocalMap; //!< global-to-local mapping
 //	std::vector< global_int_t > localToGlobalMap; //!< local-to-global mapping
+
+	matrix_type localMatrix; // This is the CrsMatrix that will hold our values and corresponding mtx indices.
+	//!< matrix indices as local values are in localMatrix.graph.entries.
+
 	global_int_1d_type localToGlobalMap;
 	mutable bool isDotProductOptimized;
 	mutable bool isSpmvOptimized;
@@ -66,8 +68,6 @@ inline void InitializeSparseMatrix(SparseMatrix & A, Geometry & geom) {
   A.localNumberOfNonzeros = 0;
   //A.nonzerosInRow = 0;
   //A.mtxIndG = 0;
-  //A.mtxIndL = 0;
-  //A.matrixValues = 0;
   //A.matrixDiagonal = 0;
 
 	//TODO This might fix the segmentation fault caused in deleteMatrix
@@ -104,12 +104,12 @@ inline void InitializeSparseMatrix(SparseMatrix & A, Geometry & geom) {
  */
 inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	assert(A.localNumberOfRows==diagonal.localLength);
-	host_const_double_2d_type valuesA = create_mirror_view(A.matrixValues);
+	host_const_double_1d_type valuesA = create_mirror_view(A.localMatrix.values);
 	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_double_1d_type dv = create_mirror_view(diagonal.values);
-	deep_copy(valuesA, A.matrixValues); // Copy the values into the mirror.
+	deep_copy(valuesA, A.localMatrix.values); // Copy the values into the mirror.
 	deep_copy(curDiagA, A.matrixDiagonal);
-	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) dv(i) = valuesA(i, curDiagA(i));
+	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) dv(i) = valuesA((int)curDiagA(i));
 	deep_copy(diagonal.values, dv);
 	return;
 }
@@ -121,13 +121,14 @@ inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
  */
 inline void ReplaceMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	assert(A.localNumberOfRows == diagonal.localLength);
-	host_double_2d_type valuesA = create_mirror_view(A.matrixValues);
+	host_double_1d_type valuesA = create_mirror_view(A.localMatrix.values);
 	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_const_double_1d_type dv = create_mirror_view(diagonal.values);
+	deep_copy(valuesA, A.localMatrix.values);
 	deep_copy(curDiagA, A.matrixDiagonal);
 	deep_copy(dv, diagonal.values);
-	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) valuesA(i, curDiagA(i)) = dv(i);
-	deep_copy(A.matrixValues, valuesA);
+	for(local_int_t i = 0; i < A.localNumberOfRows; ++i) valuesA((int)curDiagA(i)) = dv(i);
+	deep_copy(A.localMatrix.values, valuesA);
 	return;
 }
 /*!
@@ -146,7 +147,6 @@ inline void DeleteMatrix(SparseMatrix & A) {
 //  if (A.title)                  delete [] A.title;
 //  if (A.nonzerosInRow)             delete [] A.nonzerosInRow;
 //  if (A.mtxIndG) delete [] A.mtxIndG;
-//  if (A.mtxIndL) delete [] A.mtxIndL;
 //  if (A.matrixValues) delete [] A.matrixValues;
 //  if (A.matrixDiagonal)           delete [] A.matrixDiagonal;
 

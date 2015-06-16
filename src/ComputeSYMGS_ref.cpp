@@ -49,23 +49,28 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
 	const host_double_1d_type xv = create_mirror_view(x.values); // Host Mirror to x.values
 	const host_const_char_1d_type nonZerosInRow = create_mirror_view(A.nonzerosInRow); // Host Mirror to A.nonZerosInRow.
+	const host_values_type values = create_mirror_view(A.localMatrix.values);
+	const host_index_type entries = create_mirror_view(A.localMatrix.graph.entries);
+	const host_row_map_type rowMap = create_mirror_view(A.localMatrix.graph.row_map);
 //	Easier to Mirror it once than mirror in every iteration
 //	Deep Copy the values into the mirrors... Because mirrors don't do that...
 	deep_copy(matrixDiagonal, A.matrixDiagonal);
 	deep_copy(rv, r.values);
 	deep_copy(xv, x.values);
 	deep_copy(nonZerosInRow, A.nonzerosInRow);
+	deep_copy(values, A.localMatrix.values);
+	deep_copy(entries, A.localMatrix.graph.entries);
+	deep_copy(rowMap, A.localMatrix.graph.row_map);
 
 	for(local_int_t i = 0; i < nrow; i++){
-		const host_const_double_1d_type currentValues = create_mirror_view(subview(A.matrixValues, i, ALL()));
-		const host_const_local_int_1d_type currentColIndices = create_mirror_view(subview(A.mtxIndL, i, ALL()));
-		const int currentNumberOfNonzeros = nonZerosInRow(i);
-		const double currentDiagonal = currentValues((int)matrixDiagonal(i)); //This works only if matrixDiagonal is the indices of the diagonal and not the value.If its the values remove currentValues( ).
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const double currentDiagonal = values((int)matrixDiagonal(i)); //This works only if matrixDiagonal is the indices of the diagonal and not the value.If its the values remove currentValues( ).
 		double sum = rv(i);
 
-		for(int j = 0; j < currentNumberOfNonzeros; j++){
-			local_int_t curCol = currentColIndices(j);
-			sum -= currentValues(j) * xv(curCol);
+		for(int j = start; j < end; j++){
+			local_int_t curCol = entries(j);
+			sum -= values(j) * xv(curCol);
 		}
 		sum += xv(i)*currentDiagonal;
 
@@ -75,15 +80,14 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	// Now the back sweep.
 
 	for(local_int_t i = nrow-1; i >= 0; i--){
-		const host_const_double_1d_type currentValues = create_mirror_view(subview(A.matrixValues, i, ALL()));
-		const host_const_local_int_1d_type currentColIndices = create_mirror_view(subview(A.mtxIndL, i, ALL()));
-		const int currentNumberOfNonzeros = nonZerosInRow(i);
-		const double currentDiagonal = currentValues((int)matrixDiagonal(i)); // Same reason as the last loop. Change if needed.
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const double currentDiagonal = values((int)matrixDiagonal(i)); // Same reason as the last loop. Change if needed.
 		double sum = rv(i);
 
-		for(int j = 0; j < currentNumberOfNonzeros; j++){
-			local_int_t curCol = currentColIndices(j);
-			sum -= currentValues(j) * xv(curCol);
+		for(int j = start; j < end; j++){
+			local_int_t curCol = entries(j);
+			sum -= values(j) * xv(curCol);
 		}
 		sum += xv(i)*currentDiagonal;
 

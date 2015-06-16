@@ -59,27 +59,26 @@ int WriteProblem( const Geometry & geom, const SparseMatrix & A,
     return -1;
   }
 	//Mirrors and subviews! But mostly just mirrors here.
-	const host_const_double_2d_type host_matrixValues = create_mirror_view(A.matrixValues);
-	const host_const_global_int_2d_type host_mtxIndG = create_mirror_view(A.mtxIndG);
-	const host_const_char_1d_type host_nonzerosInRow = create_mirror_view(A.nonzerosInRow);
+	const host_const_global_int_1d_type host_mtxIndG = create_mirror_view(A.mtxIndG);
 	const host_const_double_1d_type host_xvalues = create_mirror_view(x.values);
 	const host_const_double_1d_type host_xexactvalues = create_mirror_view(xexact.values);
 	const host_const_double_1d_type host_bvalues = create_mirror_view(b.values);
-	deep_copy(host_matrixValues, A.matrixValues);
+	const host_values_type host_values = create_mirror_view(A.localMatrix.values);
+	const host_row_map_type host_rowMap = create_mirror_view(A.localMatrix.graph.row_map);
 	deep_copy(host_mtxIndG, A.mtxIndG);
-	deep_copy(host_nonzerosInRow, A.nonzerosInRow);
 	deep_copy(host_xvalues, x.values);
 	deep_copy(host_xexactvalues, xexact.values);
 	deep_copy(host_bvalues, b.values);
+	deep_copy(host_values, A.localMatrix.values);
+	deep_copy(host_rowMap, A.localMatrix.graph.row_map);
   for (global_int_t i=0; i< nrow; i++) {
-    auto currentRowValues = subview(host_matrixValues, i, ALL()); //TODO Should use auto
-    auto currentRowIndices = subview(host_mtxIndG, i, ALL()); //TODO Should use auto
-    const int currentNumberOfNonzeros = host_nonzerosInRow(i);
-    for (int j=0; j< currentNumberOfNonzeros; j++)
+		int start = host_rowMap(i);
+		int end = host_rowMap(i+1);
+    for (int j=start; j< end; j++)
 #ifdef HPCG_NO_LONG_LONG
-      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(currentRowIndices(j)+1),currentRowValues(j));
+      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(host_mtxIndG(j)+1),host_values(j));
 #else
-      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(currentRowIndices(j)+1),currentRowValues(j));
+      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(host_mtxIndG(j)+1),host_values(j));
 #endif
     fprintf(fx, "%22.16e\n",host_xvalues(i));
     fprintf(fxexact, "%22.16e\n",host_xexactvalues(i));
