@@ -59,13 +59,13 @@ int WriteProblem( const Geometry & geom, const SparseMatrix & A,
     return -1;
   }
 	//Mirrors and subviews! But mostly just mirrors here.
-	const host_const_global_int_1d_type host_mtxIndG = create_mirror_view(A.mtxIndG);
+	const host_global_int_1d_type host_matG_entries = create_mirror_view(A.globalMatrix.graph.entries);
 	const host_const_double_1d_type host_xvalues = create_mirror_view(x.values);
 	const host_const_double_1d_type host_xexactvalues = create_mirror_view(xexact.values);
 	const host_const_double_1d_type host_bvalues = create_mirror_view(b.values);
 	const host_values_type host_values = create_mirror_view(A.localMatrix.values);
 	const host_row_map_type host_rowMap = create_mirror_view(A.localMatrix.graph.row_map);
-	deep_copy(host_mtxIndG, A.mtxIndG);
+	deep_copy(host_matG_entries, A.globalMatrix.graph.entries);
 	deep_copy(host_xvalues, x.values);
 	deep_copy(host_xexactvalues, xexact.values);
 	deep_copy(host_bvalues, b.values);
@@ -76,9 +76,9 @@ int WriteProblem( const Geometry & geom, const SparseMatrix & A,
 		int end = host_rowMap(i+1);
     for (int j=start; j< end; j++)
 #ifdef HPCG_NO_LONG_LONG
-      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(host_mtxIndG(j)+1),host_values(j));
+      fprintf(fA, " %d %d %22.16e\n",i+1,(global_int_t)(host_matG_entries(j)+1),host_values(j));
 #else
-      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(host_mtxIndG(j)+1),host_values(j));
+      fprintf(fA, " %lld %lld %22.16e\n",i+1,(global_int_t)(host_matG_entries(j)+1),host_values(j));
 #endif
     fprintf(fx, "%22.16e\n",host_xvalues(i));
     fprintf(fxexact, "%22.16e\n",host_xexactvalues(i));

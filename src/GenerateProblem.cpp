@@ -67,17 +67,15 @@ void GenerateProblem(SparseMatrix & A, Vector & b, Vector & x, Vector & xexact){
 	// Allocate views... These are all allocated with all of their entries to 0.
 	char_1d_type nonzerosInRow = char_1d_type("Matrix: nonzerosInRow", localNumberOfRows);
 	double_1d_type matrixDiagonal = double_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
-	global_int_1d_type mtxIndG = global_int_1d_type("Matrix: mtxIndG", localNumberOfRows*numberOfNonzerosPerRow);
 
 	//CrsMatrix setup
 	// These may be too large for performance. I'll resize them later.
 	values_type values("CrsMatrix: Values", localNumberOfRows * numberOfNonzerosPerRow); //Replaces matrixValues
-	index_type indexMap("CrsMatrix: Index Map", localNumberOfRows * numberOfNonzerosPerRow); //Replace mtxIndl
+	global_index_type indexMap("CrsMatrix: Global Index Map", localNumberOfRows * numberOfNonzerosPerRow); //Replace mtxIndl
 	non_const_row_map_type rowMap("CrsMatrix: Row Map", localNumberOfRows + 1); //Psuedo replace nonzerosInRow
 
 	//Initialize Views to be all 0's.
 	deep_copy(matrixDiagonal, 0.0);
-	deep_copy(mtxIndG, 0.0);
 
 	// Vectors, Becuase vectors won't have address 0 since I'm not using poniters I can ignore the != 0
 	InitializeVector(b, localNumberOfRows);
@@ -97,11 +95,10 @@ void GenerateProblem(SparseMatrix & A, Vector & b, Vector & x, Vector & xexact){
 //Mirrors for serial.
 host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
-host_global_int_1d_type host_mtxIndG = create_mirror_view(mtxIndG);
 host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
 
 host_values_type host_values = create_mirror_view(values);
-host_index_type host_indexMap = create_mirror_view(indexMap);
+host_global_index_type host_indexMap = create_mirror_view(indexMap);
 host_non_const_row_map_type host_rowMap = create_mirror_view(rowMap);
 host_rowMap(0) = 0;
 for(local_int_t iz = 0; iz < nx; iz++){
@@ -193,18 +190,12 @@ deep_copy(rowMap, host_rowMap);
 
 	assert(host_rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
 
-	// Want mtxIndG to be the same as matrix.graph.entries. entries will change in setupHalo and mtxIndG will not.
-	// Not a deep copy since indexMap is local_int_t and mtxIndG is global_int_t
-	for(int i = 0; i < localNumberOfNonzeros; i++) host_mtxIndG(i) = host_indexMap(i);
-	deep_copy(mtxIndG, host_mtxIndG);
-
-	Kokkos::resize(mtxIndG, localNumberOfNonzeros);
 	Kokkos::resize(values, localNumberOfNonzeros); // values may have been to long and used more space than necessary
 	Kokkos::resize(indexMap, localNumberOfNonzeros); // Same reason as values.
-	matrix_type localMatrix = matrix_type("Matrix: localMatrix", localNumberOfRows, localNumberOfRows,
-		localNumberOfNonzeros, values, rowMap, indexMap);
+	global_matrix_type globalMatrix = global_matrix_type("Matrix: globalMatrix", localNumberOfRows, localNumberOfRows,
+		localNumberOfNonzeros, values, rowMap, indexMap); //local matrix will be made in setup halo.
 
-	A.localMatrix = localMatrix;
+	A.globalMatrix = globalMatrix;
 
 	A.totalNumberOfRows = totalNumberOfRows;
 	A.totalNumberOfNonzeros = totalNumberOfNonzeros;
@@ -212,7 +203,6 @@ deep_copy(rowMap, host_rowMap);
 	A.localNumberOfColumns = localNumberOfRows;
 	A.localNumberOfNonzeros = localNumberOfNonzeros;
 	A.nonzerosInRow = nonzerosInRow;
-	A.mtxIndG = mtxIndG;
 	A.matrixDiagonal = matrixDiagonal;
 	A.localToGlobalMap = localToGlobalMap;
 	return;
@@ -225,7 +215,7 @@ deep_copy(rowMap, host_rowMap);
 	It is identical to the other method aside from getting rid of anything to do with x, b, and xexact.
 */
 void GenerateProblem(SparseMatrix & A){
-	
+
 	// Make local copies of geometry information.  Use global_int_t since the RHS products in the calculations
   // below may result in global range values.
   global_int_t nx = A.geom->nx;
@@ -254,21 +244,18 @@ void GenerateProblem(SparseMatrix & A){
 	// Allocate views... These are all allocated with all of their entries to 0.
 	char_1d_type nonzerosInRow = char_1d_type("Matrix: nonzerosInRow", localNumberOfRows);
 	double_1d_type matrixDiagonal = double_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
-	global_int_1d_type mtxIndG = global_int_1d_type("Matrix: mtxIndG", localNumberOfRows * numberOfNonzerosPerRow);
 
 	//CrsMatrix setup
 	// These may be too large for performance. I'll resize them later.
 	values_type values("CrsMatrix: Values", localNumberOfRows * numberOfNonzerosPerRow); //Replaces matrixValues
-	index_type indexMap("CrsMatrix: Index Map", localNumberOfRows * numberOfNonzerosPerRow); //Replace mtxIndl
+	global_index_type indexMap("CrsMatrix: Global Index Map", localNumberOfRows * numberOfNonzerosPerRow); //Replace mtxIndl
 	non_const_row_map_type rowMap("CrsMatrix: Row Map", localNumberOfRows + 1); //Psuedo replace nonzerosInRow
 
 	//Initialize Views to be all 0's.
 	deep_copy(matrixDiagonal, 0.0);
-	deep_copy(mtxIndG, 0.0);
 
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
-
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
@@ -277,11 +264,10 @@ void GenerateProblem(SparseMatrix & A){
 //Mirrors for serial.
 host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
-host_global_int_1d_type host_mtxIndG = create_mirror_view(mtxIndG);
 host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
 
 host_values_type host_values = create_mirror_view(values);
-host_index_type host_indexMap = create_mirror_view(indexMap);
+host_global_index_type host_indexMap = create_mirror_view(indexMap);
 host_non_const_row_map_type host_rowMap = create_mirror_view(rowMap);
 host_rowMap(0) = 0;
 for(local_int_t iz = 0; iz < nx; iz++){
@@ -311,14 +297,14 @@ for(local_int_t iz = 0; iz < nx; iz++){
                 if(gix + sx > -1 && gix + sx < gnx){
                   global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
 									if(curcol == currentGlobalRow){
-										matrixDiagonal(currentLocalRow) = cvpIndex;
+										matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
 										host_values(cvpIndex) = 26.0;
 										cvpIndex++;
 									} else {
 										host_values(cvpIndex) = -1.0;
 										cvpIndex++;
 									}
-									host_indexMap(cipgIndex) = curcol;
+									host_indexMap(cipgIndex) = (local_int_t) curcol;
 									cipgIndex++;
 									numberOfNonzerosInRow++;
 								} // end x bounds test
@@ -338,7 +324,6 @@ for(local_int_t iz = 0; iz < nx; iz++){
 //Copy back the temp mirrors.
 deep_copy(nonzerosInRow, host_nonzerosInRow);
 deep_copy(matrixDiagonal, host_matrixDiagonal);
-deep_copy(localToGlobalMap, host_localToGlobalMap);
 
 deep_copy(values, host_values);
 deep_copy(indexMap, host_indexMap);
@@ -365,18 +350,14 @@ deep_copy(rowMap, host_rowMap);
 	// This assert is usuall the first to fail as problem size increases beyond the 32-bit integer range.
 	assert(totalNumberOfNonzeros > 0); // Throw an exception of the number of nonzeros is less than zero (can happen if int overflow)
 
-	assert(host_rowMap(localNumberOfRows) ==(unsigned) localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
+	assert(host_rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
 
 	Kokkos::resize(values, localNumberOfNonzeros); // values may have been to long and used more space than necessary
 	Kokkos::resize(indexMap, localNumberOfNonzeros); // Same reason as values.
-	// Want mtxIndG to be the same as matrix.graph.entries. entries will change in setupHalo and mtxIndG will not.
-	// Not a deep copy since indexMap is local_int_t and mtxIndG is global_int_t
-	for(int i = 0; i < localNumberOfNonzeros; i++) host_mtxIndG(i) = host_indexMap(i);
-	deep_copy(mtxIndG, host_mtxIndG);
-	Kokkos::resize(mtxIndG, localNumberOfNonzeros);
-	matrix_type localMatrix = matrix_type("Matrix: localMatrix", localNumberOfRows, localNumberOfRows,
-		localNumberOfNonzeros, values, rowMap, indexMap);
-	A.localMatrix = localMatrix;
+	global_matrix_type globalMatrix = global_matrix_type("Matrix: globalMatrix", localNumberOfRows, localNumberOfRows,
+		localNumberOfNonzeros, values, rowMap, indexMap); //local matrix will be made in setup halo.
+
+	A.globalMatrix = globalMatrix;
 
 	A.totalNumberOfRows = totalNumberOfRows;
 	A.totalNumberOfNonzeros = totalNumberOfNonzeros;
@@ -384,9 +365,7 @@ deep_copy(rowMap, host_rowMap);
 	A.localNumberOfColumns = localNumberOfRows;
 	A.localNumberOfNonzeros = localNumberOfNonzeros;
 	A.nonzerosInRow = nonzerosInRow;
-	A.mtxIndG = mtxIndG;
 	A.matrixDiagonal = matrixDiagonal;
 	A.localToGlobalMap = localToGlobalMap;
-
 	return;
 }

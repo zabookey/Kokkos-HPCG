@@ -37,17 +37,16 @@ using Kokkos::deep_copy;
 */
 
 class NoMPIFunctor{
-	local_int_1d_type graph_entries;
-	const_global_int_1d_type mtxIndG;
+	global_int_1d_type graph_entries;
+	local_int_1d_type indexMap;
 	
-	NoMPIFunctor(local_int_1d_type &graph_entries_, const_global_int_1d_type &mtxIndG_,
-		const_char_1d_type nonzerosInRow_):
-		graph_entries(graph_entries_), mtxIndG(mtxIndG_)
+	NoMPIFunctor(global_int_1d_type &graph_entries_, local_int_1d_type &indexMap_):
+		graph_entries(graph_entries_), indexMap(indexMap_)
 		{}
 
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i){
-		graph_entries(i) = mtxIndG(i);
+		indexMap(i) = graph_entries(i);
 	}
 };
 
@@ -57,12 +56,14 @@ void SetupHalo(SparseMatrix & A) {
 	//I'm not sure whether or not I'll need to mirror these...
 	local_int_t localNumberOfRows = A.localNumberOfRows;
 	char_1d_type nonzerosInRow = A.nonzerosInRow;
-	global_int_1d_type mtxIndG = A.mtxIndG;
 	global_int_1d_type localToGlobalMap = A.localToGlobalMap;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
 	// This may be redundant based on the changed setup in GenerateProblem
-	Kokkos::parallel_for(localNumberOfRows, NoMPIFunctor(A.localMatrix.graph.entries, mtxIndG, nonzerosInRow));
+	local_index_type indexMap("CrsMatrix: Local Index Map", A.globalMatrix.graph.entries.dimension_0());
+	Kokkos::parallel_for(localNumberOfNonzeros, NoMPIFunctor(A.globalMatrix.graph.entries, indexMap));
+	local_matrix_type localMatrix("Matrix: localMatrix", A.localNumberOfRows, A.localNumberOfRows, localNumberOfNonzeros, A.globalMatrix.values, A.globalMatrix.graph.row_map, indexMap);
+	A.localMatrix = localMatrix;
 
 #else // Run this section if compiling for MPI
 
@@ -79,19 +80,19 @@ void SetupHalo(SparseMatrix & A) {
   // TODO: With proper critical and atomic regions, this loop could be threaded, but not attempting it at this time
 	// Mirror nonzerosInRow and mtxIndG and create a scope so they go away after we deep_copy them back.
 	host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
-	host_global_int_1d_type host_mtxIndG = create_mirror_view(mtxIndG);
+	host_global_int_1d_type host_gMat_entries = create_mirror_view(A.globalMatrix.graph.entries);
 	host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
-	host_row_map_type row_map = create_mirror_view(A.localMatrix.graph.row_map);
+	host_row_map_type row_map = create_mirror_view(A.globalMatrix.graph.row_map);
 	deep_copy(host_nonzerosInRow, nonzerosInRow);
-	deep_copy(host_mtxIndG, mtxIndG);
+	deep_copy(host_gMat_entries, A.globalMatrix.graph.entries);
 	deep_copy(host_localToGlobalMap, localToGlobalMap);
-	deep_copy(row_map, A.localMatrix.graph.row_map);
+	deep_copy(row_map, A.globalMatrix.graph.row_map);
   for (local_int_t i=0; i< localNumberOfRows; i++) {
     global_int_t currentGlobalRow = host_localToGlobalMap(i);
 		int start = row_map(i);
 		int end = row_map(i+1);
     for (int j=start; j< end; j++) {
-      global_int_t curIndex = host_mtxIndG(j);
+      global_int_t curIndex = host_gMat_entries(j);
       int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 #ifdef HPCG_DETAILED_DEBUG
       HPCG_fout << "rank, row , col, globalToLocalMap[col] = " << A.geom.rank << " " << currentGlobalRow << " "
@@ -160,21 +161,23 @@ void SetupHalo(SparseMatrix & A) {
 	deep_copy(receiveLength, host_receiveLength);
 	deep_copy(sendLength, host_sendLength);
   // Convert matrix indices to local IDs
+	local_index_type indexMap("CrsMatrix: Local Index Map", A.localNumberOfNonzeros);
 	//FIXME: Lambda capture list needs to be [=] Problem is A.globalToLocalMap (std::map) and externalToLocalMap (std::map)
 	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){ // This is going to have some issues due to some parts being on a different device.
-		int start = A.localMatrix.graph.row_map(i);
-		int end = A.localMatrix.graph.row_map(i+1);
+		int start = A.globalMatrix.graph.row_map(i);
+		int end = A.globalMatrix.graph.row_map(i+1);
 		for (int j = start; j < end; j++) {
-			global_int_t curIndex = mtxIndG(j);
+			global_int_t curIndex = A.globalMatrix.graph.entries(j);
 			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 			if (A.geom->rank == rankIdOfColumnEntry){
-				A.localMatrix.graph.entries(j) = A.globalToLocalMap[curIndex];
+				indexMap(j) = A.globalToLocalMap[curIndex];
 			} else {
-				A.localMatrix.graph.entries(j) = externalToLocalMap[curIndex];
+				indexMap(j) = externalToLocalMap[curIndex];
 			}
 		}
 	});
-
+	local_matrix_type localMatrix("Matrix: localMatrix", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, A.globalMatrix.values, A.globalMatrix.graph.row_map, indexMap);
+	A.localMatrix = localMatrix;
   // Store contents in our matrix struct
   A.numberOfExternalValues = externalToLocalMap.size();
   A.localNumberOfColumns = A.localNumberOfRows + A.numberOfExternalValues;

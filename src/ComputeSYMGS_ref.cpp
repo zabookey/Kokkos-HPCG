@@ -50,7 +50,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	const host_double_1d_type xv = create_mirror_view(x.values); // Host Mirror to x.values
 	const host_const_char_1d_type nonZerosInRow = create_mirror_view(A.nonzerosInRow); // Host Mirror to A.nonZerosInRow.
 	const host_values_type values = create_mirror_view(A.localMatrix.values);
-	const host_index_type entries = create_mirror_view(A.localMatrix.graph.entries);
+	const host_local_index_type entries = create_mirror_view(A.localMatrix.graph.entries);
 	const host_row_map_type rowMap = create_mirror_view(A.localMatrix.graph.row_map);
 //	Easier to Mirror it once than mirror in every iteration
 //	Deep Copy the values into the mirrors... Because mirrors don't do that...

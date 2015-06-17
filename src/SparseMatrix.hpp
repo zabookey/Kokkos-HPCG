@@ -22,12 +22,12 @@ struct SparseMatrix_STRUCT {
 	local_int_t localNumberOfColumns;  //!< number of columns local to this process
 	local_int_t localNumberOfNonzeros;  //!< number of nonzeros local to this process
 	char_1d_type nonzerosInRow;  //!< The number of nonzeros in a row will always be 27 or fewer
-	global_int_1d_type mtxIndG; //!< matrix indices as global values 
 	double_1d_type matrixDiagonal; //!< Indices of matrix diagonal values.
 	std::map< global_int_t, local_int_t > globalToLocalMap; //!< global-to-local mapping
 //	std::vector< global_int_t > localToGlobalMap; //!< local-to-global mapping
 
-	matrix_type localMatrix; // This is the CrsMatrix that will hold our values and corresponding mtx indices.
+	local_matrix_type localMatrix; // This is the CrsMatrix that will hold our values and corresponding mtx indices.
+	global_matrix_type globalMatrix; // Same values and row_map as local matrix but entries will be the corresponding global mtx indices.
 	//!< matrix indices as local values are in localMatrix.graph.entries.
 
 	global_int_1d_type localToGlobalMap;

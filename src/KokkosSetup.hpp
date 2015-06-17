@@ -50,17 +50,20 @@ typedef const_global_int_2d_type::HostMirror host_const_global_int_2d_type;
 typedef const_char_1d_type::HostMirror host_const_char_1d_type;
 //CrsMatrix typedefs
 //CrsMatrix types
-typedef Kokkos::CrsMatrix<double, local_int_t, execution_space> matrix_type;
-typedef matrix_type::values_type values_type; // View for matrix values, similar to double_1d_type.
-typedef matrix_type::index_type index_type; // View for column Indices, similar to local_int_1d_type.
-typedef matrix_type::row_map_type row_map_type; //View for row_map, similar to const_local_int_1d_type.
-typedef matrix_type::StaticCrsGraphType StaticCrsGraphType; // The graph type held by matrix_type.
+typedef Kokkos::CrsMatrix<double, local_int_t, execution_space> local_matrix_type;
+typedef Kokkos::CrsMatrix<double, global_int_t, execution_space> global_matrix_type;
+typedef local_matrix_type::values_type values_type; // View for matrix values, similar to double_1d_type.
+typedef local_matrix_type::index_type local_index_type; // View for column Indices, similar to local_int_1d_type.
+typedef global_matrix_type::index_type global_index_type;
+typedef local_matrix_type::row_map_type row_map_type; //View for row_map, similar to const_local_int_1d_type.
+typedef local_matrix_type::StaticCrsGraphType StaticCrsGraphType; // The graph type held by matrix_type.
 typedef Kokkos::View<StaticCrsGraphType::size_type *, StaticCrsGraphType::array_layout,
 	StaticCrsGraphType::device_type> non_const_row_map_type; // Used specifically for setup of row_map_type.
 //CrsMatrix Mirrors
-typedef matrix_type::HostMirror host_matrix_type; // I don't think this will get used. Never used in Practice
+typedef local_matrix_type::HostMirror host_matrix_type; // I don't think this will get used. Never used in Practice
 typedef values_type::HostMirror host_values_type;
-typedef index_type::HostMirror host_index_type;
+typedef local_index_type::HostMirror host_local_index_type;
+typedef global_index_type::HostMirror host_global_index_type;
 typedef row_map_type::HostMirror host_row_map_type;
 typedef StaticCrsGraphType::HostMirror host_StaticCrsGraphType;
 typedef non_const_row_map_type::HostMirror host_non_const_row_map_type;

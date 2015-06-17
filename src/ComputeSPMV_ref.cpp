@@ -15,11 +15,11 @@
 
 class SPMV{
 	public:
-	const matrix_type localMatrix;
+	const local_matrix_type localMatrix;
 	const_double_1d_type xv;
 	double_1d_type yv;
 	
-	SPMV(const matrix_type &localMatrix_, double_1d_type &xv_, double_1d_type &yv_):
+	SPMV(const local_matrix_type &localMatrix_, double_1d_type &xv_, double_1d_type &yv_):
 		localMatrix(localMatrix_), xv(xv_), yv(yv_)
 		{}
 
