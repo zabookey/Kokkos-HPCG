@@ -331,7 +331,9 @@ int main(int argc, char * argv[]) {
   DeleteVector(x_overlap);
   DeleteVector(b_computed);
   //delete [] testnorms_data.values;
-
+	
+	//Print out the Kokkos Configuration
+	execution_space::print_configuration(std::cout, true);
 	execution_space::finalize();
 
   HPCG_Finalize();
