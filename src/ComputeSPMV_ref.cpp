@@ -43,7 +43,7 @@ int ComputeSPMV_ref(const SparseMatrix & A, Vector & x, Vector & y){
 	ExchangeHalo(A,x);
 #endif
 
-	Kokkos::parallel_for(A.localNumberOfRows, SPMV(A.localMatrix, x.values, y.values));
-//	KokkosSparse::spmv("SPMV", 1.0, A.localMatrix, x.values, 0.0, y.values);
+//	Kokkos::parallel_for(A.localNumberOfRows, SPMV(A.localMatrix, x.values, y.values));
+	KokkosSparse::spmv("N", 1.0, A.localMatrix, x.values, 0.0, y.values);
 return (0);
 }
