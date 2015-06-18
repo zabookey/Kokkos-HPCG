@@ -57,9 +57,15 @@ int main(int argc, char * argv[]) {
 
   HPCG_Init(&argc, &argv, params);
 
-	execution_space::initialize();
+	Kokkos::initialize(argc, argv);
 
+	//Print out the Kokkos Configuration
+	execution_space::print_configuration(std::cout, true);
+	std::cout << "hwloc avail: " << Kokkos::hwloc::available() << std::endl;
+	std::cout << "numa count:  " << Kokkos::hwloc::get_available_numa_count() << std::endl;
+	std::cout << "thread numa: " << Kokkos::hwloc::get_available_cores_per_numa() << std::endl;
   int size = params.comm_size, rank = params.comm_rank; // Number of MPI processes, My process ID
+
 
 #ifdef HPCG_DETAILED_DEBUG
   if (size < 100 && rank==0) HPCG_fout << "Process "<<rank<<" of "<<size<<" is alive with " << params.numThreads << " threads." <<endl;
@@ -332,9 +338,7 @@ int main(int argc, char * argv[]) {
   DeleteVector(b_computed);
   //delete [] testnorms_data.values;
 	
-	//Print out the Kokkos Configuration
-	execution_space::print_configuration(std::cout, true);
-	execution_space::finalize();
+	Kokkos::finalize();
 
   HPCG_Finalize();
 
