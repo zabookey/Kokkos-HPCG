@@ -57,6 +57,7 @@ typedef local_matrix_type::index_type local_index_type; // View for column Indic
 typedef global_matrix_type::index_type global_index_type;
 typedef local_matrix_type::row_map_type row_map_type; //View for row_map, similar to const_local_int_1d_type.
 typedef local_matrix_type::StaticCrsGraphType StaticCrsGraphType; // The graph type held by matrix_type.
+typedef global_matrix_type::StaticCrsGraphType globalStaticCrsGraphType;
 typedef Kokkos::View<StaticCrsGraphType::size_type *, StaticCrsGraphType::array_layout,
 	StaticCrsGraphType::device_type> non_const_row_map_type; // Used specifically for setup of row_map_type.
 //CrsMatrix Mirrors

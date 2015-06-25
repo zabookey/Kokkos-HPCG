@@ -41,6 +41,10 @@ void GenerateProblem(SparseMatrix & A, Vector & b, Vector & x, Vector & xexact){
 
 	// Make local copies of geometry information.  Use global_int_t since the RHS products in the calculations
   // below may result in global range values.
+#ifndef HPCG_NOMPI
+std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
+#endif
+
   global_int_t nx = A.geom->nx;
   global_int_t ny = A.geom->ny;
   global_int_t nz = A.geom->nz;
@@ -172,7 +176,7 @@ deep_copy(rowMap, host_rowMap);
 #endif
 
 	global_int_t totalNumberOfNonzeros = 0;
-#ifdef HPCG_NOMPI
+#ifndef HPCG_NOMPI
 	// Use MPI's reduce function to sum all nonzeros
 #ifdef HPCG_NO_LONG_LONG
 	MPI_Allreduce(&localNumberOfNonzeros, &totalNumberOfNonzeros, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -334,7 +338,7 @@ deep_copy(rowMap, host_rowMap);
 #endif
 
 	global_int_t totalNumberOfNonzeros = 0;
-#ifdef HPCG_NOMPI
+#ifndef HPCG_NOMPI
 	// Use MPI's reduce function to sum all nonzeros
 #ifdef HPCG_NO_LONG_LONG
 	MPI_Allreduce(&localNumberOfNonzeros, &totalNumberOfNonzeros, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

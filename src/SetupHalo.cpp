@@ -37,15 +37,16 @@ using Kokkos::deep_copy;
 */
 
 class NoMPIFunctor{
-	global_int_1d_type graph_entries;
-	local_int_1d_type indexMap;
+	public:
+	typename globalStaticCrsGraphType::entries_type graph_entries;
+	local_index_type indexMap;
 	
-	NoMPIFunctor(global_int_1d_type &graph_entries_, local_int_1d_type &indexMap_):
+	NoMPIFunctor(typename globalStaticCrsGraphType::entries_type &graph_entries_, local_index_type &indexMap_):
 		graph_entries(graph_entries_), indexMap(indexMap_)
 		{}
 
 	KOKKOS_INLINE_FUNCTION
-	void operator()(const int & i){
+	void operator()(const int & i)const{
 		indexMap(i) = graph_entries(i);
 	}
 };
@@ -59,6 +60,7 @@ void SetupHalo(SparseMatrix & A) {
 	global_int_1d_type localToGlobalMap = A.localToGlobalMap;
 
 #ifdef HPCG_NOMPI  // In the non-MPI case we simply copy global indices to local index storage
+	local_int_t localNumberOfNonzeros = A.localNumberOfNonzeros;
 	// This may be redundant based on the changed setup in GenerateProblem
 	local_index_type indexMap("CrsMatrix: Local Index Map", A.globalMatrix.graph.entries.dimension_0());
 	Kokkos::parallel_for(localNumberOfNonzeros, NoMPIFunctor(A.globalMatrix.graph.entries, indexMap));
