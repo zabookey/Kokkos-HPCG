@@ -182,8 +182,8 @@ deep_copy(rowMap, host_rowMap);
 	MPI_Allreduce(&localNumberOfNonzeros, &totalNumberOfNonzeros, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 #else
 	long long lnnz = localNumberOfNonzeros, gnnz = 0; // convert to 64 bit for MPI call
-	MPI_ALLreduce(&lnnz, &gnnz, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
-	toatlNumberOfNonzeros = gnnz; // Copy back
+	MPI_Allreduce(&lnnz, &gnnz, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+	totalNumberOfNonzeros = gnnz; // Copy back
 #endif
 #else
 	totalNumberOfNonzeros = localNumberOfNonzeros;
@@ -344,8 +344,8 @@ deep_copy(rowMap, host_rowMap);
 	MPI_Allreduce(&localNumberOfNonzeros, &totalNumberOfNonzeros, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 #else
 	long long lnnz = localNumberOfNonzeros, gnnz = 0; // convert to 64 bit for MPI call
-	MPI_ALLreduce(&lnnz, &gnnz, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
-	toatlNumberOfNonzeros = gnnz; // Copy back
+	MPI_Allreduce(&lnnz, &gnnz, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+	totalNumberOfNonzeros = gnnz; // Copy back
 #endif
 #else
 	totalNumberOfNonzeros = localNumberOfNonzeros;

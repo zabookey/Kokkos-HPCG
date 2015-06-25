@@ -33,7 +33,6 @@ ELSE()
 ENDIF()
 
 set(HPCG_NOOPENMP OFF)
-ADD_DEFINITIONS(-DHPCG_NOMPI)
 
 # KokkosCore check will exit if Kokkos is not found
 message("--Looking for Kokkos:") 
