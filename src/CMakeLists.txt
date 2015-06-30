@@ -10,7 +10,7 @@ set(SOURCES
   )
 
 set(HEADERS
-  #Pu all of the .hpp files here
+  #Put all of the .hpp files here
   CGData.hpp  CG.hpp  CG_ref.hpp  ComputeDotProduct.hpp  ComputeDotProduct_ref.hpp  ComputeMG.hpp
   ComputeMG_ref.hpp  ComputeProlongation_ref.hpp  ComputeResidual.hpp  ComputeRestriction_ref.hpp
   ComputeSPMV.hpp ComputeSPMV_ref.hpp  ComputeSYMGS.hpp  ComputeSYMGS_ref.hpp  ComputeWAXPBY.hpp

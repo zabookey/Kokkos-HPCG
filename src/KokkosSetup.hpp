@@ -9,6 +9,7 @@ This file is for the intention of creating things needed by Kokkos.
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Sparse.hpp>
+#include "Kokkos_UnorderedMap.hpp"
 #include "Geometry.hpp" // Just so we have the local_int_t and global_int_t definitions.
 
 //TODO Find a way to change this at compile time.
@@ -68,4 +69,6 @@ typedef global_index_type::HostMirror host_global_index_type;
 typedef row_map_type::HostMirror host_row_map_type;
 typedef StaticCrsGraphType::HostMirror host_StaticCrsGraphType;
 typedef non_const_row_map_type::HostMirror host_non_const_row_map_type;
+//UnorderedMap typedefs.
+typedef Kokkos::UnorderedMap<global_int_t, local_int_t, execution_space> map_type;
 #endif

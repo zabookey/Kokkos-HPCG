@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
 #These next few lines are ripped from the trilinos demo almost exactly
-set(Trilinos_PREFIX "/home/zabooke/Project/trilinos_build/build")
+set(Trilinos_PREFIX
+"/home/zabooke/Project/Trilinos_builds/trilinos_kokkos_tpetra/build")
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 message("Trilinos prefix: ${Trilinos_PREFIX}")
@@ -33,6 +34,7 @@ ELSE()
 ENDIF()
 
 set(HPCG_NOOPENMP OFF)
+#ADD_DEFINITIONS(-DHPCG_NOMPI)
 
 # KokkosCore check will exit if Kokkos is not found
 message("--Looking for Kokkos:") 

@@ -12,9 +12,10 @@ Installation
 ============
 
 Install requirements:
--Valid install of trilinos with Kokkos package enabled
+-Valid install of trilinos with Kokkos and Tpetra packages enabled.
+	(Tpetra requirement will be removed when KokkosCrsMatrix is moved out of Tpetra)
 -CMake Version 2.8 or newer (Looking into making it a lower version)
--OpenMP (I'm working on getting rid of this)
+-OpenMP (Not directly used but Kokkos can use this.)
 
 To Install:
 -In the top level CMakeLists file you need to change the Trilinos_PREFIX
@@ -34,5 +35,3 @@ Top Priority
 Will not function properly on Cuda, a couple of parallel functions either need to be serialized (bad)
 or have their lambdas rewritten to use [=] as their capture list. Due to this, GenerateProblem currently
 runs in serial.
-
-hwloc function doesn't seem to give me the correct number of threads.

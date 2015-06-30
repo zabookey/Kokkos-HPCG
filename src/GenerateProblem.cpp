@@ -91,6 +91,7 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 	host_double_1d_type xexactv = create_mirror_view(xexact.values);
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
+	map_type globalToLocalMap = map_type(localNumberOfRows);
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
@@ -116,21 +117,21 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
+			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
 			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
+			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
 #endif
 			char numberOfNonzerosInRow = 0;
 			int cvpIndex = rowMap(currentLocalRow);
 			int cipgIndex = cvpIndex;
       for(int sz = -1; sz <= 1; sz++){
-        if(giz + sz > -1 && giz + sz < gnz) {
-          for(int sy = -1; sy <= 1; sy++) {
-            if(giy + sy > -1 && giy + sy < gny){
-              for(int sx = -1; sx <= 1; sx++){
-                if(gix + sx > -1 && gix + sx < gnx){
-                  global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
+      	if(giz + sz > -1 && giz + sz < gnz) {
+      		for(int sy = -1; sy <= 1; sy++) {
+      			if(giy + sy > -1 && giy + sy < gny){
+      				for(int sx = -1; sx <= 1; sx++){
+      					if(gix + sx > -1 && gix + sx < gnx){
+      						global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
 									if(curcol == currentGlobalRow){
 										matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
 										host_values(cvpIndex) = 26.0;
@@ -209,6 +210,7 @@ deep_copy(rowMap, host_rowMap);
 	A.nonzerosInRow = nonzerosInRow;
 	A.matrixDiagonal = matrixDiagonal;
 	A.localToGlobalMap = localToGlobalMap;
+	A.globalToLocalMap= globalToLocalMap;
 	return;
 }
 
@@ -260,6 +262,7 @@ void GenerateProblem(SparseMatrix & A){
 
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
+	map_type globalToLocalMap = map_type(localNumberOfRows);
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
@@ -285,10 +288,10 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			A.globalToLocalMap[currentGlobalRow] = currentLocalRow;
+			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
 			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap[currentGlobalRow] << endl;
+			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
 #endif
 			char numberOfNonzerosInRow = 0;
 			int cvpIndex = rowMap(currentLocalRow);
@@ -371,5 +374,6 @@ deep_copy(rowMap, host_rowMap);
 	A.nonzerosInRow = nonzerosInRow;
 	A.matrixDiagonal = matrixDiagonal;
 	A.localToGlobalMap = localToGlobalMap;
+	A.globalToLocalMap = globalToLocalMap;
 	return;
 }

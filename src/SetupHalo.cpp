@@ -55,7 +55,7 @@ void SetupHalo(SparseMatrix & A) {
 
   // Extract Matrix pieces
 	//I'm not sure whether or not I'll need to mirror these...
-	local_int_t localNumberOfRows = A.localNumberOfRows;
+	
 	char_1d_type nonzerosInRow = A.nonzerosInRow;
 	global_int_1d_type localToGlobalMap = A.localToGlobalMap;
 
@@ -69,6 +69,8 @@ void SetupHalo(SparseMatrix & A) {
 
 #else // Run this section if compiling for MPI
 
+	local_int_t localNumberOfRows = A.localNumberOfRows;
+
   // Scan global IDs of the nonzeros in the matrix.  Determine if the column ID matches a row ID.  If not:
   // 1) We call the ComputeRankOfMatrixRow function, which tells us the rank of the processor owning the row ID.
   //  We need to receive this value of the x vector during the halo exchange.
@@ -77,7 +79,8 @@ void SetupHalo(SparseMatrix & A) {
   std::map< int, std::set< global_int_t> > sendList, receiveList;
   typedef std::map< int, std::set< global_int_t> >::iterator map_iter;
   typedef std::set<global_int_t>::iterator set_iter;
-  std::map< local_int_t, local_int_t > externalToLocalMap;
+//  std::map< local_int_t, local_int_t > externalToLocalMap;
+	Kokkos::UnorderedMap<local_int_t, local_int_t> externalToLocalMap(A.localNumberOfRows); // This should be a worst case scenario amount of rows.
 
   // TODO: With proper critical and atomic regions, this loop could be threaded, but not attempting it at this time
 	// Mirror nonzerosInRow and mtxIndG and create a scope so they go away after we deep_copy them back.
@@ -98,7 +101,7 @@ void SetupHalo(SparseMatrix & A) {
       int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 #ifdef HPCG_DETAILED_DEBUG
       HPCG_fout << "rank, row , col, globalToLocalMap[col] = " << A.geom.rank << " " << currentGlobalRow << " "
-          << curIndex << " " << A.globalToLocalMap[curIndex] << endl;
+          << curIndex << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(curIndex)) << endl;
 #endif
       if (A.geom->rank!=rankIdOfColumnEntry) {// If column index is not a row index, then it comes from another processor
         receiveList[rankIdOfColumnEntry].insert(curIndex);
@@ -150,11 +153,12 @@ void SetupHalo(SparseMatrix & A) {
     host_receiveLength(neighborCount) = receiveList[neighborId].size();
     host_sendLength(neighborCount) = sendList[neighborId].size(); // Get count if sends/receives
     for (set_iter i = receiveList[neighborId].begin(); i != receiveList[neighborId].end(); ++i, ++receiveEntryCount) {
-      externalToLocalMap[*i] = localNumberOfRows + receiveEntryCount; // The remote columns are indexed at end of internals
+//      externalToLocalMap[*i] = localNumberOfRows + receiveEntryCount; // The remote columns are indexed at end of internals
+			externalToLocalMap.insert(*i, localNumberOfRows + receiveEntryCount);
     }
     for (set_iter i = sendList[neighborId].begin(); i != sendList[neighborId].end(); ++i, ++sendEntryCount) {
       //if (geom.rank==1) HPCG_fout << "*i, globalToLocalMap[*i], sendEntryCount = " << *i << " " << A.globalToLocalMap[*i] << " " << sendEntryCount << endl;
-      host_elementsToSend(sendEntryCount) = A.globalToLocalMap[*i]; // store local ids of entry to send
+      host_elementsToSend(sendEntryCount) = A.globalToLocalMap.value_at(A.globalToLocalMap.find(*i)); // store local ids of entry to send
     }
   }
 	// deep_copy the mirrors back.
@@ -172,9 +176,9 @@ void SetupHalo(SparseMatrix & A) {
 			global_int_t curIndex = A.globalMatrix.graph.entries(j);
 			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
 			if (A.geom->rank == rankIdOfColumnEntry){
-				indexMap(j) = A.globalToLocalMap[curIndex];
+				indexMap(j) = A.globalToLocalMap.value_at(A.globalToLocalMap.find(curIndex));
 			} else {
-				indexMap(j) = externalToLocalMap[curIndex];
+				indexMap(j) = externalToLocalMap.value_at(externalToLocalMap.find(curIndex));
 			}
 		}
 	});
