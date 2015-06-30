@@ -169,7 +169,7 @@ void SetupHalo(SparseMatrix & A) {
   // Convert matrix indices to local IDs
 	local_index_type indexMap("CrsMatrix: Local Index Map", A.localNumberOfNonzeros);
 	//FIXME: Lambda capture list needs to be [=] Problem is A.globalToLocalMap (std::map) and externalToLocalMap (std::map)
-	Kokkos::parallel_for(localNumberOfRows, [&](const int & i){ // This is going to have some issues due to some parts being on a different device.
+	Kokkos::parallel_for(localNumberOfRows, KOKKOS_LAMBDA(const int & i){ // This is going to have some issues due to some parts being on a different device.
 		int start = A.globalMatrix.graph.row_map(i);
 		int end = A.globalMatrix.graph.row_map(i+1);
 		for (int j = start; j < end; j++) {
