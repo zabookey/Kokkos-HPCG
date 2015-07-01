@@ -81,6 +81,8 @@ void SetupHalo(SparseMatrix & A) {
   typedef std::set<global_int_t>::iterator set_iter;
 //  std::map< local_int_t, local_int_t > externalToLocalMap;
 	Kokkos::UnorderedMap<local_int_t, local_int_t> externalToLocalMap(A.localNumberOfRows); // This should be a worst case scenario amount of rows.
+	Kokkos::UnorderedMap<local_int_t, local_int_t>::HostMirror host_externalToLocalMap;
+	deep_copy(host_externalToLocalMap, externalToLocalMap);
 
   // TODO: With proper critical and atomic regions, this loop could be threaded, but not attempting it at this time
 	// Mirror nonzerosInRow and mtxIndG and create a scope so they go away after we deep_copy them back.
@@ -154,7 +156,7 @@ void SetupHalo(SparseMatrix & A) {
     host_sendLength(neighborCount) = sendList[neighborId].size(); // Get count if sends/receives
     for (set_iter i = receiveList[neighborId].begin(); i != receiveList[neighborId].end(); ++i, ++receiveEntryCount) {
 //      externalToLocalMap[*i] = localNumberOfRows + receiveEntryCount; // The remote columns are indexed at end of internals
-			externalToLocalMap.insert(*i, localNumberOfRows + receiveEntryCount);
+			host_externalToLocalMap.insert(*i, localNumberOfRows + receiveEntryCount);
     }
     for (set_iter i = sendList[neighborId].begin(); i != sendList[neighborId].end(); ++i, ++sendEntryCount) {
       //if (geom.rank==1) HPCG_fout << "*i, globalToLocalMap[*i], sendEntryCount = " << *i << " " << A.globalToLocalMap[*i] << " " << sendEntryCount << endl;
@@ -162,6 +164,7 @@ void SetupHalo(SparseMatrix & A) {
     }
   }
 	// deep_copy the mirrors back.
+	deep_copy(externalToLocalMap, host_externalToLocalMap);
 	deep_copy(elementsToSend, host_elementsToSend);
 	deep_copy(neighbors, host_neighbors);
 	deep_copy(receiveLength, host_receiveLength);
