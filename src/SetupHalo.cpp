@@ -51,6 +51,38 @@ class NoMPIFunctor{
 	}
 };
 
+class MPIFunctor{
+	public:
+	typename global_matrix_type::row_map_type row_map;
+	typename globalStaticCrsGraphType::entries_type graph_entries;
+	Geometry geom;
+	local_index_type indexMap;
+	map_type globalToLocalMap;
+	Kokkos::UnorderedMap<local_int_t, local_int_t> externalToLocalMap;
+
+	MPIFunctor(typename global_matrix_type::row_map_type& row_map_,
+		typename globalStaticCrsGraphType::entries_type& graph_entries_,
+		Geometry& geom_, local_index_type& indexMap_, map_type & globalToLocalMap_,
+		Kokkos::UnorderedMap<local_int_t, local_int_t>& externalToLocalMap_):
+		row_map(row_map_), graph_entries(graph_entries_), geom(geom_),
+		indexMap(indexMap_), globalToLocalMap(globalToLocalMap_),
+		externalToLocalMap(externalToLocalMap_){}
+	
+	void operator()(const int & i) const{
+		int start = row_map(i);
+		int end = row_map(i+1);
+		for(int j = start; j < end; j++){
+			global_int_t curIndex = graph_entries(j);
+			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(geom, curIndex);
+			if(geom.rank == rankIdOfColumnEntry){
+				indexMap(j) = globalToLocalMap.value_at(globalToLocalMap.find(curIndex));
+			} else {
+				indexMap(j) = externalToLocalMap.value_at(externalToLocalMap.find(curIndex));
+			}
+		}
+	}
+};
+
 void SetupHalo(SparseMatrix & A) {
 
   // Extract Matrix pieces
@@ -172,19 +204,8 @@ void SetupHalo(SparseMatrix & A) {
   // Convert matrix indices to local IDs
 	local_index_type indexMap("CrsMatrix: Local Index Map", A.localNumberOfNonzeros);
 	//FIXME: Lambda capture list needs to be [=] Problem is A.globalToLocalMap (std::map) and externalToLocalMap (std::map)
-	Kokkos::parallel_for(localNumberOfRows, KOKKOS_LAMBDA(const int & i){ // This is going to have some issues due to some parts being on a different device.
-		int start = A.globalMatrix.graph.row_map(i);
-		int end = A.globalMatrix.graph.row_map(i+1);
-		for (int j = start; j < end; j++) {
-			global_int_t curIndex = A.globalMatrix.graph.entries(j);
-			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
-			if (A.geom->rank == rankIdOfColumnEntry){
-				indexMap(j) = A.globalToLocalMap.value_at(A.globalToLocalMap.find(curIndex));
-			} else {
-				indexMap(j) = externalToLocalMap.value_at(externalToLocalMap.find(curIndex));
-			}
-		}
-	});
+	Kokkos::parallel_for(localNumberOfRows, MPIFunctor(A.globalMatrix.graph.row_map,
+		A.globalMatrix.graph.entries, *A.geom, indexMap, A.globalToLocalMap, externalToLocalMap));
 	local_matrix_type localMatrix("Matrix: localMatrix", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, A.globalMatrix.values, A.globalMatrix.graph.row_map, indexMap);
 	A.localMatrix = localMatrix;
   // Store contents in our matrix struct
