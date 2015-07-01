@@ -71,4 +71,5 @@ typedef StaticCrsGraphType::HostMirror host_StaticCrsGraphType;
 typedef non_const_row_map_type::HostMirror host_non_const_row_map_type;
 //UnorderedMap typedefs.
 typedef Kokkos::UnorderedMap<global_int_t, local_int_t, execution_space> map_type;
+typedef map_type::HostMirror host_map_type;
 #endif

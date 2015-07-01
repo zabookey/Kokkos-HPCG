@@ -92,6 +92,8 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 	map_type globalToLocalMap = map_type(localNumberOfRows);
+	host_map_type host_globalToLocalMap;
+	deep_copy(host_globalToLocalMap, globalToLocalMap);
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
@@ -106,7 +108,7 @@ host_values_type host_values = create_mirror_view(values);
 host_global_index_type host_indexMap = create_mirror_view(indexMap);
 host_non_const_row_map_type host_rowMap = create_mirror_view(rowMap);
 host_rowMap(0) = 0;
-for(local_int_t iz = 0; iz < nx; iz++){
+for(local_int_t iz = 0; iz < nz; iz++){
 /*	Kokkos::parallel_for(nz, [&](const int & iz)
 {*/
 	global_int_t giz = ipz * nz + iz;
@@ -117,13 +119,13 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
+			host_globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
 			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
+			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << host_globalToLocalMap.value_at(host_globalToLocalMap.find(currentGlobalRow)) << endl;
 #endif
 			char numberOfNonzerosInRow = 0;
-			int cvpIndex = rowMap(currentLocalRow);
+			int cvpIndex = host_rowMap(currentLocalRow);
 			int cipgIndex = cvpIndex;
       for(int sz = -1; sz <= 1; sz++){
       	if(giz + sz > -1 && giz + sz < gnz) {
@@ -133,7 +135,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
       					if(gix + sx > -1 && gix + sx < gnx){
       						global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
 									if(curcol == currentGlobalRow){
-										matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
+										host_matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
 										host_values(cvpIndex) = 26.0;
 										cvpIndex++;
 									} else {
@@ -149,8 +151,8 @@ for(local_int_t iz = 0; iz < nx; iz++){
 					} // end sy loop
 				} // end z bounds test
 			} // end sz loop
-			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			host_rowMap(currentLocalRow+1) = rowMap(currentLocalRow) + numberOfNonzerosInRow;
+			host_nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+			host_rowMap(currentLocalRow+1) = host_rowMap(currentLocalRow) + numberOfNonzerosInRow;
 // This will be an issue due to changing a const when lambda [=]... Maybe wrap a view around it so I can alter the data in parallel and then mirror it back to localNumberOfNonZeros...
 //Serial...			Kokkos::atomic_add(&localNumberOfNonzeros, (local_int_t) numberOfNonzerosInRow);
 			localNumberOfNonzeros += numberOfNonzerosInRow;
@@ -164,6 +166,8 @@ for(local_int_t iz = 0; iz < nx; iz++){
 deep_copy(nonzerosInRow, host_nonzerosInRow);
 deep_copy(matrixDiagonal, host_matrixDiagonal);
 deep_copy(localToGlobalMap, host_localToGlobalMap);
+deep_copy(globalToLocalMap, host_globalToLocalMap);
+
 deep_copy(x.values, xv);
 deep_copy(b.values, bv);
 deep_copy(xexact.values, xexactv);
@@ -272,6 +276,8 @@ void GenerateProblem(SparseMatrix & A){
 host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
 host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
+host_map_type host_globalToLocalMap;
+deep_copy(host_globalToLocalMap, globalToLocalMap);
 
 host_values_type host_values = create_mirror_view(values);
 host_global_index_type host_indexMap = create_mirror_view(indexMap);
@@ -288,13 +294,13 @@ for(local_int_t iz = 0; iz < nx; iz++){
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
 //		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
+			host_globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
 			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
 			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
 #endif
 			char numberOfNonzerosInRow = 0;
-			int cvpIndex = rowMap(currentLocalRow);
+			int cvpIndex = host_rowMap(currentLocalRow);
 			int cipgIndex = cvpIndex;
       for(int sz = -1; sz <= 1; sz++){
         if(giz + sz > -1 && giz + sz < gnz) {
@@ -304,7 +310,7 @@ for(local_int_t iz = 0; iz < nx; iz++){
                 if(gix + sx > -1 && gix + sx < gnx){
                   global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
 									if(curcol == currentGlobalRow){
-										matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
+										host_matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
 										host_values(cvpIndex) = 26.0;
 										cvpIndex++;
 									} else {
@@ -320,8 +326,8 @@ for(local_int_t iz = 0; iz < nx; iz++){
 					} // end sy loop
 				} // end z bounds test
 			} // end sz loop
-			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			host_rowMap(currentLocalRow+1) = rowMap(currentLocalRow) + numberOfNonzerosInRow;
+			host_nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+			host_rowMap(currentLocalRow+1) = host_rowMap(currentLocalRow) + numberOfNonzerosInRow;
 // This will be an issue due to changing a const when lambda [=]... Maybe wrap a view around it so I can alter the data in parallel and then mirror it back to localNumberOfNonZeros...
 //Serial...			Kokkos::atomic_add(&localNumberOfNonzeros, (local_int_t) numberOfNonzerosInRow);
 			localNumberOfNonzeros += numberOfNonzerosInRow;
@@ -331,6 +337,8 @@ for(local_int_t iz = 0; iz < nx; iz++){
 //Copy back the temp mirrors.
 deep_copy(nonzerosInRow, host_nonzerosInRow);
 deep_copy(matrixDiagonal, host_matrixDiagonal);
+deep_copy(localToGlobalMap, host_localToGlobalMap);
+deep_copy(globalToLocalMap, host_globalToLocalMap);
 
 deep_copy(values, host_values);
 deep_copy(indexMap, host_indexMap);

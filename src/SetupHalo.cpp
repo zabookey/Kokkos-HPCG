@@ -87,15 +87,15 @@ void SetupHalo(SparseMatrix & A) {
 	host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
 	host_global_int_1d_type host_gMat_entries = create_mirror_view(A.globalMatrix.graph.entries);
 	host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
-	host_row_map_type row_map = create_mirror_view(A.globalMatrix.graph.row_map);
+	host_row_map_type host_row_map = create_mirror_view(A.globalMatrix.graph.row_map);
 	deep_copy(host_nonzerosInRow, nonzerosInRow);
 	deep_copy(host_gMat_entries, A.globalMatrix.graph.entries);
 	deep_copy(host_localToGlobalMap, localToGlobalMap);
-	deep_copy(row_map, A.globalMatrix.graph.row_map);
+	deep_copy(host_row_map, A.globalMatrix.graph.row_map);
   for (local_int_t i=0; i< localNumberOfRows; i++) {
     global_int_t currentGlobalRow = host_localToGlobalMap(i);
-		int start = row_map(i);
-		int end = row_map(i+1);
+		int start = host_row_map(i);
+		int end = host_row_map(i+1);
     for (int j=start; j< end; j++) {
       global_int_t curIndex = host_gMat_entries(j);
       int rankIdOfColumnEntry = ComputeRankOfMatrixRow(*A.geom, curIndex);
