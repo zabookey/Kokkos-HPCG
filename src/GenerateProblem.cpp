@@ -24,6 +24,202 @@ using Kokkos::deep_copy;
 using Kokkos::subview;
 using Kokkos::ALL;
 
+class NonzerosFunctor{
+	public:
+	char_1d_type nonzerosInRow;
+	non_const_row_map_type rowMap;
+	double_1d_type bv, xv, xexactv;
+	//All of these are taken from Geometry...
+	global_int_t nx, ny, nz;
+	global_int_t npx, npy, npz;
+	global_int_t ipx, ipy, ipz;
+	global_int_t gnx, gny, gnz;
+	
+	NonzerosFunctor(char_1d_type & nonzerosInRow_, non_const_row_map_type & rowMap_,
+		double_1d_type& bv_, double_1d_type& xv_, double_1d_type& xexactv_, const Geometry geom_):
+		nonzerosInRow(nonzerosInRow_), rowMap(rowMap_), bv(bv_), xv(xv_), xexactv(xexactv_){
+		init(geom_);}
+
+	void init(Geometry geom){
+		nx = geom.nx; ny = geom.ny; nz = geom.nz;
+		npx = geom.npx; npy = geom.npy; npz = geom.npz;
+		ipx = geom.ipx; ipy = geom.ipy; ipz = geom.ipz;
+		gnx = nx*npx; gny = ny*npy; gnz = nz*npz;
+	}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int& iz, local_int_t& localNumberOfNonzeros_)const{
+		global_int_t giz = ipz * nz + iz;
+		for(local_int_t iy = 0; iy < ny; iy++){
+			global_int_t giy = ipy * ny + iy;
+			for(local_int_t ix = 0; ix < nx; ix++){
+				global_int_t gix = ipx * nx + ix;
+				local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+				char numberOfNonzerosInRow = 0;
+				for(int sz = -1; sz <= 1; sz++){
+					if(giz + sz > -1 && giz + sz < gnz){
+						for(int sy = -1; sy <= 1; sy++){
+							if(giy + sy > -1 && giy + sy < gny){
+								for(int sx = -1; sx <= 1; sx++){
+									if(gix + sx > -1 && gix + sx < gnx){
+										numberOfNonzerosInRow++;
+									}
+								}
+							}
+						}
+					}
+				}
+				nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+				rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
+				localNumberOfNonzeros_ += numberOfNonzerosInRow;
+				bv(currentLocalRow) = 26.0 -((double) (numberOfNonzerosInRow -1));
+				xv(currentLocalRow) = 0.0;
+				xexactv(currentLocalRow) = 1.0;
+			}
+		}
+	}
+};
+
+class ScanFunctor{
+	public:
+	non_const_row_map_type rowMap;
+	
+	ScanFunctor(non_const_row_map_type rowMap_):
+		rowMap(rowMap_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i, local_int_t & upd, bool final)const{
+		upd += rowMap(i);
+		if(final)
+			rowMap(i) = upd;
+	}
+};
+
+class SetFunctor{
+	public:
+	non_const_row_map_type rowMap;
+	values_type values;
+	global_index_type indexMap;
+	double_1d_type matrixDiagonal;
+	global_int_1d_type localToGlobalMap;
+	map_type globalToLocalMap;
+	//All of these are taken from Geometry...
+	global_int_t nx, ny, nz;
+	global_int_t npx, npy, npz;
+	global_int_t ipx, ipy, ipz;
+	global_int_t gnx, gny, gnz;
+
+	SetFunctor(non_const_row_map_type& rowMap_, values_type& values_, global_index_type& indexMap_,
+		double_1d_type& matrixDiagonal_, global_int_1d_type& localToGlobalMap_,
+		map_type globalToLocalMap_, Geometry geom_):
+		rowMap(rowMap_), values(values_), indexMap(indexMap_), matrixDiagonal(matrixDiagonal_),
+		localToGlobalMap(localToGlobalMap_), globalToLocalMap(globalToLocalMap_){
+		init(geom_);}
+
+	void init(Geometry geom){
+		nx = geom.nx; ny = geom.ny; nz = geom.nz;
+		npx = geom.npx; npy = geom.npy; npz = geom.npz;
+		ipx = geom.ipx; ipy = geom.ipy; ipz = geom.ipz;
+		gnx = nx*npx; gny = ny*npy; gnz = nz*npz;
+	}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & iz)const{
+		global_int_t giz = ipz * nz + iz;
+		for(local_int_t iy = 0; iy < ny; iy++){
+			global_int_t giy = ipy * ny + iy;
+			for(local_int_t ix = 0; ix < nx; ix++){
+				global_int_t gix = ipx * nx + ix;
+				local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+				global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
+				globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
+				localToGlobalMap(currentLocalRow) = currentGlobalRow;
+#ifdef HPCG_DETAILED_DEBUG
+				HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
+#endif
+				int cvpIndex = rowMap(currentLocalRow);
+				int cipgIndex = cvpIndex;
+				for(int sz = -1; sz <= 1; sz++){
+					if(giz + sz > -1 && giz + sz < gnz){
+						for(int sy = -1; sy <= 1; sy++){
+							if(giy + sy > -1 && giy + sy < gny){
+								for(int sx = -1; sx <= 1; sx++){
+									if(gix + sx > -1 && gix + sx < gnx){
+										global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
+										if(curcol == currentGlobalRow){
+											matrixDiagonal(currentLocalRow) = cvpIndex;
+											values(cvpIndex) = 26.0;
+											cvpIndex++;
+										} else {
+											values(cvpIndex) = -1.0;
+											cvpIndex++;
+										}
+										indexMap(cipgIndex) = (local_int_t) curcol;
+										cipgIndex++;
+									}
+								}
+							}
+						}
+					}
+				}
+				assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
+			}
+		}
+	}
+};
+
+class CoarseNonzerosFunctor{
+	public:
+	char_1d_type nonzerosInRow;
+	non_const_row_map_type rowMap;
+	//All of these are taken from Geometry...
+	global_int_t nx, ny, nz;
+	global_int_t npx, npy, npz;
+	global_int_t ipx, ipy, ipz;
+	global_int_t gnx, gny, gnz;
+	
+	CoarseNonzerosFunctor(char_1d_type & nonzerosInRow_, non_const_row_map_type & rowMap_,
+		const Geometry geom_): 
+		nonzerosInRow(nonzerosInRow_), rowMap(rowMap_){
+		init(geom_);}
+
+	void init(Geometry geom){
+		nx = geom.nx; ny = geom.ny; nz = geom.nz;
+		npx = geom.npx; npy = geom.npy; npz = geom.npz;
+		ipx = geom.ipx; ipy = geom.ipy; ipz = geom.ipz;
+		gnx = nx*npx; gny = ny*npy; gnz = nz*npz;
+	}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int& iz, local_int_t& localNumberOfNonzeros_)const{
+		global_int_t giz = ipz * nz + iz;
+		for(local_int_t iy = 0; iy < ny; iy++){
+			global_int_t giy = ipy * ny + iy;
+			for(local_int_t ix = 0; ix < nx; ix++){
+				global_int_t gix = ipx * nx + ix;
+				local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+				char numberOfNonzerosInRow = 0;
+				for(int sz = -1; sz <= 1; sz++){
+					if(giz + sz > -1 && giz + sz < gnz){
+						for(int sy = -1; sy <= 1; sy++){
+							if(giy + sy > -1 && giy + sy < gny){
+								for(int sx = -1; sx <= 1; sx++){
+									if(gix + sx > -1 && gix + sx < gnx){
+										numberOfNonzerosInRow++;
+									}
+								}
+							}
+						}
+					}
+				}
+				nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+				rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
+				localNumberOfNonzeros_ += numberOfNonzerosInRow;
+			}
+		}
+	}
+};
+
 /*!
   Routine to read a sparse matrix, right hand side, initial guess, and exact
   solution (as computed by a direct solver).
@@ -99,87 +295,14 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
 // I'll take care of the maps in the loop that specifies values since this loop doesn't need currentGlobalRow
 //  This parallel loop figures out how many nonzeros are in each row.
-Kokkos::parallel_reduce(nz, KOKKOS_LAMBDA(const int & iz, local_int_t & localNumberOfNonzeros_){
-	global_int_t giz = ipz * nz + iz;
-	for(local_int_t iy = 0; iy < ny; iy++){
-		global_int_t giy = ipy * ny + iy;
-		for(local_int_t ix = 0; ix < nx; ix++){
-			global_int_t gix = ipx * nx + ix;
-			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
-			char numberOfNonzerosInRow = 0;
-			for(int sz = -1; sz <= 1; sz++){
-				if(giz + sz > -1 && giz + sz < gnz){
-					for(int sy = -1; sy <= 1; sy++){
-						if(giy + sy > -1 && giy + sy < gny){
-							for(int sx = -1; sx <= 1; sx++){
-								if(gix + sx > -1 && gix + sx < gnx){
-									numberOfNonzerosInRow++;
-								}
-							}
-						}
-					}
-				}
-			}
-			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
-			localNumberOfNonzeros_ += numberOfNonzerosInRow;
-			bv(currentLocalRow) = 26.0 -((double) (numberOfNonzerosInRow -1));
-			xv(currentLocalRow) = 0.0;
-			xexactv(currentLocalRow) = 1.0;
-		}
-	}
-}, localNumberOfNonzeros);
+Kokkos::parallel_reduce(A.geom->nz, NonzerosFunctor(nonzerosInRow, rowMap, bv, xv, xexactv, *A.geom), localNumberOfNonzeros);
 // This takes the values we've already filled in rowMap and updates them to reflect the layout we want rowMap to be in.
 //FIXME: This isn't actually doing anything aside from changing rowMap to all 0's...
 const size_t n = rowMap.dimension_0();
-Kokkos::parallel_scan(n, KOKKOS_LAMBDA(const int & i, local_int_t & upd, bool final){
-	upd += rowMap(i);
-	if(final)
-		rowMap(i) = upd;
-});
+Kokkos::parallel_scan(n, ScanFunctor(rowMap));
 // This will finally store the values we wish to use
-Kokkos::parallel_for(nz, KOKKOS_LAMBDA(const int & iz){
-global_int_t giz = ipz * nz + iz;
-	for(local_int_t iy = 0; iy < ny; iy++){
-		global_int_t giy = ipy * ny + iy;
-		for(local_int_t ix = 0; ix < nx; ix++){
-			global_int_t gix = ipx * nx + ix;
-			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
-			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
-			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
-			localToGlobalMap(currentLocalRow) = currentGlobalRow;
-#ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
-#endif
-			int cvpIndex = rowMap(currentLocalRow);
-			int cipgIndex = cvpIndex;
-			for(int sz = -1; sz <= 1; sz++){
-				if(giz + sz > -1 && giz + sz < gnz){
-					for(int sy = -1; sy <= 1; sy++){
-						if(giy + sy > -1 && giy + sy < gny){
-							for(int sx = -1; sx <= 1; sx++){
-								if(gix + sx > -1 && gix + sx < gnx){
-									global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
-									if(curcol == currentGlobalRow){
-										matrixDiagonal(currentLocalRow) = cvpIndex;
-										values(cvpIndex) = 26.0;
-										cvpIndex++;
-									} else {
-										values(cvpIndex) = -1.0;
-										cvpIndex++;
-									}
-									indexMap(cipgIndex) = (local_int_t) curcol;
-									cipgIndex++;
-								}
-							}
-						}
-					}
-				}
-			}
-			assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
-		}
-	}
-});
+Kokkos::parallel_for(A.geom->nz, SetFunctor(rowMap, values, indexMap, matrixDiagonal,
+	localToGlobalMap, globalToLocalMap, *A.geom));
 
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
@@ -278,84 +401,14 @@ void GenerateProblem(SparseMatrix & A){
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
 // I'll take care of the maps in the loop that specifies values since this loop doesn't need currentGlobalRow
 //  This parallel loop figures out how many nonzeros are in each row.
-Kokkos::parallel_reduce(nz, KOKKOS_LAMBDA(const int & iz, local_int_t & localNumberOfNonzeros_){
-	global_int_t giz = ipz * nz + iz;
-	for(local_int_t iy = 0; iy < ny; iy++){
-		global_int_t giy = ipy * ny + iy;
-		for(local_int_t ix = 0; ix < nx; ix++){
-			global_int_t gix = ipx * nx + ix;
-			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
-			char numberOfNonzerosInRow = 0;
-			for(int sz = -1; sz <= 1; sz++){
-				if(giz + sz > -1 && giz + sz < gnz){
-					for(int sy = -1; sy <= 1; sy++){
-						if(giy + sy > -1 && giy + sy < gny){
-							for(int sx = -1; sx <= 1; sx++){
-								if(gix + sx > -1 && gix + sx < gnx){
-									numberOfNonzerosInRow++;
-								}
-							}
-						}
-					}
-				}
-			}
-			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
-			localNumberOfNonzeros_ += numberOfNonzerosInRow;
-		}
-	}
-}, localNumberOfNonzeros);
+Kokkos::parallel_reduce(A.geom->nz, CoarseNonzerosFunctor(nonzerosInRow, rowMap, *A.geom), localNumberOfNonzeros);
 // This takes the values we've already filled in rowMap and updates them to reflect the layout we want rowMap to be in.
 //TODO: Exclusive Scan would make more sense but the inclusive scan works.
 const size_t n = rowMap.dimension_0();
-Kokkos::parallel_scan(n, KOKKOS_LAMBDA(const int & i, local_int_t & upd, bool final){
-	upd += rowMap(i);
-	if(final)
-		rowMap(i) = upd;
-});
+Kokkos::parallel_scan(n, ScanFunctor(rowMap));
 // This will finally store the values we wish to use
-Kokkos::parallel_for(nz, KOKKOS_LAMBDA(const int & iz){
-global_int_t giz = ipz * nz + iz;
-	for(local_int_t iy = 0; iy < ny; iy++){
-		global_int_t giy = ipy * ny + iy;
-		for(local_int_t ix = 0; ix < nx; ix++){
-			global_int_t gix = ipx * nx + ix;
-			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
-			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
-			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
-			localToGlobalMap(currentLocalRow) = currentGlobalRow;
-#ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
-#endif
-			int cvpIndex = rowMap(currentLocalRow);
-			int cipgIndex = cvpIndex;
-			for(int sz = -1; sz <= 1; sz++){
-				if(giz + sz > -1 && giz + sz < gnz){
-					for(int sy = -1; sy <= 1; sy++){
-						if(giy + sy > -1 && giy + sy < gny){
-							for(int sx = -1; sx <= 1; sx++){
-								if(gix + sx > -1 && gix + sx < gnx){
-									global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
-									if(curcol == currentGlobalRow){
-										matrixDiagonal(currentLocalRow) = cvpIndex;
-										values(cvpIndex) = 26.0;
-										cvpIndex++;
-									} else {
-										values(cvpIndex) = -1.0;
-										cvpIndex++;
-									}
-									indexMap(cipgIndex) = (local_int_t) curcol;
-									cipgIndex++;
-								}
-							}
-						}
-					}
-				}
-			}
-			assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
-		}
-	}
-});
+Kokkos::parallel_for(A.geom->nz, SetFunctor(rowMap, values, indexMap, matrixDiagonal,
+	localToGlobalMap, globalToLocalMap, *A.geom));
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfNonzeros << " nonzeros." << endl;
