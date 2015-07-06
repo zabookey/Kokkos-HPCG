@@ -86,9 +86,9 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 	InitializeVector(x, localNumberOfRows);
 	InitializeVector(xexact, localNumberOfRows);
 	// The mirrors are only temporary while we run this method in serial.
-	host_double_1d_type bv = create_mirror_view(b.values);
-	host_double_1d_type xv = create_mirror_view(x.values);
-	host_double_1d_type xexactv = create_mirror_view(xexact.values);
+	double_1d_type bv = b.values;
+	double_1d_type xv = x.values;
+	double_1d_type xexactv = xexact.values;
 //	A.localToGlobalMap.resize(localNumberOfRows);
 	global_int_1d_type localToGlobalMap = global_int_1d_type("Matrix: localToGlobalMap", localNumberOfRows);
 	map_type globalToLocalMap = map_type(localNumberOfRows);
@@ -97,84 +97,90 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
-	// FIXME: This needs to use [=] capture list. Problem is A.globalToLocalMap (std::map) and potentially A.localToGlobalMap (std::vector)
-//We'll just make this serial for now...
-//Mirrors for serial.
-host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
-host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
-host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
-
-host_values_type host_values = create_mirror_view(values);
-host_global_index_type host_indexMap = create_mirror_view(indexMap);
-host_non_const_row_map_type host_rowMap = create_mirror_view(rowMap);
-host_rowMap(0) = 0;
-for(local_int_t iz = 0; iz < nz; iz++){
-/*	Kokkos::parallel_for(nz, [&](const int & iz)
-{*/
+// I'll take care of the maps in the loop that specifies values since this loop doesn't need currentGlobalRow
+//  This parallel loop figures out how many nonzeros are in each row.
+Kokkos::parallel_reduce(nz, KOKKOS_LAMBDA(const int & iz, local_int_t & localNumberOfNonzeros_){
 	global_int_t giz = ipz * nz + iz;
 	for(local_int_t iy = 0; iy < ny; iy++){
 		global_int_t giy = ipy * ny + iy;
 		for(local_int_t ix = 0; ix < nx; ix++){
 			global_int_t gix = ipx * nx + ix;
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
-			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
-//		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			host_globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
-			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
-#ifdef HPCG_DETAILED_DEBUG
-			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << host_globalToLocalMap.value_at(host_globalToLocalMap.find(currentGlobalRow)) << endl;
-#endif
 			char numberOfNonzerosInRow = 0;
-			int cvpIndex = host_rowMap(currentLocalRow);
-			int cipgIndex = cvpIndex;
-      for(int sz = -1; sz <= 1; sz++){
-      	if(giz + sz > -1 && giz + sz < gnz) {
-      		for(int sy = -1; sy <= 1; sy++) {
-      			if(giy + sy > -1 && giy + sy < gny){
-      				for(int sx = -1; sx <= 1; sx++){
-      					if(gix + sx > -1 && gix + sx < gnx){
-      						global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
-									if(curcol == currentGlobalRow){
-										host_matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
-										host_values(cvpIndex) = 26.0;
-										cvpIndex++;
-									} else {
-										host_values(cvpIndex) = -1.0;
-										cvpIndex++;
-									}
-									host_indexMap(cipgIndex) = (local_int_t) curcol;
-									cipgIndex++;
+			for(int sz = -1; sz <= 1; sz++){
+				if(giz + sz > -1 && giz + sz < gnz){
+					for(int sy = -1; sy <= 1; sy++){
+						if(giy + sy > -1 && giy + sy < gny){
+							for(int sx = -1; sx <= 1; sx++){
+								if(gix + sx > -1 && gix + sx < gnx){
 									numberOfNonzerosInRow++;
-								} // end x bounds test
-							} // end sx loop
-						} // end y bounds test
-					} // end sy loop
-				} // end z bounds test
-			} // end sz loop
-			host_nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			host_rowMap(currentLocalRow+1) = host_rowMap(currentLocalRow) + numberOfNonzerosInRow;
-// This will be an issue due to changing a const when lambda [=]... Maybe wrap a view around it so I can alter the data in parallel and then mirror it back to localNumberOfNonZeros...
-//Serial...			Kokkos::atomic_add(&localNumberOfNonzeros, (local_int_t) numberOfNonzerosInRow);
-			localNumberOfNonzeros += numberOfNonzerosInRow;
+								}
+							}
+						}
+					}
+				}
+			}
+			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+			rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
+			localNumberOfNonzeros_ += numberOfNonzerosInRow;
 			bv(currentLocalRow) = 26.0 -((double) (numberOfNonzerosInRow -1));
 			xv(currentLocalRow) = 0.0;
 			xexactv(currentLocalRow) = 1.0;
 		}
 	}
-}//);
-//Copy back the temp mirrors.
-deep_copy(nonzerosInRow, host_nonzerosInRow);
-deep_copy(matrixDiagonal, host_matrixDiagonal);
-deep_copy(localToGlobalMap, host_localToGlobalMap);
-deep_copy(globalToLocalMap, host_globalToLocalMap);
+}, localNumberOfNonzeros);
+// This takes the values we've already filled in rowMap and updates them to reflect the layout we want rowMap to be in.
+//FIXME: This isn't actually doing anything aside from changing rowMap to all 0's...
+const size_t n = rowMap.dimension_0();
+Kokkos::parallel_scan(n, KOKKOS_LAMBDA(const int & i, local_int_t & upd, bool final){
+	upd += rowMap(i);
+	if(final)
+		rowMap(i) = upd;
+});
+// This will finally store the values we wish to use
+Kokkos::parallel_for(nz, KOKKOS_LAMBDA(const int & iz){
+global_int_t giz = ipz * nz + iz;
+	for(local_int_t iy = 0; iy < ny; iy++){
+		global_int_t giy = ipy * ny + iy;
+		for(local_int_t ix = 0; ix < nx; ix++){
+			global_int_t gix = ipx * nx + ix;
+			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
+			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
+			localToGlobalMap(currentLocalRow) = currentGlobalRow;
+#ifdef HPCG_DETAILED_DEBUG
+			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
+#endif
+			int cvpIndex = rowMap(currentLocalRow);
+			int cipgIndex = cvpIndex;
+			for(int sz = -1; sz <= 1; sz++){
+				if(giz + sz > -1 && giz + sz < gnz){
+					for(int sy = -1; sy <= 1; sy++){
+						if(giy + sy > -1 && giy + sy < gny){
+							for(int sx = -1; sx <= 1; sx++){
+								if(gix + sx > -1 && gix + sx < gnx){
+									global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
+									if(curcol == currentGlobalRow){
+										matrixDiagonal(currentLocalRow) = cvpIndex;
+										values(cvpIndex) = 26.0;
+										cvpIndex++;
+									} else {
+										values(cvpIndex) = -1.0;
+										cvpIndex++;
+									}
+									indexMap(cipgIndex) = (local_int_t) curcol;
+									cipgIndex++;
+								}
+							}
+						}
+					}
+				}
+			}
+			assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
+		}
+	}
+});
 
-deep_copy(x.values, xv);
-deep_copy(b.values, bv);
-deep_copy(xexact.values, xexactv);
-
-deep_copy(values, host_values);
-deep_copy(indexMap, host_indexMap);
-deep_copy(rowMap, host_rowMap);
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
 		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;
@@ -197,7 +203,7 @@ deep_copy(rowMap, host_rowMap);
 	// This assert is usuall the first to fail as problem size increases beyond the 32-bit integer range.
 	assert(totalNumberOfNonzeros > 0); // Throw an exception of the number of nonzeros is less than zero (can happen if int overflow)
 
-	assert(host_rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
+	assert(rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
 
 	Kokkos::resize(values, localNumberOfNonzeros); // values may have been to long and used more space than necessary
 	Kokkos::resize(indexMap, localNumberOfNonzeros); // Same reason as values.
@@ -270,82 +276,89 @@ void GenerateProblem(SparseMatrix & A){
 	// Now were to the assign values stage...
 	local_int_t localNumberOfNonzeros = 0;
 	// Since were using Kokkos::Parallel_for I don't need to make mirrors.
-	// FIXME: This needs to use [=] capture list. Problem is A.globalToLocalMap (std::map) and potentially A.localToGlobalMap (std::vector)
-//We'll just make this serial for now...
-//Mirrors for serial.
-host_char_1d_type host_nonzerosInRow = create_mirror_view(nonzerosInRow);
-host_double_1d_type host_matrixDiagonal = create_mirror_view(matrixDiagonal);
-host_global_int_1d_type host_localToGlobalMap = create_mirror_view(localToGlobalMap);
-host_map_type host_globalToLocalMap;
-deep_copy(host_globalToLocalMap, globalToLocalMap);
-
-host_values_type host_values = create_mirror_view(values);
-host_global_index_type host_indexMap = create_mirror_view(indexMap);
-host_non_const_row_map_type host_rowMap = create_mirror_view(rowMap);
-host_rowMap(0) = 0;
-for(local_int_t iz = 0; iz < nx; iz++){
-/*	Kokkos::parallel_for(nz, [&](const int & iz)
-{*/
+// I'll take care of the maps in the loop that specifies values since this loop doesn't need currentGlobalRow
+//  This parallel loop figures out how many nonzeros are in each row.
+Kokkos::parallel_reduce(nz, KOKKOS_LAMBDA(const int & iz, local_int_t & localNumberOfNonzeros_){
 	global_int_t giz = ipz * nz + iz;
 	for(local_int_t iy = 0; iy < ny; iy++){
 		global_int_t giy = ipy * ny + iy;
 		for(local_int_t ix = 0; ix < nx; ix++){
 			global_int_t gix = ipx * nx + ix;
 			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
+			char numberOfNonzerosInRow = 0;
+			for(int sz = -1; sz <= 1; sz++){
+				if(giz + sz > -1 && giz + sz < gnz){
+					for(int sy = -1; sy <= 1; sy++){
+						if(giy + sy > -1 && giy + sy < gny){
+							for(int sx = -1; sx <= 1; sx++){
+								if(gix + sx > -1 && gix + sx < gnx){
+									numberOfNonzerosInRow++;
+								}
+							}
+						}
+					}
+				}
+			}
+			nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
+			rowMap(currentLocalRow + 1) = (local_int_t) numberOfNonzerosInRow;
+			localNumberOfNonzeros_ += numberOfNonzerosInRow;
+		}
+	}
+}, localNumberOfNonzeros);
+// This takes the values we've already filled in rowMap and updates them to reflect the layout we want rowMap to be in.
+//TODO: Exclusive Scan would make more sense but the inclusive scan works.
+const size_t n = rowMap.dimension_0();
+Kokkos::parallel_scan(n, KOKKOS_LAMBDA(const int & i, local_int_t & upd, bool final){
+	upd += rowMap(i);
+	if(final)
+		rowMap(i) = upd;
+});
+// This will finally store the values we wish to use
+Kokkos::parallel_for(nz, KOKKOS_LAMBDA(const int & iz){
+global_int_t giz = ipz * nz + iz;
+	for(local_int_t iy = 0; iy < ny; iy++){
+		global_int_t giy = ipy * ny + iy;
+		for(local_int_t ix = 0; ix < nx; ix++){
+			global_int_t gix = ipx * nx + ix;
+			local_int_t currentLocalRow = iz * nx * ny + iy * nx + ix;
 			global_int_t currentGlobalRow = giz * gnx * gny + giy * gnx + gix;
-//		/*	A.globalToLocalMap = */Kokkos::atomic_exchange(& A.globalToLocalMap[currentGlobalRow], currentLocalRow); // I want this to be equivalent to A.globalToLocalMap[currentGlobalRow] = currentLocalRow...
-			host_globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
-			host_localToGlobalMap(currentLocalRow) = currentGlobalRow;
+			globalToLocalMap.insert(currentGlobalRow, currentLocalRow);
+			localToGlobalMap(currentLocalRow) = currentGlobalRow;
 #ifdef HPCG_DETAILED_DEBUG
 			HPCG_fout << " rank, globalRow, localRow = " << A.geom.rank << " " << currentGlobalRow << " " << A.globalToLocalMap.value_at(A.globalToLocalMap.find(currentGlobalRow)) << endl;
 #endif
-			char numberOfNonzerosInRow = 0;
-			int cvpIndex = host_rowMap(currentLocalRow);
+			int cvpIndex = rowMap(currentLocalRow);
 			int cipgIndex = cvpIndex;
-      for(int sz = -1; sz <= 1; sz++){
-        if(giz + sz > -1 && giz + sz < gnz) {
-          for(int sy = -1; sy <= 1; sy++) {
-            if(giy + sy > -1 && giy + sy < gny){
-              for(int sx = -1; sx <= 1; sx++){
-                if(gix + sx > -1 && gix + sx < gnx){
-                  global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
+			for(int sz = -1; sz <= 1; sz++){
+				if(giz + sz > -1 && giz + sz < gnz){
+					for(int sy = -1; sy <= 1; sy++){
+						if(giy + sy > -1 && giy + sy < gny){
+							for(int sx = -1; sx <= 1; sx++){
+								if(gix + sx > -1 && gix + sx < gnx){
+									global_int_t curcol = currentGlobalRow + sz * gnx * gny + sy * gnx + sx;
 									if(curcol == currentGlobalRow){
-										host_matrixDiagonal(currentLocalRow) = cvpIndex; //Should still give the index in values for the diagonal
-										host_values(cvpIndex) = 26.0;
+										matrixDiagonal(currentLocalRow) = cvpIndex;
+										values(cvpIndex) = 26.0;
 										cvpIndex++;
 									} else {
-										host_values(cvpIndex) = -1.0;
+										values(cvpIndex) = -1.0;
 										cvpIndex++;
 									}
-									host_indexMap(cipgIndex) = (local_int_t) curcol;
+									indexMap(cipgIndex) = (local_int_t) curcol;
 									cipgIndex++;
-									numberOfNonzerosInRow++;
-								} // end x bounds test
-							} // end sx loop
-						} // end y bounds test
-					} // end sy loop
-				} // end z bounds test
-			} // end sz loop
-			host_nonzerosInRow(currentLocalRow) = numberOfNonzerosInRow;
-			host_rowMap(currentLocalRow+1) = host_rowMap(currentLocalRow) + numberOfNonzerosInRow;
-// This will be an issue due to changing a const when lambda [=]... Maybe wrap a view around it so I can alter the data in parallel and then mirror it back to localNumberOfNonZeros...
-//Serial...			Kokkos::atomic_add(&localNumberOfNonzeros, (local_int_t) numberOfNonzerosInRow);
-			localNumberOfNonzeros += numberOfNonzerosInRow;
+								}
+							}
+						}
+					}
+				}
+			}
+			assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
 		}
 	}
-}//);
-//Copy back the temp mirrors.
-deep_copy(nonzerosInRow, host_nonzerosInRow);
-deep_copy(matrixDiagonal, host_matrixDiagonal);
-deep_copy(localToGlobalMap, host_localToGlobalMap);
-deep_copy(globalToLocalMap, host_globalToLocalMap);
-
-deep_copy(values, host_values);
-deep_copy(indexMap, host_indexMap);
-deep_copy(rowMap, host_rowMap);
+});
 #ifdef HPCG_DETAILED_DEBUG
 	HPCG_fout << "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfRows << "rows." << endl;
-		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumbverOfNonzeros << " nonzeros." << endl;
+		<< "Process " << A.geom.rank << " of " << A.geom.size << " has " << localNumberOfNonzeros << " nonzeros." << endl;
 #endif
 
 	global_int_t totalNumberOfNonzeros = 0;
@@ -365,7 +378,7 @@ deep_copy(rowMap, host_rowMap);
 	// This assert is usuall the first to fail as problem size increases beyond the 32-bit integer range.
 	assert(totalNumberOfNonzeros > 0); // Throw an exception of the number of nonzeros is less than zero (can happen if int overflow)
 
-	assert(host_rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
+	assert(rowMap(localNumberOfRows) == (unsigned)localNumberOfNonzeros); // This is here to make sure our rowMap covers all the nonzero values.
 
 	Kokkos::resize(values, localNumberOfNonzeros); // values may have been to long and used more space than necessary
 	Kokkos::resize(indexMap, localNumberOfNonzeros); // Same reason as values.

@@ -73,7 +73,16 @@ class MPIFunctor{
 		int end = row_map(i+1);
 		for(int j = start; j < end; j++){
 			global_int_t curIndex = graph_entries(j);
-			int rankIdOfColumnEntry = ComputeRankOfMatrixRow(geom, curIndex);
+//		int rankIdOfColumnEntry = ComputeRankOfMatrixRow(geom, curIndex);
+			global_int_t gnx = geom.nx*geom.npx;
+			global_int_t gny = geom.ny*geom.npy;
+			global_int_t iz = curIndex/(gny*gnx);
+			global_int_t iy = (curIndex-iz*gny*gnx)/gnx;
+			global_int_t ix = curIndex%gnx;
+			global_int_t ipz = iz/geom.nz;
+			global_int_t ipy = iy/geom.ny;
+			global_int_t ipx = ix/geom.nx;
+			int rankIdOfColumnEntry = ipx+ipy*geom.npx+ipz*geom.npy*geom.npx;
 			if(geom.rank == rankIdOfColumnEntry){
 				indexMap(j) = globalToLocalMap.value_at(globalToLocalMap.find(curIndex));
 			} else {
