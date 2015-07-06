@@ -68,6 +68,7 @@ class MPIFunctor{
 		indexMap(indexMap_), globalToLocalMap(globalToLocalMap_),
 		externalToLocalMap(externalToLocalMap_){}
 	
+	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i) const{
 		int start = row_map(i);
 		int end = row_map(i+1);
