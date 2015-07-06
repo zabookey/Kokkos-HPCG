@@ -32,6 +32,6 @@ Known Issues
 
 Top Priority
 
-Will not function properly on Cuda, a couple of parallel functions either need to be serialized (bad)
-or have their lambdas rewritten to use [=] as their capture list. Due to this, GenerateProblem currently
-runs in serial.
+-Changing SYMGS to use a different preconditioner.
+-To run on CUDA you need to use a trilinos build with Kokkos-Cuda enabled and change the
+	execution_space typedef in Kokkos_Setup.hpp to Kokkos::Cuda.
