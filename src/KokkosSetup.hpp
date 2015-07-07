@@ -13,7 +13,13 @@ This file is for the intention of creating things needed by Kokkos.
 #include "Geometry.hpp" // Just so we have the local_int_t and global_int_t definitions.
 
 //TODO Find a way to change this at compile time.
+typedef Kokkos::Serial execution_space;
+#ifdef HPCG_Kokkos_OpenMP
 typedef Kokkos::OpenMP execution_space;
+#endif
+#ifdef HPCG_Kokkos_Cuda
+typedef Kokkos::Cuda execution_space;
+#endif
 //View typedefs.
 //Normal types.
 typedef Kokkos::View<int *> int_1d_type;

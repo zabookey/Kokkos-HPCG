@@ -44,6 +44,12 @@ ELSE()
   message(FATAL_ERROR "Kokkos not found... CMake exiting")
 ENDIF()
 
+# Change this definition to specify where to execute the code.
+# -DHPCG_Kokkos_OpenMP
+# -DHPCG_Kokkos_Cuda
+# -DHPCG_Kokkos_Serial (Defualt)
+ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
+
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.
 add_subdirectory(src)
