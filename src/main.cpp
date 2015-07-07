@@ -294,10 +294,7 @@ int main(int argc, char * argv[]) {
   double optTolerance = 0.0;  // Force optMaxIters iterations
   TestNormsData testnorms_data;
   testnorms_data.samples = numberOfCgSets;
-  testnorms_data.values = double_1d_type("TestNormsData: values", numberOfCgSets);
-	Kokkos::deep_copy(testnorms_data.values, 0.0);
-{ //Introduce a scope here so our mirror deallocates after being deep_copied back.
-	host_double_1d_type testnorms_values = Kokkos::create_mirror_view(testnorms_data.values);
+  testnorms_data.values = new double[numberOfCgSets];
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
@@ -305,7 +302,6 @@ int main(int argc, char * argv[]) {
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
     testnorms_data.values[i] = normr/normr0; // Record scaled residual from this run
   }
-	Kokkos::deep_copy(testnorms_data.values, testnorms_values);}
 
   // Compute difference between known exact solution and computed solution
   // All processors are needed here.
@@ -336,7 +332,7 @@ int main(int argc, char * argv[]) {
   DeleteVector(xexact);
   DeleteVector(x_overlap);
   DeleteVector(b_computed);
-  //delete [] testnorms_data.values;
+  delete [] testnorms_data.values;
 	
 	Kokkos::finalize();
 

@@ -11,7 +11,7 @@
 
 
 struct TestNormsData_STRUCT {
-  double_1d_type values; //!< sample values
+  double* values; //!< sample values
   double   mean;   //!< mean of all sampes
   double variance; //!< variance of mean
   int    samples;  //!< number of samples
