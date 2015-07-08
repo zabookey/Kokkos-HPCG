@@ -47,7 +47,7 @@ ENDIF()
 # Change this definition to specify where to execute the code.
 # -DHPCG_Kokkos_OpenMP
 # -DHPCG_Kokkos_Cuda
-# -DHPCG_Kokkos_Serial (Defualt)
+# -DHPCG_Kokkos_Serial
 ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
 
 include_directories("${Trilinos_PREFIX}/include")
