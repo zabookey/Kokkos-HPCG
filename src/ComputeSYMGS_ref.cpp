@@ -36,6 +36,57 @@ using Kokkos::ALL;
 
   @see ComputeSYMGS
 */
+#ifdef Option_2
+class forwardSweep{
+	public:
+	local_matrix_type A;
+	double_1d_type rv, xv, matrixDiagonal;
+	
+	forwardSweep(const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
+		double_1d_type matrixDiagonal_):
+		A(A_), rv(rv_), xv(xv_), matrixDiagonal(matrixDiagonal_) {}
+
+	void operator()(const int & i) const{
+		int start = A.graph.row_map(i);
+		int end = A.graph.row_map(i+1);
+		const double currentDiagonal = A.values((int)matrixDiagonal(i));
+		double sum = rv(i);
+
+		for(int j = start; j < end; j++)
+			sum -= A.values(j) * xv(A.graph.entries(j));
+		sum += xv(i) * currentDiagonal;
+		
+		xv(i) = sum/currentDiagonal;
+	}
+	
+};
+
+class backSweep{
+	public:
+	local_matrix_type A;
+	double_1d_type rv, xv, matrixDiagonal;
+	int nrow;
+	
+	backSweep(const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
+		double_1d_type matrixDiagonal_, const local_int_t nrow_):
+		A(A_), rv(rv_), xv(xv_), matrixDiagonal(matrixDiagonal_), nrow(nrow_) {}
+
+	void operator()(const int & i) const{
+		int start = A.graph.row_map(nrow - i); //Work from the end of the matrix up.
+		int end = A.graph.row_map(nrow - i + 1);
+		const double currentDiagonal = A.values((int)matrixDiagonal(i));
+		double sum = rv(i);
+
+		for(int j = start; j < end; j++)
+			sum -= A.values(j) * xv(A.graph.entries(j));
+		sum += xv(i) * currentDiagonal;
+		
+		xv(i) = sum/currentDiagonal;
+	}
+	
+};
+#endif
+
 int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
@@ -43,6 +94,19 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #ifndef HPCG_NOMPI
 	ExchangeHalo(A,x);
 #endif
+
+#ifdef Option_2
+	const local_int_t nrow = A.localNumberOfRows;
+	int approxIter = 8; //Since this is 2*number of default threads on faure.
+	for(int k = 0; k < approxIter; k++){
+		Kokkos::parallel_for(nrow, forwardSweep(A.localMatrix, r.values, x.values, A.matrixDiagonal));
+		Kokkos::fence();
+	}
+	for(int k = 0; k < approxIter; k++){
+		Kokkos::parallel_for(nrow, backSweep(A.localMatrix, r.values, x.values, A.matrixDiagonal, nrow));
+		Kokkos::fence();
+	}
+#else
 
 	const local_int_t nrow = A.localNumberOfRows;
 	host_double_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
@@ -96,5 +160,6 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
 	// All of the mirrors should go out of scope here and deallocate themselves.
+#endif
 	return(0);
 }
