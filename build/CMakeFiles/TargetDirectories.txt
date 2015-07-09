@@ -1,2 +1,0 @@
-/home/zabooke/KokkosHPCG/build/src/CMakeFiles/KokkosHPCG.exe.dir
-/home/zabooke/KokkosHPCG/build/src/CMakeFiles/kokkoshpcglib.dir
