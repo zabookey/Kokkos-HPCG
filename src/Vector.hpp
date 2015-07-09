@@ -55,12 +55,11 @@ inline void ZeroVector(Vector & v){
   @param[in] index Local index of entry to scale
   @param[in] value Value to scale by
  */
-inline void ScaleVectorValue(Vector & v, local_int_t index, double value) {
+KOKKOS_INLINE_FUNCTION
+void ScaleVectorValue(const Vector & v, local_int_t index, double value) {
   assert(index>=0 && index < v.localLength);
-  host_double_1d_type vv = create_mirror_view(v.values);
-	deep_copy(vv, v.values);
+	double_1d_type vv = v.values;
 	vv(index) *= value;
-	deep_copy(v.values, vv);
 	return;
 }
 /*!

@@ -35,6 +35,29 @@ using std::endl;
 
   @see CG()
  */
+
+class ExaggeratedDiag{
+	public:
+	const_global_int_1d_type localToGlobalMap;
+	Vector exaggeratedDiagA, b;
+
+	ExaggeratedDiag(const const_global_int_1d_type & localToGlobalMap_,const Vector & exaggeratedDiagA_,const Vector & b_):
+		localToGlobalMap(localToGlobalMap_), exaggeratedDiagA(exaggeratedDiagA_), b(b_){}
+	
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		global_int_t globalRowID = localToGlobalMap(i);
+		if(globalRowID<9){
+			double scale = (globalRowID+2)*1.0e6;
+			ScaleVectorValue(exaggeratedDiagA, i, scale);
+			ScaleVectorValue(b, i, scale);
+		} else {
+			ScaleVectorValue(exaggeratedDiagA, i, 1.0e6);
+			ScaleVectorValue(b, i, 1.0e6);
+		}
+	}
+};
+
 int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData & testcg_data) {
 
 
@@ -48,14 +71,14 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
   CopyMatrixDiagonal(A, origDiagA);
   CopyVector(origDiagA, exaggeratedDiagA);
   CopyVector(b, origB);
-
   // Modify the matrix diagonal to greatly exaggerate diagonal values.
   // CG should converge in about 10 iterations for this problem, regardless of problem size
 	// Mirror and copy A.localToGlobalMap to be used on the host.
 	host_global_int_1d_type host_localToGlobalMap = Kokkos::create_mirror_view(A.localToGlobalMap);
 	deep_copy(host_localToGlobalMap, A.localToGlobalMap);
 	//This may be highly parallelizable since I've removed the std::vector.
-  for (local_int_t i=0; i< A.localNumberOfRows; ++i) {
+  Kokkos::parallel_for(A.localNumberOfRows, ExaggeratedDiag(A.localToGlobalMap, exaggeratedDiagA, b));
+/*  for (local_int_t i=0; i< A.localNumberOfRows; ++i) {
     global_int_t globalRowID = host_localToGlobalMap(i);
     if (globalRowID<9) {
       double scale = (globalRowID+2)*1.0e6;
@@ -66,8 +89,8 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
       ScaleVectorValue(b, i, 1.0e6);
     }
   }
+*/
   ReplaceMatrixDiagonal(A, exaggeratedDiagA);
-
   int niters = 0;
   double normr = 0.0;
   double normr0 = 0.0;
@@ -99,7 +122,6 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
       }
     }
   }
-
   // Restore matrix diagonal and RHS
   ReplaceMatrixDiagonal(A, origDiagA);
   CopyVector(origB, b);
@@ -108,6 +130,5 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
   DeleteVector(exaggeratedDiagA);
   DeleteVector(origB);
   testcg_data.normr = normr;
-
   return 0;
 }
