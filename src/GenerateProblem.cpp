@@ -162,7 +162,7 @@ class SetFunctor{
 						}
 					}
 				}
-				assert(cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
+				assert((unsigned)cvpIndex == rowMap(currentLocalRow+1)); // Make sure we are completely filling our row and nothing more.
 			}
 		}
 	}
@@ -244,15 +244,6 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
   global_int_t nx = A.geom->nx;
   global_int_t ny = A.geom->ny;
   global_int_t nz = A.geom->nz;
-  global_int_t npx = A.geom->npx;
-  global_int_t npy = A.geom->npy;
-  global_int_t npz = A.geom->npz;
-  global_int_t ipx = A.geom->ipx;
-  global_int_t ipy = A.geom->ipy;
-  global_int_t ipz = A.geom->ipz;
-  global_int_t gnx = nx*npx;
-  global_int_t gny = ny*npy;
-  global_int_t gnz = nz*npz;
 
 	local_int_t localNumberOfRows = nx*ny*nz; // This is the size of our subblock
 	// If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
@@ -360,15 +351,7 @@ void GenerateProblem(SparseMatrix & A){
   global_int_t nx = A.geom->nx;
   global_int_t ny = A.geom->ny;
   global_int_t nz = A.geom->nz;
-  global_int_t npx = A.geom->npx;
-  global_int_t npy = A.geom->npy;
-  global_int_t npz = A.geom->npz;
-  global_int_t ipx = A.geom->ipx;
-  global_int_t ipy = A.geom->ipy;
-  global_int_t ipz = A.geom->ipz;
-  global_int_t gnx = nx*npx;
-  global_int_t gny = ny*npy;
-  global_int_t gnz = nz*npz;
+ 
 
 	local_int_t localNumberOfRows = nx*ny*nz; // This is the size of our subblock
 	// If this assert fails, it most likely means that the local_int_t is set to int and should be set to long long
