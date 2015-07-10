@@ -33,6 +33,7 @@ typedef Kokkos::View<global_int_t *> global_int_1d_type;
 typedef Kokkos::View<global_int_t **> global_int_2d_type;
 typedef Kokkos::View<char *> char_1d_type;
 //Const values
+typedef Kokkos::View<const int *> const_int_1d_type;
 typedef Kokkos::View<const double *> const_double_1d_type;
 typedef Kokkos::View<const double **> const_double_2d_type;
 typedef Kokkos::View<const local_int_t *> const_local_int_1d_type;
@@ -50,6 +51,7 @@ typedef global_int_1d_type::HostMirror host_global_int_1d_type;
 typedef global_int_2d_type::HostMirror host_global_int_2d_type;
 typedef char_1d_type::HostMirror host_char_1d_type;
 //Const Mirrors
+typedef const_int_1d_type::HostMirror host_const_int_1d_type;
 typedef const_double_1d_type::HostMirror host_const_double_1d_type;
 typedef const_double_2d_type::HostMirror host_const_double_2d_type;
 typedef const_local_int_1d_type::HostMirror host_const_local_int_1d_type;

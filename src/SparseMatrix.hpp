@@ -22,7 +22,7 @@ struct SparseMatrix_STRUCT {
 	local_int_t localNumberOfColumns;  //!< number of columns local to this process
 	local_int_t localNumberOfNonzeros;  //!< number of nonzeros local to this process
 	char_1d_type nonzerosInRow;  //!< The number of nonzeros in a row will always be 27 or fewer
-	double_1d_type matrixDiagonal; //!< Indices of matrix diagonal values.
+	int_1d_type matrixDiagonal; //!< Indices of matrix diagonal values.
 //	std::map< global_int_t, local_int_t > globalToLocalMap; //!< global-to-local mapping
 //	std::vector< global_int_t > localToGlobalMap; //!< local-to-global mapping
 
@@ -106,7 +106,7 @@ inline void InitializeSparseMatrix(SparseMatrix & A, Geometry & geom) {
 inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	assert(A.localNumberOfRows==diagonal.localLength);
 	host_values_type valuesA = create_mirror_view(A.localMatrix.values);
-	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
+	host_const_int_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_double_1d_type dv = create_mirror_view(diagonal.values);
 	deep_copy(valuesA, A.localMatrix.values); // Copy the values into the mirror.
 	deep_copy(curDiagA, A.matrixDiagonal);
@@ -123,7 +123,7 @@ inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 inline void ReplaceMatrixDiagonal(SparseMatrix & A, Vector & diagonal){
 	assert(A.localNumberOfRows == diagonal.localLength);
 	host_values_type valuesA = create_mirror_view(A.localMatrix.values);
-	host_const_double_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
+	host_const_int_1d_type curDiagA = create_mirror_view(A.matrixDiagonal);
 	host_const_double_1d_type dv = create_mirror_view(diagonal.values);
 	deep_copy(valuesA, A.localMatrix.values);
 	deep_copy(curDiagA, A.matrixDiagonal);

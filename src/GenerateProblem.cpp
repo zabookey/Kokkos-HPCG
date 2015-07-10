@@ -100,7 +100,7 @@ class SetFunctor{
 	non_const_row_map_type rowMap;
 	values_type values;
 	global_index_type indexMap;
-	double_1d_type matrixDiagonal;
+	int_1d_type matrixDiagonal;
 	global_int_1d_type localToGlobalMap;
 	map_type globalToLocalMap;
 	//All of these are taken from Geometry...
@@ -110,7 +110,7 @@ class SetFunctor{
 	global_int_t gnx, gny, gnz;
 
 	SetFunctor(non_const_row_map_type& rowMap_, values_type& values_, global_index_type& indexMap_,
-		double_1d_type& matrixDiagonal_, global_int_1d_type& localToGlobalMap_,
+		int_1d_type& matrixDiagonal_, global_int_1d_type& localToGlobalMap_,
 		map_type globalToLocalMap_, Geometry geom_):
 		rowMap(rowMap_), values(values_), indexMap(indexMap_), matrixDiagonal(matrixDiagonal_),
 		localToGlobalMap(localToGlobalMap_), globalToLocalMap(globalToLocalMap_){
@@ -266,7 +266,7 @@ std::cout<< "RUNNING WITH MPI COMPILED" << std::endl;
 
 	// Allocate views... These are all allocated with all of their entries to 0.
 	char_1d_type nonzerosInRow = char_1d_type("Matrix: nonzerosInRow", localNumberOfRows);
-	double_1d_type matrixDiagonal = double_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
+	int_1d_type matrixDiagonal = int_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
 
 	//CrsMatrix setup
 	// These may be too large for performance. I'll resize them later.
@@ -382,7 +382,7 @@ void GenerateProblem(SparseMatrix & A){
 
 	// Allocate views... These are all allocated with all of their entries to 0.
 	char_1d_type nonzerosInRow = char_1d_type("Matrix: nonzerosInRow", localNumberOfRows);
-	double_1d_type matrixDiagonal = double_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
+	int_1d_type matrixDiagonal = int_1d_type("Matrix: matrixDiagonal", localNumberOfRows); // This view will hold the indices to the values along the diagonal
 
 	//CrsMatrix setup
 	// These may be too large for performance. I'll resize them later.

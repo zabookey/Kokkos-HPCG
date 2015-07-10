@@ -40,16 +40,17 @@ using Kokkos::ALL;
 class forwardSweep{
 	public:
 	local_matrix_type A;
-	double_1d_type rv, xv, matrixDiagonal;
+	double_1d_type rv, xv;
+	int_1d_type matrixDiagonal;
 	
 	forwardSweep(const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
-		double_1d_type matrixDiagonal_):
+		int_1d_type matrixDiagonal_):
 		A(A_), rv(rv_), xv(xv_), matrixDiagonal(matrixDiagonal_) {}
 
 	void operator()(const int & i) const{
 		int start = A.graph.row_map(i);
 		int end = A.graph.row_map(i+1);
-		const double currentDiagonal = A.values((int)matrixDiagonal(i));
+		const double currentDiagonal = A.values(matrixDiagonal(i));
 		double sum = rv(i);
 
 		for(int j = start; j < end; j++)
@@ -64,17 +65,18 @@ class forwardSweep{
 class backSweep{
 	public:
 	local_matrix_type A;
-	double_1d_type rv, xv, matrixDiagonal;
+	double_1d_type rv, xv;
+	int_1d_type matrixDiagonal;
 	int nrow;
 	
 	backSweep(const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
-		double_1d_type matrixDiagonal_, const local_int_t nrow_):
+		int_1d_type matrixDiagonal_, const local_int_t nrow_):
 		A(A_), rv(rv_), xv(xv_), matrixDiagonal(matrixDiagonal_), nrow(nrow_) {}
 
 	void operator()(const int & i) const{
 		int start = A.graph.row_map(nrow - i); //Work from the end of the matrix up.
 		int end = A.graph.row_map(nrow - i + 1);
-		const double currentDiagonal = A.values((int)matrixDiagonal(i));
+		const double currentDiagonal = A.values(matrixDiagonal(i));
 		double sum = rv(i);
 
 		for(int j = start; j < end; j++)
@@ -109,7 +111,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #else
 
 	const local_int_t nrow = A.localNumberOfRows;
-	host_double_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
+	host_int_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
 	const host_double_1d_type xv = create_mirror_view(x.values); // Host Mirror to x.values
 	const host_const_char_1d_type nonZerosInRow = create_mirror_view(A.nonzerosInRow); // Host Mirror to A.nonZerosInRow.
@@ -129,7 +131,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	for(local_int_t i = 0; i < nrow; i++){
 		int start = rowMap(i);
 		int end = rowMap(i+1);
-		const double currentDiagonal = values((int)matrixDiagonal(i)); //This works only if matrixDiagonal is the indices of the diagonal and not the value.If its the values remove currentValues( ).
+		const double currentDiagonal = values(matrixDiagonal(i)); //This works only if matrixDiagonal is the indices of the diagonal and not the value.If its the values remove currentValues( ).
 		double sum = rv(i);
 
 		for(int j = start; j < end; j++){
@@ -146,7 +148,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	for(local_int_t i = nrow-1; i >= 0; i--){
 		int start = rowMap(i);
 		int end = rowMap(i+1);
-		const double currentDiagonal = values((int)matrixDiagonal(i)); // Same reason as the last loop. Change if needed.
+		const double currentDiagonal = values(matrixDiagonal(i)); // Same reason as the last loop. Change if needed.
 		double sum = rv(i);
 
 		for(int j = start; j < end; j++){
