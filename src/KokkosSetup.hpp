@@ -12,15 +12,14 @@ This file is for the intention of creating things needed by Kokkos.
 #include "Kokkos_UnorderedMap.hpp"
 #include "Geometry.hpp" // Just so we have the local_int_t and global_int_t definitions.
 
-//TODO Find a way to change this at compile time.
-#ifdef HPCG_Kokkos_Serial
-typedef Kokkos::Serial execution_space;
-#endif
 #ifdef HPCG_Kokkos_OpenMP
 typedef Kokkos::OpenMP execution_space;
-#endif
+#else
 #ifdef HPCG_Kokkos_Cuda
 typedef Kokkos::Cuda execution_space;
+#else
+typedef Kokkos::Serial execution_space;
+#endif
 #endif
 //View typedefs.
 //Normal types.
