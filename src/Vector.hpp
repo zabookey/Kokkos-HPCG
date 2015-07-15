@@ -18,9 +18,6 @@ struct Vector_STRUCT {
    used inside optimized ComputeSPMV().
    */
   void * optimizationData;
-
-	bool isInitialized = false; // Use this variable instead of checking if the address = 0.
-
 };
 typedef struct Vector_STRUCT Vector;
 
@@ -34,7 +31,6 @@ inline void InitializeVector(Vector & v, local_int_t localLength) {
   v.localLength = localLength;
   v.values = double_1d_type("Vector Values", localLength);
   v.optimizationData = 0;
-	v.isInitialized = true; //Use this variable only when looking to be deleted. MIGHT NOT EVEN BE NECESSARY...
   return;
 }
 
@@ -89,7 +85,6 @@ inline void CopyVector(const Vector & v, Vector & w) {
 	deep_copy(vv, v.values);
 	deep_copy(wv, w.values); //Have to copy the whole thing in case w is longer than v, this way we retain the end that v can't touch.
 	for(int i = 0; i < localLength; ++i) wv(i) = vv(i);
-	w.isInitialized = v.isInitialized;
 	Kokkos::deep_copy(w.values, wv);
 	return;
 }
@@ -101,7 +96,6 @@ inline void CopyVector(const Vector & v, Vector & w) {
 inline void DeleteVector(Vector & v) {
 
   v.localLength = 0;
-	v.isInitialized = false;
   return;
 }
 

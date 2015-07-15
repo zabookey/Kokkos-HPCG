@@ -89,6 +89,68 @@ class backSweep{
 };
 #endif
 
+#ifdef Option_3
+class LowerTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type r;
+	double_1d_type x_new;
+	double_1d_type x_old;
+
+	LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
+		double_1d_type x_new_):
+		A(A_), diag(diag_), r(r_), x_new(x_new_){
+		x_old = double_1d_type("x_old", x_new_.dimension_0());
+		Kokkos::deep_copy(x_old, x_new_);
+		}
+
+/* [a_i1/a_ii, a_i2/a_ii, ..., a_ii-1/a_ii, 1, 0, 0, ..., 0] This is our row to dot product with X */
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		double rowDot = 0.0;
+		x_new(i) = r(i);//Since our diagonal in this matrix is 1 there should be no need to divide the diagonal.
+		x_new(i) += x_old(i);
+		for(int k = A.graph.row_map(i); k < diag(i); k++){ // This should start at the beginning of the row and go up to the diagonal.
+			rowDot += A.values(k) * x_old(A.graph.entries(k)) / A.values(diag(A.graph.entries(k)));
+		}
+//		rowDot = rowDot/A.values((local_int_t)diag(i)); // Scale by the diagonal in A.
+		rowDot += x_old(i); // Add in 1 * x_old(i) since we skipped the diagonal before.
+		x_new(i) -= rowDot;//Since our diagonal in this matrix is 1 there should be no need to divide the diagonal
+	}
+	
+};
+
+class UpperTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type r;
+	double_1d_type x_new;
+	double_1d_type x_old;
+
+	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
+		double_1d_type x_new_):
+		A(A_), diag(diag_), r(r_), x_new(x_new_){
+		x_old = double_1d_type("x_old", x_new_.dimension_0());
+		Kokkos::deep_copy(x_old, x_new_);
+		}
+/* This is just the jacobi method only applied from the diagonal to the end of the row
+	 to simulate the lower triangular portion being only 0's
+*/
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		double rowDot = 0.0;
+		x_new(i) = r(i)/A.values(diag(i));
+		x_new(i) += x_old(i);
+		for(int k = diag(i); k < A.graph.row_map(i+1); k++)
+			rowDot+=A.values(k) * x_old(A.graph.entries(k));
+		x_new(i) -= rowDot/A.values(diag(i));
+	}
+};
+#endif
+
 int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
@@ -109,7 +171,23 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		Kokkos::fence();
 	}
 #else
-
+#ifdef Option_3
+	const local_int_t localNumberOfRows = A.localNumberOfRows;
+	const int iterations = 1;
+	double_1d_type z("z", x.values.dimension_0());
+// Apply LowerTrisolve
+// Solves (I - ED^{-1})z = r
+	for(int i = 0; i < iterations; i++){
+		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z));
+		Kokkos::fence();
+	}
+// Apply UpperTrisolve
+// Solves (D - F)x = z
+	for(int i = 0; i < iterations; i++){
+		Kokkos::parallel_for(localNumberOfRows, UpperTrisolve(A.localMatrix, A.matrixDiagonal, z, x.values));
+		Kokkos::fence();
+	}
+#else
 	const local_int_t nrow = A.localNumberOfRows;
 	host_int_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
@@ -162,6 +240,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
 	// All of the mirrors should go out of scope here and deallocate themselves.
-#endif
+#endif // Option_3
+#endif // Option_2
 	return(0);
 }

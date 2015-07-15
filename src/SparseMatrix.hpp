@@ -54,8 +54,6 @@ struct SparseMatrix_STRUCT {
 	local_int_1d_type sendLength; //!< lenghts of messages sent to neighboring processes
 	double * sendBuffer; //!< send buffer for non-blocking sends. Still a pointer for EXCHANGEHALO MPI requests. Will change when I figure out how
 #endif
-
-	mutable bool isInitialized = false;
 };
 typedef struct SparseMatrix_STRUCT SparseMatrix;
 
@@ -93,7 +91,6 @@ inline void InitializeSparseMatrix(SparseMatrix & A, Geometry & geom) {
 #endif
   A.mgData = 0; // Fine-to-coarse grid transfer initially not defined.
   A.Ac =0; 
-	A.isInitialized = true;
   return;
 }
 
