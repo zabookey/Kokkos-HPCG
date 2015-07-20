@@ -54,7 +54,7 @@ ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
 # -DOption_2 Parallel Gauss Seidel (Doesn't Produce valid results)
 # -DOption_3 Jacobi Trisolves (Doesn't produce valid results)
 # Default is serial Gauss Seidel used in Vanilla HPCG
-ADD_DEFINITIONS(-DOption_3)
+ADD_DEFINITIONS(-DOption_1)
 
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.

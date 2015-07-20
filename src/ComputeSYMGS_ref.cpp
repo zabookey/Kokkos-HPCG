@@ -36,6 +36,62 @@ using Kokkos::ALL;
 
   @see ComputeSYMGS
 */
+#ifdef Option_1
+class colouredForwardSweep{
+	public:
+	local_int_t colors_row;
+	local_int_1d_type colors_ind;
+
+	local_matrix_type A;
+	double_1d_type rv, xv;
+	int_1d_type matrixDiagonal;
+
+	colouredForwardSweep(const local_int_t colors_row_, const local_int_1d_type& colors_ind_,
+		const local_matrix_type& A_, const double_1d_type& rv_, const double_1d_type& xv_,
+		const int_1d_type matrixDiagonal_):
+		colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
+		matrixDiagonal(matrixDiagonal_) {}
+
+	void operator()(const int & i)const{
+		local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
+		int start = A.graph.row_map(currentRow);
+		int end = A.graph.row_map(currentRow+1);
+		const double currentDiagonal = A.values(matrixDiagonal(currentRow));
+		double sum = rv(currentRow);
+		for(int j = start; j < end; j++)
+			sum -= A.values(j) * xv(A.graph.entries(j));
+		sum += xv(currentRow) * currentDiagonal;
+	}
+};
+
+class colouredBackSweep{
+	public:
+	local_int_t colors_row;
+	local_int_1d_type colors_ind;
+	
+	local_matrix_type A;
+	double_1d_type rv, xv;
+	int_1d_type matrixDiagonal;
+
+	colouredBackSweep(const local_int_t colors_row_, const local_int_1d_type& colors_ind_,
+			const local_matrix_type& A_, const double_1d_type& rv_, const double_1d_type& xv_,
+			const int_1d_type matrixDiagonal_):
+			colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
+			matrixDiagonal(matrixDiagonal_) {}
+
+	void operator()(const int & i)const{
+		local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
+		int start = A.graph.row_map(currentRow);
+		int end = A.graph.row_map(currentRow+1);
+		const double currentDiagonal = A.values(matrixDiagonal(currentRow));
+		double sum = rv(currentRow);
+		for(int j = start; j < end; j++)
+			sum -= A.values(j) * xv(A.graph.entries(j));
+		sum += xv(currentRow) * currentDiagonal;
+	}
+};
+#endif
+
 #ifdef Option_2
 class forwardSweep{
 	public:
@@ -96,13 +152,14 @@ class LowerTrisolve{
 	const_int_1d_type diag;
 	const_double_1d_type r;
 	double_1d_type x_new;
-	double_1d_type x_old;
+	const_double_1d_type x_old;
 
 	LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
 		double_1d_type x_new_):
 		A(A_), diag(diag_), r(r_), x_new(x_new_){
-		x_old = double_1d_type("x_old", x_new_.dimension_0());
-		Kokkos::deep_copy(x_old, x_new_);
+		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
+		Kokkos::deep_copy(x_tmp, x_new_);
+		x_old = x_tmp;
 		}
 
 /* [a_i1/a_ii, a_i2/a_ii, ..., a_ii-1/a_ii, 1, 0, 0, ..., 0] This is our row to dot product with X */
@@ -128,13 +185,16 @@ class UpperTrisolve{
 	const_int_1d_type diag;
 	const_double_1d_type r;
 	double_1d_type x_new;
-	double_1d_type x_old;
+	const_double_1d_type x_old;
+	local_int_t nrows;
 
 	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
 		double_1d_type x_new_):
 		A(A_), diag(diag_), r(r_), x_new(x_new_){
-		x_old = double_1d_type("x_old", x_new_.dimension_0());
-		Kokkos::deep_copy(x_old, x_new_);
+		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
+		Kokkos::deep_copy(x_tmp, x_new_);
+		x_old = x_tmp;
+		nrows = x_new_.dimension_0() - 1;
 		}
 /* This is just the jacobi method only applied from the diagonal to the end of the row
 	 to simulate the lower triangular portion being only 0's
@@ -142,11 +202,11 @@ class UpperTrisolve{
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i)const{
 		double rowDot = 0.0;
-		x_new(i) = r(i)/A.values(diag(i));
-		x_new(i) += x_old(i);
-		for(int k = diag(i); k < A.graph.row_map(i+1); k++)
+		x_new(nrows - i) = r(nrows - i)/A.values(diag(nrows - i));
+		x_new(nrows - i) += x_old(nrows - i);
+		for(int k = diag(nrows - i); k < A.graph.row_map(nrows - i+1); k++)
 			rowDot+=A.values(k) * x_old(A.graph.entries(k));
-		x_new(i) -= rowDot/A.values(diag(i));
+		x_new(nrows - i) -= rowDot/A.values(diag(nrows - i));
 	}
 };
 #endif
@@ -158,7 +218,22 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #ifndef HPCG_NOMPI
 	ExchangeHalo(A,x);
 #endif
-
+#ifdef Option_1
+ // Level Solve Algorithm will go here.
+ // Forward Sweep!
+	const int numColors = A.numColors;
+	for(int i = 0; i < numColors; i++){
+		int start = A.colors_map(i);
+		int end = A.colors_map(i+1);
+		Kokkos::parallel_for(end - start, colouredForwardSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
+	}
+ // Back Sweep!
+	for(int i = numColors - 1; i >= 0; i--){
+		int start = A.colors_map(i);
+		int end = A.colors_map(i+1);
+		Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
+	}
+#else
 #ifdef Option_2
 	const local_int_t nrow = A.localNumberOfRows;
 	int approxIter = 8; //Since this is 2*number of default threads on faure.
@@ -242,5 +317,6 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	// All of the mirrors should go out of scope here and deallocate themselves.
 #endif // Option_3
 #endif // Option_2
+#endif // Option_1
 	return(0);
 }
