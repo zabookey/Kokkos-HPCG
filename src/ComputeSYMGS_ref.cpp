@@ -47,7 +47,7 @@ class colouredForwardSweep{
 	int_1d_type matrixDiagonal;
 
 	colouredForwardSweep(const local_int_t colors_row_, const local_int_1d_type& colors_ind_,
-		const local_matrix_type& A_, const double_1d_type& rv_, const double_1d_type& xv_,
+		const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
 		const int_1d_type matrixDiagonal_):
 		colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
 		matrixDiagonal(matrixDiagonal_) {}
@@ -61,6 +61,7 @@ class colouredForwardSweep{
 		for(int j = start; j < end; j++)
 			sum -= A.values(j) * xv(A.graph.entries(j));
 		sum += xv(currentRow) * currentDiagonal;
+		xv(i) = sum/currentDiagonal;
 	}
 };
 
@@ -74,7 +75,7 @@ class colouredBackSweep{
 	int_1d_type matrixDiagonal;
 
 	colouredBackSweep(const local_int_t colors_row_, const local_int_1d_type& colors_ind_,
-			const local_matrix_type& A_, const double_1d_type& rv_, const double_1d_type& xv_,
+			const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_,
 			const int_1d_type matrixDiagonal_):
 			colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
 			matrixDiagonal(matrixDiagonal_) {}
@@ -88,6 +89,7 @@ class colouredBackSweep{
 		for(int j = start; j < end; j++)
 			sum -= A.values(j) * xv(A.graph.entries(j));
 		sum += xv(currentRow) * currentDiagonal;
+		xv(i) = sum/currentDiagonal;
 	}
 };
 #endif
@@ -218,16 +220,22 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #ifndef HPCG_NOMPI
 	ExchangeHalo(A,x);
 #endif
+//	for(int i = 0; i < 10; i++) std::cout << "Before SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
 #ifdef Option_1
  // Level Solve Algorithm will go here.
  // Forward Sweep!
+	std::cout << "Option 1" << std::endl;
+	std::cout << "NUM COLORS " << A.numColors << std::endl;
 	const int numColors = A.numColors;
+	local_int_t dummy = 0;
 	for(int i = 0; i < numColors; i++){
 		int currentColor = A.f_colors_order(i);
 		int start = A.colors_map(currentColor - 1); // Colors start at 1, i starts at 0
 		int end = A.colors_map(currentColor);
+		dummy += end - start;
 		Kokkos::parallel_for(end - start, colouredForwardSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
 	}
+	assert(dummy == A.localNumberOfRows);
  // Back Sweep!
 	for(int i = 0; i < numColors; i++){
 		int currentColor = A.b_colors_order(i);
@@ -235,6 +243,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		int end = A.colors_map(currentColor);
 		Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
 	}
+	
 #else
 #ifdef Option_2
 	const local_int_t nrow = A.localNumberOfRows;
@@ -320,5 +329,6 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #endif // Option_3
 #endif // Option_2
 #endif // Option_1
+//for(int i = 0; i < 10; i++) std::cout << "After SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
 	return(0);
 }

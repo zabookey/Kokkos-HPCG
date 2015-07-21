@@ -298,7 +298,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 	Kokkos::parallel_for(A.localMatrix.graph.entries.dimension_0(), fillAdj(adj, A.localMatrix.graph.entries));
 
 	Coloring c(A.localNumberOfRows, idx, adj, colors);
-	c.color(false, false, false); // Flags are as follows... Use conflict List, Serial Resolve Conflict, Time and show.
+	c.color(false, false, true); // Flags are as follows... Use conflict List, Serial Resolve Conflict, Time and show.
 	int numColors = c.getNumColors();
 	std::cout<<"Number of colors used: " << numColors << std::endl;
 	local_int_1d_type colors_map("Colors Map", numColors + 1);
