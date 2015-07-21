@@ -47,6 +47,8 @@ struct SparseMatrix_STRUCT {
 	local_int_1d_type colors_ind; // View that in correspondance with colors_map says which rows belong to which color.
 	local_int_1d_type colors_map; // View that will hold the row_map for colors_ind;
 	int numColors;
+	local_int_1d_type f_colors_order;
+	local_int_1d_type b_colors_order;
 #endif
 #ifndef HPCG_NOMPI
 	local_int_t numberOfExternalValues; //!< number of entries that are external to this process

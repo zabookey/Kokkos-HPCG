@@ -179,7 +179,7 @@ class Coloring{
 
 	Ordinal getNumColors() {
       Ordinal maxColor=0;
-      // TODO: parallel_reduce? This produced strange results...
+      // TODO: parallel_reduce? This produced strange results... So instead we'll use mirrors and only call this method once and store the result
 			array_type::HostMirror _colors_host = Kokkos::create_mirror_view(_colors);
 			Kokkos::deep_copy(_colors_host, _colors);
 			for(int i = 0; i < _size; i++)
@@ -300,14 +300,59 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 	Coloring c(A.localNumberOfRows, idx, adj, colors);
 	c.color(false, false, false); // Flags are as follows... Use conflict List, Serial Resolve Conflict, Time and show.
 	int numColors = c.getNumColors();
+	std::cout<<"Number of colors used: " << numColors << std::endl;
 	local_int_1d_type colors_map("Colors Map", numColors + 1);
 	local_int_1d_type colors_ind("Colors Idx", A.localNumberOfRows);
+// Fill colors_map so that colors_map(i) contains the number of entries with color i
 	Kokkos::parallel_for(numColors, fillColorsMap(colors_map, colors));
+// Scan colors_map to finish filling out the map.
 	Kokkos::parallel_scan(numColors + 1, mapScan(colors_map));
+// Use colors_map to fill fill out colors_ind.
 	Kokkos::parallel_for(numColors, fillColorsInd(colors_ind, colors_map, colors));
+// Prepare to fill out our _colors_order
+	Coloring::array_type::HostMirror host_colors = Kokkos::create_mirror_view(colors);
+	Kokkos::deep_copy(host_colors, colors);
+//	for(int i = 0; i < colors.dimension_0(); i++) std::cout << "Row " << i << " got color: " << colors(i) << std::endl;
+	bool marked[numColors];
+	int colorsToFill = numColors;
+	for(int i = 0; i < numColors; i++) marked[i] = false;
+// Fill out f_colors_order.
+	local_int_1d_type f_colors_order("f_colors_order", numColors);
+	host_local_int_1d_type host_f_colors_order = Kokkos::create_mirror_view(f_colors_order);
+	for(local_int_t i = 0; colorsToFill > 0; i++){ // This should be safe assuming that Coloring::getNumColors() works.
+		int currentColor = host_colors(i);
+		if(!marked[currentColor-1]){ // If our currentColor isnt being used, add it to f_colors_order. -1 since colors start at 1 and i starts at 0
+			host_f_colors_order(numColors-colorsToFill) = currentColor;
+			marked[currentColor-1] = true;
+			colorsToFill--;
+			std::cout<< "Used color: " << currentColor << " Colors Remaining: " << colorsToFill << std::endl;
+		}
+	}
+	Kokkos::deep_copy(f_colors_order, host_f_colors_order);
+// Reset our markers to fill out b_colors_order
+	for(int i = 0; i < numColors; i++) marked[i] = false; // TODO Technically these should all be true so we could just flip if statement in b_colors_order.
+	colorsToFill = numColors;
+// Fill out b_colors_order
+	local_int_1d_type b_colors_order("b_colors_order", numColors);
+	host_local_int_1d_type host_b_colors_order = Kokkos::create_mirror_view(b_colors_order);
+	for(int i = colors.dimension_0() - 1; colorsToFill > 0; i--){ // This should be safe assuming that Coloring::getNumColors() works.
+		int currentColor = host_colors(i);
+		if(!marked[currentColor-1]){
+			host_b_colors_order(numColors-colorsToFill) = currentColor;
+			marked[currentColor-1] = true;
+			colorsToFill--;
+		}
+	}
+std::cout<< "here" << std::endl;
+	Kokkos::deep_copy(b_colors_order, host_b_colors_order);
+	for(int i = 0; i < numColors; i++)
+		std::cout<< "F(i): " << host_f_colors_order(i) << " B(i): " << host_b_colors_order(i) << std::endl;
+// Assign everything back to A now.
 	A.colors_map = colors_map;
 	A.colors_ind = colors_ind;
 	A.numColors = numColors;
+	A.f_colors_order = f_colors_order;
+	A.b_colors_order = b_colors_order;
 // Make sure we color our coarse matrices as well.
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);//TODO data, b, x, and xexact are never used but if that changes they may need to be changed.
 	else return(0);
