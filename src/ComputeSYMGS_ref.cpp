@@ -220,14 +220,12 @@ class LowerTrisolve{
 	const_int_1d_type diag;
 	const_double_1d_type r;
 	double_1d_type z_new;
-	const_double_1d_type z_old;
+	double_1d_type z_old;
 
 	LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
-		double_1d_type z_new_):
-		A(A_), diag(diag_), r(r_), z_new(z_new_){
-		double_1d_type z_tmp(Kokkos::ViewAllocateWithoutInitializing("z_tmp"), z_new_.dimension_0());
-		Kokkos::deep_copy(z_tmp, z_new_);
-		z_old = z_tmp;
+		double_1d_type& z_new_, const double_1d_type& z_old_):
+		A(A_), diag(diag_), r(r_), z_new(z_new_), z_old(z_old_){
+		Kokkos::deep_copy(z_old, z_new);
 		}
 
 	KOKKOS_INLINE_FUNCTION
@@ -245,15 +243,14 @@ class applyD{
 	public:
 	local_matrix_type A;
 	const_int_1d_type diag;
-	double_1d_type w;
-	const_double_1d_type z;
+	double_1d_type z;
 
-	applyD(const local_matrix_type& A_, const const_int_1d_type& diag_, double_1d_type& w_, const double_1d_type& z_):
-		A(A_), diag(diag_), w(w_), z(z_){}
+	applyD(const local_matrix_type& A_, const const_int_1d_type& diag_, const double_1d_type& z_):
+		A(A_), diag(diag_), z(z_){}
 
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i)const{
-		w(i) = z(i)*A.values(diag(i));
+		z(i) = z(i)*A.values(diag(i));
 	}
 };
 
@@ -263,14 +260,12 @@ class UpperTrisolve{
 	const_int_1d_type diag;
 	const_double_1d_type w;
 	double_1d_type x_new;
-	const_double_1d_type x_old;
+	double_1d_type x_old;
 
 	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& w_,
-		double_1d_type x_new_):
-		A(A_), diag(diag_), w(w_), x_new(x_new_){
-		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
-		Kokkos::deep_copy(x_tmp, x_new_);
-		x_old = x_tmp;
+		double_1d_type& x_new_,const double_1d_type& x_old_):
+		A(A_), diag(diag_), w(w_), x_new(x_new_), x_old(x_old_){
+		Kokkos::deep_copy(x_old, x_new_);
 		}
 
 	KOKKOS_INLINE_FUNCTION
@@ -346,16 +341,15 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #else
 #ifdef Option_4
 	const local_int_t localNumberOfRows = A.localNumberOfRows;
-	const int iterations = 10;
+	const int iterations = 20;
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
-		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z));
+		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old));
 		Kokkos::fence();
 	}
-	double_1d_type w("w", x.values.dimension_0());
-	Kokkos::parallel_for(localNumberOfRows, applyD(A.localMatrix, A.matrixDiagonal, w, z));
+	Kokkos::parallel_for(localNumberOfRows, applyD(A.localMatrix, A.matrixDiagonal, z));
 	for(int i = 0; i < iterations; i++){
-		Kokkos::parallel_for(localNumberOfRows, UpperTrisolve(A.localMatrix, A.matrixDiagonal, w, x.values));
+		Kokkos::parallel_for(localNumberOfRows, UpperTrisolve(A.localMatrix, A.matrixDiagonal, z, x.values, A.old));
 		Kokkos::fence();
 	}
 #else

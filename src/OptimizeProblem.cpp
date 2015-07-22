@@ -356,6 +356,13 @@ std::cout<< "here" << std::endl;
 // Make sure we color our coarse matrices as well.
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);//TODO data, b, x, and xexact are never used but if that changes they may need to be changed.
 	else return(0);
-#endif
+#else
+#ifdef Option_4
+	A.z = double_1d_type("z", A.localNumberOfRows);
+	A.old = double_1d_type("old", A.localNumberOfRows);
+	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);
+	else return(0);
+#endif // Option_4
+#endif // Option_1
 	return(0);
 }

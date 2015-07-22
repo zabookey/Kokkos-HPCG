@@ -60,6 +60,10 @@ struct SparseMatrix_STRUCT {
 	local_int_1d_type sendLength; //!< lenghts of messages sent to neighboring processes
 	double * sendBuffer; //!< send buffer for non-blocking sends. Still a pointer for EXCHANGEHALO MPI requests. Will change when I figure out how
 #endif
+
+	//SYMGS Optimizations
+	double_1d_type z;
+	double_1d_type old; // This will be used in place of z_old and x_old.
 };
 typedef struct SparseMatrix_STRUCT SparseMatrix;
 
