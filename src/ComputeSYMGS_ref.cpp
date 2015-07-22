@@ -132,8 +132,8 @@ class backSweep{
 		A(A_), rv(rv_), xv(xv_), matrixDiagonal(matrixDiagonal_), nrow(nrow_) {}
 
 	void operator()(const int & i) const{
-		int start = A.graph.row_map(nrow - i); //Work from the end of the matrix up.
-		int end = A.graph.row_map(nrow - i + 1);
+		int start = A.graph.row_map(nrow - i - 1); //Work from the end of the matrix up.
+		int end = A.graph.row_map(nrow - i);
 		const double currentDiagonal = A.values(matrixDiagonal(i));
 		double sum = rv(i);
 
@@ -213,6 +213,78 @@ class UpperTrisolve{
 };
 #endif
 
+#ifdef Option_4
+class LowerTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type r;
+	double_1d_type z_new;
+	const_double_1d_type z_old;
+
+	LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
+		double_1d_type z_new_):
+		A(A_), diag(diag_), r(r_), z_new(z_new_){
+		double_1d_type z_tmp(Kokkos::ViewAllocateWithoutInitializing("z_tmp"), z_new_.dimension_0());
+		Kokkos::deep_copy(z_tmp, z_new_);
+		z_old = z_tmp;
+		}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		double rowDot = 0.0;
+		z_new(i) = r(i)/A.values(diag(i));
+		z_new(i) += z_old(i);
+		for(int k = A.graph.row_map(i); k <= diag(i); k++)
+			rowDot += A.values(k) * z_old(A.graph.entries(k));
+		z_new(i) -= rowDot/A.values(diag(i));
+	}
+};
+
+class applyD{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	double_1d_type w;
+	const_double_1d_type z;
+
+	applyD(const local_matrix_type& A_, const const_int_1d_type& diag_, double_1d_type& w_, const double_1d_type& z_):
+		A(A_), diag(diag_), w(w_), z(z_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		w(i) = z(i)*A.values(diag(i));
+	}
+};
+
+class UpperTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type w;
+	double_1d_type x_new;
+	const_double_1d_type x_old;
+
+	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& w_,
+		double_1d_type x_new_):
+		A(A_), diag(diag_), w(w_), x_new(x_new_){
+		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
+		Kokkos::deep_copy(x_tmp, x_new_);
+		x_old = x_tmp;
+		}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		double rowDot = 0.0;
+		x_new(i) = w(i)/A.values(diag(i));
+		x_new(i) += x_old(i);
+		for(int k = diag(i); k < A.graph.row_map(i+1); k++)
+			rowDot += A.values(k) * x_old(A.graph.entries(k));
+		x_new(i) -= rowDot/A.values(diag(i));
+	}
+};
+#endif
+
 int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
@@ -224,8 +296,6 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #ifdef Option_1
  // Level Solve Algorithm will go here.
  // Forward Sweep!
-	std::cout << "Option 1" << std::endl;
-	std::cout << "NUM COLORS " << A.numColors << std::endl;
 	const int numColors = A.numColors;
 	local_int_t dummy = 0;
 	for(int i = 0; i < numColors; i++){
@@ -247,7 +317,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #else
 #ifdef Option_2
 	const local_int_t nrow = A.localNumberOfRows;
-	int approxIter = 8; //Since this is 2*number of default threads on faure.
+	int approxIter = 4; //Since this is 2*number of default threads on faure.
 	for(int k = 0; k < approxIter; k++){
 		Kokkos::parallel_for(nrow, forwardSweep(A.localMatrix, r.values, x.values, A.matrixDiagonal));
 		Kokkos::fence();
@@ -274,6 +344,21 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		Kokkos::fence();
 	}
 #else
+#ifdef Option_4
+	const local_int_t localNumberOfRows = A.localNumberOfRows;
+	const int iterations = 10;
+	double_1d_type z("z", x.values.dimension_0());
+	for(int i = 0; i < iterations; i++){
+		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z));
+		Kokkos::fence();
+	}
+	double_1d_type w("w", x.values.dimension_0());
+	Kokkos::parallel_for(localNumberOfRows, applyD(A.localMatrix, A.matrixDiagonal, w, z));
+	for(int i = 0; i < iterations; i++){
+		Kokkos::parallel_for(localNumberOfRows, UpperTrisolve(A.localMatrix, A.matrixDiagonal, w, x.values));
+		Kokkos::fence();
+	}
+#else
 	const local_int_t nrow = A.localNumberOfRows;
 	host_int_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
@@ -291,7 +376,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	deep_copy(values, A.localMatrix.values);
 	deep_copy(entries, A.localMatrix.graph.entries);
 	deep_copy(rowMap, A.localMatrix.graph.row_map);
-
+/* FIXME DEBUG TESTING
 	for(local_int_t i = 0; i < nrow; i++){
 		int start = rowMap(i);
 		int end = rowMap(i+1);
@@ -323,9 +408,37 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 		xv(i) = sum/currentDiagonal;
 	}
+*/
+
+// Step 1. Find (D+L)z=r
+	host_double_1d_type z("z", xv.dimension_0());
+	for(local_int_t i = 0; i < nrow; i++){
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const int diagIdx = matrixDiagonal(i);
+		double sum = rv(i);
+		for(int j = start; j < diagIdx; j++)
+			sum -= z(entries(j))*values(j);
+		z(i) = sum/values(diagIdx);
+	}
+// Step 2. Find Dw = z
+	host_double_1d_type w("w", xv.dimension_0());
+	for(local_int_t i = 0; i < nrow; i++)
+		w(i) = z(i)*values(matrixDiagonal(i));
+// Step 3. Find (D+U)x = w
+	for(local_int_t i = nrow - 1; i >= 0; i--){
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const int diagIdx = matrixDiagonal(i);
+		double sum = w(i);
+		for(int j = diagIdx + 1; j < end; j++)
+			sum -= xv(entries(j))*values(j);
+		xv(i) = sum/values(diagIdx);
+	}
 
 	deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
 	// All of the mirrors should go out of scope here and deallocate themselves.
+#endif // Option_4
 #endif // Option_3
 #endif // Option_2
 #endif // Option_1
