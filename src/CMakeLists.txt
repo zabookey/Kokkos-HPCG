@@ -18,6 +18,7 @@ set(HEADERS
   GenerateProblem.hpp  Geometry.hpp  hpcg.hpp KokkosSetup.hpp  MGData.hpp  mytimer.hpp
   OptimizeProblem.hpp  ReadHpcgDat.hpp  ReportResults.hpp  SetupHalo.hpp  SparseMatrix.hpp  TestCG.hpp
   TestNorms.hpp  TestSymmetry.hpp  Vector.hpp  WriteProblem.hpp  YAML_Doc.hpp  YAML_Element.hpp
+	Levels.hpp
   )
 
 message("Compiler Flags: ${CMAKE_CXX_FLAGS}")

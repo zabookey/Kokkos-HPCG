@@ -8,6 +8,9 @@
 #include "Geometry.hpp"
 #include "Vector.hpp"
 #include "MGData.hpp"
+#ifdef Option_0
+#include "Levels.hpp"
+#endif
 #include "KokkosSetup.hpp"
 
 using Kokkos::create_mirror_view;
@@ -43,13 +46,6 @@ struct SparseMatrix_STRUCT {
 	mutable struct SparseMatrix_STRUCT * Ac; // Coarse grid matrix 
 	mutable MGData * mgData; // Pointer to the coarse level data for this fine matrix
 	void * optimizationData;  // pointer that can be used to store implementation-specific data
-#ifdef Option_1 //Coloring Option.
-	local_int_1d_type colors_ind; // View that in correspondance with colors_map says which rows belong to which color.
-	local_int_1d_type colors_map; // View that will hold the row_map for colors_ind;
-	int numColors;
-	local_int_1d_type f_colors_order;
-	local_int_1d_type b_colors_order;
-#endif
 #ifndef HPCG_NOMPI
 	local_int_t numberOfExternalValues; //!< number of entries that are external to this process
 	int numberOfSendNeighbors; //!< number of neighboring processes that will be send local data
@@ -62,8 +58,22 @@ struct SparseMatrix_STRUCT {
 #endif
 
 	//SYMGS Optimizations
+#ifdef Option_0
+	LevelScheduler levels;
+#else
+#ifdef Option_1 //Coloring Option.
+	local_int_1d_type colors_ind; // View that in correspondance with colors_map says which rows belong to which color.
+	local_int_1d_type colors_map; // View that will hold the row_map for colors_ind;
+	int numColors;
+	local_int_1d_type f_colors_order;
+	local_int_1d_type b_colors_order;
+#else
+#ifdef Option_4 // Fixed Trisolve Option
 	double_1d_type z;
 	double_1d_type old; // This will be used in place of z_old and x_old.
+#endif
+#endif
+#endif
 };
 typedef struct SparseMatrix_STRUCT SparseMatrix;
 

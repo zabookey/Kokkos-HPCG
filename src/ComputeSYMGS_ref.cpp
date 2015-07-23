@@ -36,6 +36,75 @@ using Kokkos::ALL;
 
   @see ComputeSYMGS
 */
+class leveledForwardSweep{
+	public:
+	local_int_t f_lev_start;
+	local_int_1d_type f_lev_ind;
+
+	local_matrix_type A;
+	double_1d_type rv, zv;
+	int_1d_type matrixDiagonal;
+
+	leveledForwardSweep(const local_int_t f_lev_start_, const local_int_1d_type & f_lev_ind_, 
+		const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& zv_,
+		const int_1d_type& matrixDiagonal_):
+		f_lev_start(f_lev_start_), f_lev_ind(f_lev_ind_), A(A_), rv(rv_), zv(zv_),
+		matrixDiagonal(matrixDiagonal_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		local_int_t currentRow = f_lev_ind(f_lev_start+i);
+		int start = A.graph.row_map(currentRow);
+		const int diagIdx = matrixDiagonal(currentRow);
+		double sum = rv(i);
+		for(int j = start; j < diagIdx; j++)
+			sum -= zv(A.graph.entries(j))*A.values(j);
+		zv(i) = sum/A.values(diagIdx);
+	}
+};
+
+class applyD{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	double_1d_type z;
+
+	applyD(const local_matrix_type& A_, const const_int_1d_type& diag_, const double_1d_type& z_):
+		A(A_), diag(diag_), z(z_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		z(i) = z(i)/A.values(diag(i));
+	}
+};
+
+class leveledBackSweep{
+	public:
+	local_int_t b_lev_start;
+	local_int_1d_type b_lev_ind;
+
+	local_matrix_type A;
+	double_1d_type zv, xv;
+	int_1d_type matrixDiagonal;
+
+	leveledBackSweep(const local_int_t b_lev_start_, const local_int_1d_type & b_lev_ind_, 
+		const local_matrix_type& A_, const double_1d_type& zv_, double_1d_type& xv_,
+		const int_1d_type& matrixDiagonal_):
+		b_lev_start(b_lev_start_), b_lev_ind(b_lev_ind_), A(A_), zv(zv_), xv(xv_),
+		matrixDiagonal(matrixDiagonal_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i)const{
+		local_int_t currentRow = b_lev_ind(b_lev_start+i);
+		int end = A.graph.row_map(currentRow+1);
+		const int diagIdx = matrixDiagonal(currentRow);
+		double sum = zv(i);
+		for(int j = diagIdx+1; j < end; j++)
+			sum -= xv(A.graph.entries(j))*A.values(j);
+		xv(i) = sum/A.values(diagIdx);
+	}
+};
+
 #ifdef Option_1
 class colouredForwardSweep{
 	public:
@@ -288,6 +357,50 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	ExchangeHalo(A,x);
 #endif
 //	for(int i = 0; i < 10; i++) std::cout << "Before SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
+#ifdef Option_0
+/*
+
+// Step 1. Find (D+L)z=r
+	host_double_1d_type z("z", xv.dimension_0());
+	for(local_int_t i = 0; i < nrow; i++){
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const int diagIdx = matrixDiagonal(i);
+		double sum = rv(i);
+		for(int j = start; j < diagIdx; j++)
+			sum -= z(entries(j))*values(j);
+		z(i) = sum/values(diagIdx);
+	}
+// Step 2. Find Dw = z
+	host_double_1d_type w("w", xv.dimension_0());
+	for(local_int_t i = 0; i < nrow; i++)
+		w(i) = z(i)*values(matrixDiagonal(i));
+// Step 3. Find (D+U)x = w
+	for(local_int_t i = nrow - 1; i >= 0; i--){
+		int start = rowMap(i);
+		int end = rowMap(i+1);
+		const int diagIdx = matrixDiagonal(i);
+		double sum = w(i);
+		for(int j = diagIdx + 1; j < end; j++)
+			sum -= xv(entries(j))*values(j);
+		xv(i) = sum/values(diagIdx);
+	}
+*/
+	const int f_numLevels = A.levels.f_numberOfLevels;
+	const int b_numLevels = A.levels.b_numberOfLevels;
+	double_1d_type z("z", x.values.dimension_0());
+	for(int i = 0; i < f_numLevels; i++){
+		int start = A.levels.f_lev_map(i);
+		int end = A.levels.f_lev_map(i+1);
+		Kokkos::parallel_for(end - start, leveledForwardSweep(start, A.levels.f_lev_ind, A.localMatrix, r.values, z, A.matrixDiagonal));
+	}
+	Kokkos::parallel_for(z.dimension_0(), applyD(A.localMatrix, A.matrixDiagonal, z));
+	for(int i = 0; i < b_numLevels; i++){
+		int start = A.levels.b_lev_map(i);
+		int end = A.levels.b_lev_map(i+1);
+		Kokkos::parallel_for(end - start, leveledBackSweep(start, A.levels.b_lev_ind, A.localMatrix, z, x.values, A.matrixDiagonal));
+	}
+#else
 #ifdef Option_1
  // Level Solve Algorithm will go here.
  // Forward Sweep!
@@ -341,7 +454,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #else
 #ifdef Option_4
 	const local_int_t localNumberOfRows = A.localNumberOfRows;
-	const int iterations = 20;
+	const int iterations = 8;
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old));
@@ -370,7 +483,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	deep_copy(values, A.localMatrix.values);
 	deep_copy(entries, A.localMatrix.graph.entries);
 	deep_copy(rowMap, A.localMatrix.graph.row_map);
-/* FIXME DEBUG TESTING
+/*// FIXME DEBUG TESTING
 	for(local_int_t i = 0; i < nrow; i++){
 		int start = rowMap(i);
 		int end = rowMap(i+1);
@@ -436,6 +549,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #endif // Option_3
 #endif // Option_2
 #endif // Option_1
+#endif // Option_0
 //for(int i = 0; i < 10; i++) std::cout << "After SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
 	return(0);
 }
