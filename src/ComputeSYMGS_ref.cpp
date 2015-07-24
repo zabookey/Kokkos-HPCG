@@ -36,6 +36,7 @@ using Kokkos::ALL;
 
   @see ComputeSYMGS
 */
+#ifdef Option_0
 class leveledForwardSweep{
 	public:
 	local_int_t f_lev_start;
@@ -74,7 +75,7 @@ class applyD{
 
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i)const{
-		z(i) = z(i)/A.values(diag(i));
+		z(i) = z(i)*A.values(diag(i));
 	}
 };
 
@@ -104,7 +105,7 @@ class leveledBackSweep{
 		xv(i) = sum/A.values(diagIdx);
 	}
 };
-
+#endif
 #ifdef Option_1
 class colouredForwardSweep{
 	public:
@@ -226,7 +227,7 @@ class LowerTrisolve{
 	const_double_1d_type x_old;
 
 	LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
-		double_1d_type x_new_):
+		double_1d_type& x_new_):
 		A(A_), diag(diag_), r(r_), x_new(x_new_){
 		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
 		Kokkos::deep_copy(x_tmp, x_new_);
@@ -260,7 +261,7 @@ class UpperTrisolve{
 	local_int_t nrows;
 
 	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
-		double_1d_type x_new_):
+		double_1d_type& x_new_):
 		A(A_), diag(diag_), r(r_), x_new(x_new_){
 		double_1d_type x_tmp(Kokkos::ViewAllocateWithoutInitializing("x_tmp"), x_new_.dimension_0());
 		Kokkos::deep_copy(x_tmp, x_new_);
@@ -386,6 +387,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		xv(i) = sum/values(diagIdx);
 	}
 */
+
 	const int f_numLevels = A.levels.f_numberOfLevels;
 	const int b_numLevels = A.levels.b_numberOfLevels;
 	double_1d_type z("z", x.values.dimension_0());

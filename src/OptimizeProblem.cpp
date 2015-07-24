@@ -448,6 +448,12 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 // Right now it does nothing, so compiling with a check for unused variables results in complaints
 #ifdef Option_0
 	LevelScheduler(A);
+	for(int i = 0; i < 10 && i < A.levels.f_numberOfLevels; i++){
+		std::cout << "Rows with level " << i + 1 << ": ";
+		for(int j = A.levels.f_lev_map(i); j < A.levels.f_lev_map(i+1); j++)
+			std::cout << A.levels.f_lev_ind(j) << ", ";
+		std::cout << std::endl;
+	}
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);
 #else
 #ifdef Option_1
