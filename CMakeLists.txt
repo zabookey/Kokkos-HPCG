@@ -51,11 +51,13 @@ ENDIF()
 ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
 
 # Change this definition to specify which Gauss Seidel to use
-# -DOption_1 Level solve using Colouring (Doesn't Produce valid results)
-# -DOption_2 Parallel Gauss Seidel (Doesn't Produce valid results)
-# -DOption_3 Jacobi Trisolves (Doesn't produce valid results)
+# -DSYMGS_COLOR Solve using graph Colouring. (Doesn't Produce valid results)
+# -DSYMGS_LEVEL Level solve.
+# -DSYMGS_INEXACT Jacobi Trisolve. (Only works if you use enough iterations
+#		for your problem size.)
 # Default is serial Gauss Seidel used in Vanilla HPCG
-ADD_DEFINITIONS(-DOption_4)
+# If nothing is specified the defualt serial Gauss Seidel will be used.
+ADD_DEFINITIONS(-DSYMGS_OPTION)
 
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.

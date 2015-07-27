@@ -74,8 +74,6 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
   // Modify the matrix diagonal to greatly exaggerate diagonal values.
   // CG should converge in about 10 iterations for this problem, regardless of problem size
 	// Mirror and copy A.localToGlobalMap to be used on the host.
-	host_global_int_1d_type host_localToGlobalMap = Kokkos::create_mirror_view(A.localToGlobalMap);
-	deep_copy(host_localToGlobalMap, A.localToGlobalMap);
 	//This may be highly parallelizable since I've removed the std::vector.
   Kokkos::parallel_for(A.localNumberOfRows, ExaggeratedDiag(A.localToGlobalMap, exaggeratedDiagA, b));
 /*  for (local_int_t i=0; i< A.localNumberOfRows; ++i) {

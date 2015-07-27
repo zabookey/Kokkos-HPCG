@@ -22,7 +22,7 @@
   @see GenerateProblem
 */
 
-#ifdef Option_0
+#ifdef SYMGS_LEVEL
 
 using Kokkos::create_mirror_view;
 using Kokkos::deep_copy;
@@ -147,7 +147,6 @@ class fillColorsInd{
 			if(depth > b_numberOfLevels) b_numberOfLevels = depth;
 			host_b_row_level(i) = depth;
 		}
-		std::cout<< "Num f_levels: " << f_numberOfLevels << "   Num b_levels: " << b_numberOfLevels << std::endl;
 		deep_copy(b_row_level, host_b_row_level);
 // Set up f_lev_map and f_lev_ind
 		f_lev_map = local_int_1d_type("f_lev_map", f_numberOfLevels+1);
@@ -168,6 +167,8 @@ class fillColorsInd{
 // Fill our b_lev_ind now.
 		Kokkos::parallel_for(b_numberOfLevels, fillColorsInd(b_lev_ind, b_lev_map, b_row_level));
 
+		assert(f_lev_map(f_numberOfLevels) == A.localNumberOfRows);
+
 		A.levels.f_numberOfLevels = f_numberOfLevels;
 		A.levels.b_numberOfLevels = b_numberOfLevels;
 		A.levels.f_lev_map = f_lev_map;
@@ -179,7 +180,7 @@ class fillColorsInd{
 	}
 #endif
 
-#ifdef Option_1
+#ifdef SYMGS_COLOR
 class Coloring{
 	public:
 	typedef local_int_t Ordinal;
@@ -446,17 +447,11 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 
 // This function can be used to completely transform any part of the data structures.
 // Right now it does nothing, so compiling with a check for unused variables results in complaints
-#ifdef Option_0
+#ifdef SYMGS_LEVEL
 	LevelScheduler(A);
-	for(int i = 0; i < 10 && i < A.levels.f_numberOfLevels; i++){
-		std::cout << "Rows with level " << i + 1 << ": ";
-		for(int j = A.levels.f_lev_map(i); j < A.levels.f_lev_map(i+1); j++)
-			std::cout << A.levels.f_lev_ind(j) << ", ";
-		std::cout << std::endl;
-	}
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);
 #else
-#ifdef Option_1
+#ifdef SYMGS_COLOR
 	Coloring::array_type colors("colors", A.localNumberOfRows);
 	Coloring::array_type idx("idx", A.localMatrix.graph.row_map.dimension_0()); // Should be A.localNumberOfRows+1 length
 	Coloring::array_type adj("adj", A.localMatrix.graph.entries.dimension_0()); // Should be A.LocalNumberOfNonzeros.
@@ -523,13 +518,13 @@ std::cout<< "here" << std::endl;
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);//TODO data, b, x, and xexact are never used but if that changes they may need to be changed.
 	else return(0);
 #else
-#ifdef Option_4
+#ifdef SYMGS_INEXACT
 	A.z = double_1d_type("z", A.localNumberOfRows);
 	A.old = double_1d_type("old", A.localNumberOfRows);
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);
 	else return(0);
-#endif // Option_4
-#endif // Option_1
-#endif // Option_0
+#endif // SYMGS_INEXACT
+#endif // SYMGS_COLOR
+#endif // SYMGS_LEVEL
 	return(0);
 }
