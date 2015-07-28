@@ -1,0 +1,102 @@
+\documentclass{ccr15}
+
+% PACKAGES ---------------------------------------------------------------
+\usepackage{amsfonts,amsmath,graphicx,subfigure}
+% ADD YOUR OWN PACKAGES HERE ---------------------------------------------
+%\usepackage{someotherpackage}
+
+% DEFINITIONS ------------------------------------------------------------
+% ADD YOUR OWN DEFINITIONS HERE ------------------------------------------
+% BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
+\newcommand{\ZABnorm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\ZABabs}[1]{\left\vert#1\right\vert}
+
+% This controls the table-of-contents entry in the proceedings. Edit it
+% to include your article title followed by the authors' names, as shown.
+\addcontentsline{toc}{chapter}{The Quantum Mechanics of Chocolate Pudding\\
+{\em Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}}
+
+\pagestyle{myheadings}
+
+\thispagestyle{plain}
+
+% This gives the running head. Usually you list a shortened version of
+% your article title (unless it's already very short) along with
+% the author's names, as shown.
+\markboth{Pudding Quantum Mechanics}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
+
+% Put your article title in here
+\title{The Quantum Mechanics of Chocolate Pudding}
+
+% List each author, their affiliation, and their e-mail address, as shown.
+\author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
+ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}}
+
+\begin{document}
+
+\maketitle
+
+% Include your abstract here.
+\begin{abstract}
+Unlike many other baked goods, chocolate pudding is subject to a myriad of interesting (and unique) effects on both the
+meso and nano scales.  Understanding these phenomena is critical, not only to America's restaurant industry, but to
+children everywhere.  We intend to examine these effects and propose new potential models which accurately capture the
+material structure of chocolate pudding.
+\end{abstract}
+
+\section{Introduction} \label{ZAB:sec:intro}
+I like chocolate pudding.  For that matter everyone else does too. This relationship is captured in \eqref{ZAB:eq:one},
+\begin{equation}\label{ZAB:eq:one}
+f(x) = x^{100-d},
+\end{equation}
+where $f$ is happiness in utils, $x$ is the quantity of chocolate pudding consumed in ounces and $d$ is the age of the
+subject in years.
+
+It has been argued that that chocolate pudding consumption by age is shown in Figure \ref{ZAB:fig:Mentor05}.  However,
+we propose an alternative pudding consumption model, shown in Figure \ref{ZAB:fig:cos}.
+
+\begin{figure}[hbh]
+\begin{center}
+\scalebox{0.5}{\includegraphics{plots/ZABsinx}} \caption{Chocolate pudding consumption model of
+\cite{ZAB:Mentor05}}\label{ZAB:fig:Mentor05}
+\end{center}\end{figure}
+
+\begin{figure}[htb]
+\begin{center}
+\scalebox{0.5}{\includegraphics{plots/ZABcosx}} \caption{Proposed chocolate pudding consumption model}\label{ZAB:fig:cos}
+\end{center}\end{figure}
+
+We also want to show these figures side by side, to better illustrate our comparison.  We can see this in Figures
+\ref{ZAB:fig:comp1} and \ref{ZAB:fig:comp2}.
+
+\begin{figure}[htb]
+\begin{center}
+\subfigure[M. Mentor's Model]{\includegraphics[scale=.5]{plots/ZABsinx}\label{ZAB:fig:comp1}} \subfigure[Proposed
+Model]{\includegraphics[scale=.5]{plots/ZABcosx}\label{ZAB:fig:comp2}} \caption{Comparative chocolate pudding consumption
+models}
+\end{center}\end{figure}
+
+\section{Actual Content}
+
+As we saw in Section \ref{ZAB:sec:intro}, we all like chocolate pudding. This is where I wish
+\textsf{$\setminus$jargonfill} worked. It would fill the page with meaningless technobabble so I could illustrate this
+package. Instead, I'll talk about how to use quotations in latex. "Never use these quotations." ``Always use these,
+instead.''
+
+\section{Conclusions}
+Herein, we repeat the abstract in past tense.
+
+Unlike many other baked goods, chocolate pudding is subject to a myriad of interesting (and unique) effects on both the
+meso and nano scales.  Understanding these phenomena is critical, not only to America's restaurant industry, but to
+children everywhere.  We have examined these effects and have proposed new potential models which accurately capture
+the material structure of chocolate pudding.
+
+\bibliographystyle{siam}
+% Edit the line below to be your first and last names.
+\bibliography{ZacharyBookey}
+
+% Edit FirstnameLastname below to be your first and last names, but leave the line commented out.
+% This line will help me merge bibliographies for the proceedings.
+%\input{FirstnameLastname/FirstnameLastname.bbl}
+
+\end{document}
