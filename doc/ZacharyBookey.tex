@@ -1,0 +1,174 @@
+\documentclass{ccr15}
+
+% PACKAGES ---------------------------------------------------------------
+\usepackage{amsfonts,amsmath,graphicx,subfigure}
+\usepackage{listings}
+% ADD YOUR OWN PACKAGES HERE ---------------------------------------------
+%\usepackage{someotherpackage}
+
+% DEFINITIONS ------------------------------------------------------------
+% ADD YOUR OWN DEFINITIONS HERE ------------------------------------------
+% BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
+\newcommand{\ZABnorm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\ZABabs}[1]{\left\vert#1\right\vert}
+
+% This controls the table-of-contents entry in the proceedings. Edit it
+% to include your article title followed by the authors' names, as shown.
+\addcontentsline{toc}{chapter}{Performance Portable HPCG\\
+{\em Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}}
+
+\pagestyle{myheadings}
+
+\thispagestyle{plain}
+
+% This gives the running head. Usually you list a shortened version of
+% your article title (unless it's already very short) along with
+% the author's names, as shown.
+\markboth{Performance Portable HPCG}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
+
+% Put your article title in here
+\title{Performance Portable HPCG}
+
+% List each author, their affiliation, and their e-mail address, as shown.
+\author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
+ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}}
+\begin{document}
+
+\maketitle
+
+% Include your abstract here.
+\begin{abstract}
+The High Performance Conjugate Gradients (HPCG) Benchmark is an international project to create a
+more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
+which is the standard for measuring the performance of the top 500 fastest computers in the
+world, is moving computers in a direction that is no longer beneficial to many important
+parallel applications. In this project we are developing a version of HPCG, using the Kokkos
+package found in Trilinos, that can be optimally executed across several distinct high
+performance computing architectures. This new code demonstrates an efficient programming 
+approach that can be adopted by other programmers to write portable high performance software.
+\end{abstract}
+
+\section{Introduction}
+The High Performance Conjugate Gradient, from here out referred to as HPCG, is a new and
+upcoming benchmark test to rank the worlds largest computers. HPCG uses a preconditioned 
+conjugate gradient to solve a system of equations. The goal of our project was to create a
+version of HPCG that uses the Kokkos package found in Trilinos in order to increase portability
+among many types of architectures while maintaining reasonable performance.
+
+\section{HPCG}
+After generations of using the High Performance Linpack (HPL) benchmark to measure the
+performance of large computers it became necessary to use another benchmark to help better the 
+direction that super computers were headed to more accurately reflect the types of applications
+that these machines were running. HPCG was created to fill the gap that HPL had created. On top
+of solving a large system of equations, HPCG also features a more irregular data access pattern
+so that data access affects results as well as matrix computations.
+
+HPCG begins by creating a symmetric positive definite matrix and it's corresponding multi grid 
+to be used in the preconditioning phase. For the preconditioner it uses a Symmetric Gauss-Seidel 
+forward sweep and back sweep to solve the lower and upper triangular matrices. For the actual
+solve of $A x = b$, HPCG uses the conjugate gradient method after the preconditioning phase.
+
+HPCG runs in seven major phases.
+\begin{enumerate}
+	\item \textbf{Problem Setup:} This is the beginning of HPCG and is where we construct the 
+geometry that is used to generate the problem. HPCG generates a symmetric, positive definite, 
+sparse matrix with up to 27 nonzero entries per row depending on the local location of the row.
+	\item \textbf{Validation Testing:} This portion of the program is to make sure any changes 
+made produce valid results. Specifically it checks to make sure that both the unpreconditioned 
+and preconditioned conjugate gradient converge in around 12 and 2 iterations respectively. It 
+also makes sure that after performing both a sparse matrix vector multiplication and a symmetric 
+Gauss-Seidel sweep that we preserve symmetry by using two pseudorandomly filled vectors and 
+performing simple operations that should be zero due to the nature of our symmetric matrix A.
+	\item \textbf{Reference Sparse Matrix Vector Multiplication and Multigrid Timing:} This 
+portion of the code times how long it takes to perform the reference versionts of SPMV and 
+Symmetric Gauss-Seidel.
+	\item \textbf{Reference Conjugate Gradient Timing:} Here we run 50 iterations of the reference
+version of the conjugate gradient method and record the resulting residual. This residual must be
+attained by the optimized version of conjugate gradient no matter how many iterations are
+required.
+	\item \textbf{Optimized Conjugate Gradient Setup:} Runs one set of the optimized conjugate
+gradient and determines the number of iterations required to reach the residual found before.
+Then figures out how mamy times to reach the desired residual to fill in the requested benchmark
+time.
+	\item \textbf{Optimized Conjugate Gradient Timing:} Runs the optimized conjugate gradient the
+required amount of times. Records time for each timed section to report out later.
+	\item \textbf{Report Results:} Writes out log files for debugging and creates the .yaml file
+to display the results which can then be submitted if all the requirements are met.
+\end{enumerate}
+HPCG gives you the option to run with MPI, OpenMP, both, or in serial. Running with MPI adds an
+extra dimension to the problem and requires processes to exchange values on their borders to
+perform. This results in a tradeoff between more overhead and more parallelism.
+
+\section{Kokkos}
+As different computer architectures are better with certain applications than others it has
+become increasingly difficult to write code that will perform well across many different types of
+architectures. One solution to this problem is the C++ package, Kokkos. Kokkos acts as a wrapper
+around your code to allow you to specify at compile time where and how you want to run your
+application. Currently Kokkos supports the following execution spaces:
+\begin{itemize}
+	\item Serial
+	\item PThreads
+	\item OpenMP
+	\item Cuda
+\end{itemize}
+
+Kokkos has two main features, views and parallel kernels. A view is essentially a wrapper around
+an array of data that gives you the option to specify which execution space you want to store the
+data on and allows you to choose what sort of memory access traits you wish this data to have.
+Views also handle their own memory management via reference counting so that the view
+automatically deallocates itself when all of the variables that reference it go out of scope,
+thus making memory management much simpler across multiple devices.
+
+There are three main parallel kernels: parallel\_for, parallel\_reduce, and parallel\_scan. All 
+of these serve their own purpose and act as wrappers over how you would execute a section of 
+code in parallel over the respective exectuion space. For all of the parallel kernels you 
+initiate the kernel by passing in a functor that performs the desired parallel operation, as of 
+C++11 lambdas work as well and soon lamda functionality will be fully supported by cuda from 
+host to device.
+
+Parallel\_for is simply a generic for loop that will run all of the context of the loop in
+parallel. This works well for parallel kernels like vector addition. Parallel\_reduce is for 
+simultaneously updating a single value, this function guarantees that you avoid race conditions 
+with the updated values. Parallel\_reduce works well for parallel kernels like finding the dot
+product of two vectors. Parallel\_scan is for taking a view and creating a running sum of values
+to replace the values of the view. Although parallel\_scan is useful it was only really needed
+for setup phases in our HPCG.
+
+Kokkos allows for nested parallelism that involves creating a league of teams of threads.
+With this tool, a developer could launch a parallel\_reduce kernel that uses a parallel\_for to
+update some value that later gets added to the value that was initially included to be reduced.
+Although this has not been implemented in our project yet, there are places in our code that
+could and should benefit from nested parallelism and thus we intend to include it at a later
+time.
+
+\section{HPCG + Kokkos}
+
+\section{Future Work}
+
+\section{Conclusion}
+
+\section{Actual Content}
+
+As we saw in Section 1, we all like chocolate pudding. This is where I wish
+\textsf{$\setminus$jargonfill} worked. It would fill the page with meaningless technobabble so I could illustrate this
+package. Instead, I'll talk about how to use quotations in latex. "Never use these quotations." ``Always use these,
+instead.''
+
+\section{Conclusions}
+Herein, we repeat the abstract in past tense.
+
+Unlike many other baked goods, chocolate pudding is subject to a myriad of interesting (and unique) effects on both the
+meso and nano scales.  Understanding these phenomena is critical, not only to America's restaurant industry, but to
+children everywhere.  We have examined these effects and have proposed new potential models which accurately capture
+the material structure of chocolate pudding.
+
+\bibliographystyle{siam}
+% Edit the line below to be your first and last names.
+\nocite{ZAB:Mentor05}
+\bibliography{ZacharyBookey}
+
+% Edit FirstnameLastname below to be your first and last names, but leave the line commented out.
+% This line will help me merge bibliographies for the proceedings.
+%\input{ZacharyBookey/ZacharyBookey.bbl}
+
+\end{document}

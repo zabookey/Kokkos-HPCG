@@ -8,7 +8,7 @@
 #include "Kokkos_Atomic.hpp"
 #include <impl/Kokkos_Timer.hpp>
 
-#ifdef Option_1 // Coloring Option.
+#ifdef SYMGS_COLOR // Coloring Option.
 #ifndef FORBIDDEN_SIZE
 #define FORBIDDEN_SIZE 64 // GPU: Hopefully this fits in fast (shared) memory
 #endif

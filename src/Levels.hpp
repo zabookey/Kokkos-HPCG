@@ -9,9 +9,9 @@ struct LevelScheduler{
 	int b_numberOfLevels;
 // Forward sweep data and backward sweep data
 // map gives us which indixes in _lev_ind are in each level and _lev_ind contains the row numbers.
-	local_int_1d_type f_lev_map;
+	host_local_int_1d_type f_lev_map;
 	local_int_1d_type f_lev_ind;
-	local_int_1d_type b_lev_map;
+	host_local_int_1d_type b_lev_map;
 	local_int_1d_type b_lev_ind;
 // Simple view of length number of rows that holds what level each row is in.
 	local_int_1d_type f_row_level;

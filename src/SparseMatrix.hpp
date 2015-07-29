@@ -8,7 +8,7 @@
 #include "Geometry.hpp"
 #include "Vector.hpp"
 #include "MGData.hpp"
-#ifdef Option_0
+#ifdef SYMGS_LEVEL
 #include "Levels.hpp"
 #endif
 #include "KokkosSetup.hpp"
@@ -58,17 +58,17 @@ struct SparseMatrix_STRUCT {
 #endif
 
 	//SYMGS Optimizations
-#ifdef Option_0
+#ifdef SYMGS_LEVEL
 	LevelScheduler levels;
 #else
-#ifdef Option_1 //Coloring Option.
+#ifdef SYMGS_COLOR //Coloring Option.
 	local_int_1d_type colors_ind; // View that in correspondance with colors_map says which rows belong to which color.
 	local_int_1d_type colors_map; // View that will hold the row_map for colors_ind;
 	int numColors;
 	local_int_1d_type f_colors_order;
 	local_int_1d_type b_colors_order;
 #else
-#ifdef Option_4 // Fixed Trisolve Option
+#ifdef SYMGS_INEXACT // Fixed Trisolve Option
 	double_1d_type z;
 	double_1d_type old; // This will be used in place of z_old and x_old.
 #endif

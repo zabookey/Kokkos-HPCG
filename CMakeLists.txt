@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 #These next few lines are ripped from the trilinos demo almost exactly
-set(Trilinos_PREFIX "/home/zabooke/Project/Trilinos_builds/trilinos_kokkos_tpetra/build")
+set(Trilinos_PREFIX "/home/zabooke/Trilinos_build/Trilinos_Cuda/build")
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 message("Trilinos prefix: ${Trilinos_PREFIX}")
@@ -48,14 +48,16 @@ ENDIF()
 # -DHPCG_Kokkos_OpenMP
 # -DHPCG_Kokkos_Cuda
 # -DHPCG_Kokkos_Serial (Default)
-ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
+ADD_DEFINITIONS(-DHPCG_Kokkos_Cuda)
 
 # Change this definition to specify which Gauss Seidel to use
-# -DOption_1 Level solve using Colouring (Doesn't Produce valid results)
-# -DOption_2 Parallel Gauss Seidel (Doesn't Produce valid results)
-# -DOption_3 Jacobi Trisolves (Doesn't produce valid results)
+# -DSYMGS_COLOR Solve using graph Colouring. (Doesn't Produce valid results)
+# -DSYMGS_LEVEL Level solve.
+# -DSYMGS_INEXACT Jacobi Trisolve. (Only works if you use enough iterations
+#		for your problem size.)
 # Default is serial Gauss Seidel used in Vanilla HPCG
-ADD_DEFINITIONS(-DOption_4)
+# If nothing is specified the defualt serial Gauss Seidel will be used.
+ADD_DEFINITIONS(-DSYMGS_LEVEL)
 
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.
