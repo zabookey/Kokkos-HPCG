@@ -16,7 +16,7 @@
 %% Version 1.1
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{csri14}[2015/06/01 CCR 2015 Summer Report Class]
+\ProvidesClass{ccr15}[2015/06/01 CCR 2015 Summer Report Class]
 
 % Options for siamltex
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{siamltex}}
