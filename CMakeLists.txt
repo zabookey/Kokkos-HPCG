@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 #These next few lines are ripped from the trilinos demo almost exactly
-set(Trilinos_PREFIX "/home/zabooke/Project/Trilinos_builds/trilinos_kokkos_tpetra/build")
+set(Trilinos_PREFIX "/home/zabooke/Trilinos_build/Trilinos_Cuda/build")
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 message("Trilinos prefix: ${Trilinos_PREFIX}")
@@ -48,7 +48,7 @@ ENDIF()
 # -DHPCG_Kokkos_OpenMP
 # -DHPCG_Kokkos_Cuda
 # -DHPCG_Kokkos_Serial (Default)
-ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
+ADD_DEFINITIONS(-DHPCG_Kokkos_Cuda)
 
 # Change this definition to specify which Gauss Seidel to use
 # -DSYMGS_COLOR Solve using graph Colouring. (Doesn't Produce valid results)
