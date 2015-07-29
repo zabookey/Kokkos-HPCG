@@ -13,7 +13,7 @@
 
 % This controls the table-of-contents entry in the proceedings. Edit it
 % to include your article title followed by the authors' names, as shown.
-\addcontentsline{toc}{chapter}{The Quantum Mechanics of Chocolate Pudding\\
+\addcontentsline{toc}{chapter}{Performance Portable HPCG\\
 {\em Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}}
 
 \pagestyle{myheadings}
@@ -23,10 +23,10 @@
 % This gives the running head. Usually you list a shortened version of
 % your article title (unless it's already very short) along with
 % the author's names, as shown.
-\markboth{Pudding Quantum Mechanics}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
+\markboth{Performance Portable HPCG}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
 
 % Put your article title in here
-\title{The Quantum Mechanics of Chocolate Pudding}
+\title{Performance Portable HPCG}
 
 % List each author, their affiliation, and their e-mail address, as shown.
 \author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
@@ -38,7 +38,7 @@ ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Labora
 % Include your abstract here.
 \begin{abstract}
 The High Performance Conjugate Gradients (HPCG) Benchmark is an international project to create a
-more accurate benchmark test for the world's largest computers. The current LINPACK benchmark,
+more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
 parallel applications. In this project we are developing a version of HPCG, using the Kokkos
@@ -47,31 +47,13 @@ performance computing architectures. This new code demonstrates an efficient pro
 approach that can be adopted by other programmers to write portable high performance software.
 \end{abstract}
 
-\begin{itemize}
-	\item Introduction
-	\item HPCG
-	\begin{itemize}
-		\item History/Reason HPCG exists
-		\item What HPCG does
-		\begin{itemize}
-			\item Methods and stuff
-		\end{itemize}
-	\end{itemize}
-	\item Kokkos
-	\begin{itemize}
-		\item Maybe talk about the features of Kokkos
-	\end{itemize}
-	\item Explain the changes we made to HPCG to implement Kokkos
-	\item Future Work
-	\item Conclusion
-\end{itemize}
-
 \section{Introduction}
 The High Performance Conjugate Gradient, from here out referred to as HPCG, is a new and
 upcoming benchmark test to rank the worlds largest computers. HPCG uses a preconditioned 
 conjugate gradient to solve a system of equations. The goal of our project was to create a
 version of HPCG that uses the Kokkos package found in Trilinos in order to increase portability
 among many types of architectures while maintaining reasonable performance.
+
 \section{HPCG}
 After generations of using the High Performance Linpack (HPL) benchmark to measure the
 performance of large computers it became necessary to use another benchmark to help better the 
@@ -107,11 +89,27 @@ Views also handle their own memory management via reference counting so that the
 automatically deallocates itself when all of the variables that reference it go out of scope,
 thus making memory management much simpler across multiple devices.
 
-There are three main parallel kernels: parallel_for, parallel_reduce, and parallel_scan. All of
-these serve their own purpose and act as wrappers over how you would execute a section of code in
-parallel over the respective exectuion space. For all of the parallel kernels you initiate the
-kernel by passing in a functor that performs the desired parallel operation, as of C++11 lambdas
-work as well and soon lamda functionality will be fully supported by cuda from host to device.
+There are three main parallel kernels: parallel\_for, parallel\_reduce, and parallel\_scan. All 
+of these serve their own purpose and act as wrappers over how you would execute a section of 
+code in parallel over the respective exectuion space. For all of the parallel kernels you 
+initiate the kernel by passing in a functor that performs the desired parallel operation, as of 
+C++11 lambdas work as well and soon lamda functionality will be fully supported by cuda from 
+host to device.
+
+Parallel\_for is simply a generic for loop that will run all of the context of the loop in
+parallel. This works well for parallel kernels like vector addition. Parallel\_reduce is for 
+simultaneously updating a single value, this function guarantees that you avoid race conditions 
+with the updated values. Parallel\_reduce works well for parallel kernels like finding the dot
+product of two vectors. Parallel\_scan is for taking a view and creating a running sum of values
+to replace the values of the view. Although parallel\_scan is useful it was only really needed
+for setup phases in our HPCG.
+
+Kokkos allows for nested parallelism that involves creating a league of teams of threads.
+With this tool, a developer could launch a parallel\_reduce kernel that uses a parallel\_for to
+update some value that later gets added to the value that was initially included to be reduced.
+Although this has not been implemented in our project yet, there are places in our code that
+could and should benefit from nested parallelism and thus we intend to include it at a later
+time.
 
 \subsection{Kokkos Features}
 
