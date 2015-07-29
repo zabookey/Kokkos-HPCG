@@ -2,6 +2,7 @@
 
 % PACKAGES ---------------------------------------------------------------
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
+\usepackage{listings}
 % ADD YOUR OWN PACKAGES HERE ---------------------------------------------
 %\usepackage{someotherpackage}
 
@@ -67,7 +68,36 @@ to be used in the preconditioning phase. For the preconditioner it uses a Symmet
 forward sweep and back sweep to solve the lower and upper triangular matrices. For the actual
 solve of $A x = b$, HPCG uses the conjugate gradient method after the preconditioning phase.
 
-I can add more info here if I need to.
+HPCG runs in seven major phases.
+\begin{enumerate}
+	\item \textbf{Problem Setup:} This is the beginning of HPCG and is where we construct the 
+geometry that is used to generate the problem. HPCG generates a symmetric, positive definite, 
+sparse matrix with up to 27 nonzero entries per row depending on the local location of the row.
+	\item \textbf{Validation Testing:} This portion of the program is to make sure any changes 
+made produce valid results. Specifically it checks to make sure that both the unpreconditioned 
+and preconditioned conjugate gradient converge in around 12 and 2 iterations respectively. It 
+also makes sure that after performing both a sparse matrix vector multiplication and a symmetric 
+Gauss-Seidel sweep that we preserve symmetry by using two pseudorandomly filled vectors and 
+performing simple operations that should be zero due to the nature of our symmetric matrix A.
+	\item \textbf{Reference Sparse Matrix Vector Multiplication and Multigrid Timing:} This 
+portion of the code times how long it takes to perform the reference versionts of SPMV and 
+Symmetric Gauss-Seidel.
+	\item \textbf{Reference Conjugate Gradient Timing:} Here we run 50 iterations of the reference
+version of the conjugate gradient method and record the resulting residual. This residual must be
+attained by the optimized version of conjugate gradient no matter how many iterations are
+required.
+	\item \textbf{Optimized Conjugate Gradient Setup:} Runs one set of the optimized conjugate
+gradient and determines the number of iterations required to reach the residual found before.
+Then figures out how mamy times to reach the desired residual to fill in the requested benchmark
+time.
+	\item \textbf{Optimized Conjugate Gradient Timing:} Runs the optimized conjugate gradient the
+required amount of times. Records time for each timed section to report out later.
+	\item \textbf{Report Results:} Writes out log files for debugging and creates the .yaml file
+to display the results which can then be submitted if all the requirements are met.
+\end{enumerate}
+HPCG gives you the option to run with MPI, OpenMP, both, or in serial. Running with MPI adds an
+extra dimension to the problem and requires processes to exchange values on their borders to
+perform. This results in a tradeoff between more overhead and more parallelism.
 
 \section{Kokkos}
 As different computer architectures are better with certain applications than others it has
@@ -110,8 +140,6 @@ update some value that later gets added to the value that was initially included
 Although this has not been implemented in our project yet, there are places in our code that
 could and should benefit from nested parallelism and thus we intend to include it at a later
 time.
-
-\subsection{Kokkos Features}
 
 \section{HPCG + Kokkos}
 
