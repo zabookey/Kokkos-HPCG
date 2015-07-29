@@ -171,12 +171,14 @@ class fillColorsInd{
 
 		A.levels.f_numberOfLevels = f_numberOfLevels;
 		A.levels.b_numberOfLevels = b_numberOfLevels;
-		A.levels.f_lev_map = f_lev_map;
 		A.levels.f_lev_ind = f_lev_ind;
-		A.levels.b_lev_map = b_lev_map;
 		A.levels.b_lev_ind = b_lev_ind;
 		A.levels.f_row_level = f_row_level;
 		A.levels.b_row_level = b_row_level;
+		A.levels.f_lev_map = Kokkos::create_mirror_view(f_lev_map);
+		Kokkos::deep_copy(A.levels.f_lev_map, f_lev_map);
+		A.levels.b_lev_map = Kokkos::create_mirror_view(b_lev_map);
+		Kokkos::deep_copy(A.levels.b_lev_map, b_lev_map);
 	}
 #endif
 

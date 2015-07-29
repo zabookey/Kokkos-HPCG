@@ -14,8 +14,8 @@ struct LevelScheduler{
 	local_int_1d_type b_lev_map;
 	local_int_1d_type b_lev_ind;
 // Simple view of length number of rows that holds what level each row is in.
-	local_int_1d_type f_row_level;
-	local_int_1d_type b_row_level;
+	host_local_int_1d_type f_row_level;
+	host_local_int_1d_type b_row_level;
 };
 #endif/*
 
