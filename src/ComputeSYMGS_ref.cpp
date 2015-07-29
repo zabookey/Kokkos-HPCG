@@ -507,7 +507,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 #ifdef KOKKOS_TEAM
-         const team_policy policy( 8 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ) );
+         const team_policy policy( 512 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ) );
           Kokkos::parallel_for(policy, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old,  localNumberOfRows));
 #else
 		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old));
