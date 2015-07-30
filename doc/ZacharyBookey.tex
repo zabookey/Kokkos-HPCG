@@ -38,7 +38,8 @@ ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Labora
 
 % Include your abstract here.
 \begin{abstract}
-The High Performance Conjugate Gradients (HPCG) Benchmark is an international project to create a
+%Irina comment: we can't use acronyms in abstarct
+The High Performance Conjugate Gradients Benchmark is an international project to create a
 more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
@@ -49,17 +50,31 @@ approach that can be adopted by other programmers to write portable high perform
 \end{abstract}
 
 \section{Introduction}
-The High Performance Conjugate Gradient, from here out referred to as HPCG, is a new and
-upcoming benchmark test to rank the worlds largest computers. HPCG uses a preconditioned 
-conjugate gradient to solve a system of equations. The goal of our project was to create a
-version of HPCG that uses the Kokkos package found in Trilinos in order to increase portability
-among many types of architectures while maintaining reasonable performance.
+
+AfAfter generations of using the High Performance Linpack (HPL) benchmark to measure the
+performance of large computers it became necessary to use another benchmark to help better the
+direction that super computers were headed to more accurately reflect the types of applications
+that these machines were running.
+
+HPL is a simple program that factors and solves a large dense system of linear equations using
+Gaussian Elimination with partial pivoting.
+While dense matrix - matrix multiplication and related kernels are commonly used in scientific applications,
+they are not representative of all the operations usually performed in scientific computing:
+computations with lower computation-to-data-access ratios(computational intensity) and with
+irregular memory access are also very common.
+
+The High Performance Conjugate Gradient (HPCG) was created to fill the gap that HPL had created.
+HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
+dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
+
+Original, MPI-only,  HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
+And the goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers, by using Kokkos library from Trilinos.
+
+% Irina comment: I think we can add related work here
 
 \section{HPCG}
-After generations of using the High Performance Linpack (HPL) benchmark to measure the
-performance of large computers it became necessary to use another benchmark to help better the 
-direction that super computers were headed to more accurately reflect the types of applications
-that these machines were running. HPCG was created to fill the gap that HPL had created. On top
+HPCG is a new and
+upcoming benchmark test to rank the worlds largest computers. On top
 of solving a large system of equations, HPCG also features a more irregular data access pattern
 so that data access affects results as well as matrix computations.
 
