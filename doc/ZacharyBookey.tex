@@ -7,8 +7,6 @@
 % DEFINITIONS ------------------------------------------------------------
 % ADD YOUR OWN DEFINITIONS HERE ------------------------------------------
 % BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
-\newcommand{\ZABnorm}[1]{\left\Vert#1\right\Vert}
-\newcommand{\ZABabs}[1]{\left\vert#1\right\vert}
 % This controls the table-of-contents entry in the proceedings. Edit it
 % to include your article title followed by the authors' names, as shown.
 \addcontentsline{toc}{chapter}{Performance Portable HPCG\\
@@ -39,27 +37,35 @@ performance computing architectures. This new code demonstrates an efficient pro
 approach that can be adopted by other programmers to write portable high performance software.
 \end{abstract}
 \section{Introduction}
-AfAfter generations of using the High Performance Linpack (HPL) benchmark to measure the
+
+After generations of using the High Performance Linpack (HPL) benchmark to measure the
 performance of large computers it became necessary to use another benchmark to help better the
 direction that super computers were headed to more accurately reflect the types of applications
 that these machines were running.
+
 HPL is a simple program that factors and solves a large dense system of linear equations using
 Gaussian Elimination with partial pivoting.
 While dense matrix - matrix multiplication and related kernels are commonly used in scientific applications,
 they are not representative of all the operations usually performed in scientific computing:
 computations with lower computation-to-data-access ratios(computational intensity) and with
 irregular memory access are also very common.
+
 The High Performance Conjugate Gradient (HPCG) was created to fill the gap that HPL had created.
 HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
-Original, MPI-only, HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
+
+Original, MPI-only,  HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
 And the goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers, by using Kokkos library from Trilinos.
+
 % Irina comment: I think we can add related work here
+
+
 \section{HPCG}
 HPCG is a new and
 upcoming benchmark test to rank the worlds largest computers. On top
 of solving a large system of equations, HPCG also features a more irregular data access pattern
 so that data access affects results as well as matrix computations.
+
 HPCG begins by creating a symmetric positive definite matrix and it's corresponding multi grid
 to be used in the preconditioning phase. For the preconditioner it uses a Symmetric Gauss-Seidel
 forward sweep and back sweep to solve the lower and upper triangular matrices. For the actual
@@ -112,11 +118,11 @@ data on and allows you to choose what sort of memory access traits you wish this
 Views also handle their own memory management via reference counting so that the view
 automatically deallocates itself when all of the variables that reference it go out of scope,
 thus making memory management much simpler across multiple devices.
-There are three main parallel kernels: parallel\_for, parallel\_reduce, and parallel\_scan. All
-of these serve their own purpose and act as wrappers over how you would execute a section of
-code in parallel over the respective exectuion space. For all of the parallel kernels you
-initiate the kernel by passing in a functor that performs the desired parallel operation, as of
-C++11 lambdas work as well and soon lamda functionality will be fully supported by cuda from
+
+There are three main parallel kernels: parallel\_for, parallel\_reduce, and parallel\_scan. All 
+of these serve their own purpose and act as wrappers over how you would execute a section of 
+code in parallel over the respective execution space. For all of the parallel kernels you 
+initiate the kernel by passing in a functor that performs the desired parallel operation, as of 
 host to device.
 Parallel\_for is simply a generic for loop that will run all of the context of the loop in
 parallel. This works well for parallel kernels like vector addition. Parallel\_reduce is for
@@ -132,13 +138,25 @@ Although this has not been implemented in our project yet, there are places in o
 could and should benefit from nested parallelism and thus we intend to include it at a later
 time.
 \section{HPCG + Kokkos}
+The goal for our project was to create a version of HPCG that used Kokkos features to be able to
+produce valid results across many architectures.
 \subsection{Kokkos re-factoring}
 \subsection{Performance evaluation result}
 %Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
 %\section{Future Work}
 \section{Conclusion}
 \section{Acknowledgements}
+%Irina comment: I'll fill this section later 
+\subsection{Kokkos re-factoring}
+
+\subsection{Performance evaluation result}
+
+%Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
+\section{Conclusion}
+
+\section{Acknowledgements}
 %Irina comment: I'll fill this section later
+
 \section{Actual Content}
 As we saw in Section 1, we all like chocolate pudding. This is where I wish
 \textsf{$\setminus$jargonfill} worked. It would fill the page with meaningless technobabble so I could illustrate this
