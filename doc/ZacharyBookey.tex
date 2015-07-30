@@ -167,7 +167,20 @@ Computing the preconditioner using a symmetric Gauss-Seidel was initially done i
 moving to Kokkos required us to copy memory from the device to the host every time we ran it,
 which was the reason performance was lost. We tried implementing many different ways to perform
 a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
-implemented a level solve algorithm, a coloring algorithm, and an inexact solve. 
+implemented an inexact solve, a level solve, and a colouring algorithm.
+
+Our level solve algorithm splits our matrix $A$ into parts $L$, $U$, and $D$ where $L$ is the
+lower triangular part of $A$ that includes the diagonal, $U$ is similar to $L$ since it is just
+the upper triangular part of $A$ that includes the diagonal. $D$ is just the diagonal of A. For
+this algorithm we introduce another data structure, levels, to our SparseMatrix that stores all 
+of the data needed for sorting the matrix. When we optimize the problem we find dependencies in
+solving for $L$ and sort based on those dependencies in a way that a row will only be solved if
+all of it's dependencies have been solved. We repeat this process for solving for $A$ and store
+all of this data into levels. Now when we compute our Symmetric Gauss-Seidel we solve just like
+we do for the inexact solve except we start by solving for the rows in level 1 in parallel and
+then the rows in level 2 in parallel and repeat until we solve all of our levels. In the end we
+have a Symmetric Gauss-Seidel that has introduced a deal of parallelism and performs well
+compared to the original implementation.
 
 \subsection{Performance evaluation result}
 %Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
