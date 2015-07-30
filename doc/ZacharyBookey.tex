@@ -2,7 +2,6 @@
 
 % PACKAGES ---------------------------------------------------------------
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
-\usepackage{listings}
 % ADD YOUR OWN PACKAGES HERE ---------------------------------------------
 %\usepackage{someotherpackage}
 
@@ -49,8 +48,8 @@ approach that can be adopted by other programmers to write portable high perform
 \end{abstract}
 
 \section{Introduction}
-The High Performance Conjugate Gradient, from here out referred to as HPCG, is a new and
-upcoming benchmark test to rank the worlds largest computers. HPCG uses a preconditioned 
+The High Performance Conjugate Gradient, from here out referred to as HPCG, is an upcoming 
+benchmark test to rank the worlds largest computers. HPCG uses a preconditioned 
 conjugate gradient to solve a system of equations. The goal of our project was to create a
 version of HPCG that uses the Kokkos package found in Trilinos in order to increase portability
 among many types of architectures while maintaining reasonable performance.
@@ -138,10 +137,11 @@ Kokkos allows for nested parallelism that involves creating a league of teams of
 With this tool, a developer could launch a parallel\_reduce kernel that uses a parallel\_for to
 update some value that later gets added to the value that was initially included to be reduced.
 Although this has not been implemented in our project yet, there are places in our code that
-could and should benefit from nested parallelism and thus we intend to include it at a later
-time.
+would benefit from nested parallelism and thus we intend to include it at a later time.
 
 \section{HPCG + Kokkos}
+The goal for our project was to create a version of HPCG that used Kokkos features to be able to
+produce valid results across many architectures.
 
 \section{Future Work}
 
@@ -165,6 +165,7 @@ the material structure of chocolate pudding.
 \bibliographystyle{siam}
 % Edit the line below to be your first and last names.
 \nocite{ZAB:Mentor05}
+\nocite{ZAB:TechHPCG}
 \bibliography{ZacharyBookey}
 
 % Edit FirstnameLastname below to be your first and last names, but leave the line commented out.

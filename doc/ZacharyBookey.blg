@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.6)
+The top-level auxiliary file: ZacharyBookey.aux
+The style file: siam.bst
+Database file #1: ZacharyBookey.bib
+Warning--empty year in ZAB:TechHPCG
+You've used 2 entries,
+            2030 wiz_defined-function locations,
+            509 strings with 3972 characters,
+and the built_in function-call counts, 616 in all, are:
+= -- 57
+> -- 25
+< -- 0
++ -- 10
+- -- 8
+* -- 50
+:= -- 106
+add.period$ -- 2
+call.type$ -- 2
+change.case$ -- 11
+chr.to.int$ -- 0
+cite$ -- 3
+duplicate$ -- 27
+empty$ -- 45
+format.name$ -- 8
+if$ -- 123
+int.to.chr$ -- 0
+int.to.str$ -- 2
+missing$ -- 1
+newline$ -- 9
+num.names$ -- 4
+pop$ -- 9
+preamble$ -- 1
+purify$ -- 8
+quote$ -- 0
+skip$ -- 20
+stack$ -- 0
+substring$ -- 37
+swap$ -- 10
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 8
+warning$ -- 1
+while$ -- 7
+width$ -- 3
+write$ -- 19
+(There was 1 warning)
