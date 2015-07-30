@@ -138,18 +138,43 @@ Although this has not been implemented in our project yet, there are places in o
 could and should benefit from nested parallelism and thus we intend to include it at a later
 time.
 \section{HPCG + Kokkos}
-The goal for our project was to create a version of HPCG that used Kokkos features to be able to
-produce valid results across many architectures.
+The goal for our project was to create a version of HPCG that uses Kokkos features to be able to
+produce valid results across many architectures without sacrificing performance. First we needed
+to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
+all of the code to work with Kokkos views, and finally we needed to make a few optimizations to
+avoid an unecessary amount of memory copying from the host to the device and vice versa.
 \subsection{Kokkos re-factoring}
+Rewriting the parallel kernels involved replacing the parallel loops with the correct type of
+Kokkos parallel kernel. This part of re-factoring was heavily focused on converting the
+computation algorithms into functors and lambdas. Completing this task didn't affect portability
+at all and due to some Kokkos restrictions actually caused a slight reduction of performance in
+the function ComputeResidual. Other kernels would later have to be changed to accomodate the fact
+that data was stored on a device but was being run on the host.
+
+Restructuring the code involved a whole rewrite of HPCG to change how all of the structs stored
+their values. We replaced every array that would be used in a parallel kernel with an appropriate
+view. Once this was functional we had to go back to some of the compute algorithms and change
+how the data was accessed as to not try to access device data from the host or the
+other way around.
+
+While restructuring we decided to change how our SparseMatrix stored the data and implemented it
+as a sort of overlying structure on top of a Kokkos CSRMatrix. This change required us to again
+go back and change how most of our computational kernels worked and created a noticeable increase
+in performance. At this point the code was functional across all of Kokkos execution spaces but
+took a severe performance hit while trying to run on Cuda.
+
+Computing the preconditioner using a symmetric Gauss-Seidel was initially done in serial and thus
+moving to Kokkos required us to copy memory from the device to the host every time we ran it,
+which was the reason performance was lost. We tried implementing many different ways to perform
+a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
+implemented a level solve algorithm, a coloring algorithm, and an inexact solve. 
+
 \subsection{Performance evaluation result}
 %Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
 %\section{Future Work}
 \section{Conclusion}
 \section{Acknowledgements}
 %Irina comment: I'll fill this section later 
-\subsection{Kokkos re-factoring}
-
-\subsection{Performance evaluation result}
 
 %Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
 \section{Conclusion}
@@ -171,6 +196,7 @@ the material structure of chocolate pudding.
 \bibliographystyle{siam}
 % Edit the line below to be your first and last names.
 \nocite{ZAB:Mentor05}
+\nocite{ZAB:TechHPCG}
 \bibliography{ZacharyBookey}
 % Edit FirstnameLastname below to be your first and last names, but leave the line commented out.
 % This line will help me merge bibliographies for the proceedings.
