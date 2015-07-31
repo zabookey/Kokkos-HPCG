@@ -169,6 +169,15 @@ which was the reason performance was lost. We tried implementing many different 
 a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
 implemented an inexact solve, a level solve, and a colouring algorithm.
 
+The inexact solve works by performing a few triangular matrix solves. We split our matrix $A$ into
+parts $L$, $U$, and $D$ where $L$ is the lower triangular matrix including the diagonal, $U$ is the upper
+triangular matrix including the diagonal and $D$ is the diagonal. The inexact solve is done by solving three
+different equations. Given our problem $A x = b$, to simulate a symmetric Gauss-Seidel sweep we solve
+$L z = b$ then $D w = z$ and finally $U x = w$. All of these solves are done using a parallel Jacobi solve.
+Although this version of symmetric Gauss-Seidel is run in parallel and avoid all device to host memory
+copies it still performs slowly since each Jacobi solve needs to be run a certain amount of time depending
+on problem density and results in more parallel kernels being launched than is ideal.
+
 Our level solve algorithm splits our matrix $A$ into parts $L$, $U$, and $D$ where $L$ is the
 lower triangular part of $A$ that includes the diagonal, $U$ is similar to $L$ since it is just
 the upper triangular part of $A$ that includes the diagonal. $D$ is just the diagonal of A. For
@@ -182,30 +191,32 @@ then the rows in level 2 in parallel and repeat until we solve all of our levels
 have a Symmetric Gauss-Seidel that has introduced a deal of parallelism and performs well
 compared to the original implementation.
 
+At the time of writing our coloring algorithm does not work. We are in the process of debugging and
+determining what a good fix will be. The algorithm works by coloring our matrix $A$ so that all rows
+with a certain color have no dependencies on one another. This way we can run a sweep of symmetric
+Gauss-Seidel in parallel over each color. While similar to the level solve, this method requires more iterations
+to converge due to the fact that although no two rows in the same color depend on each other it is likely
+that they depend on a row in a color that will be solved in a later iteration.
+
 \subsection{Performance evaluation result}
+Performance results coming soon!
 %Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
 %\section{Future Work}
 \section{Conclusion}
+In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
+package found in Trilinos. This version of HPCG will be a useful for being able to run the reference
+version of HPCG out of the box and not need to configure the code to be compatible with the
+specific machine being benchmarked.
+
+Our work here is not completed but we have made great headway on this project and currently have
+code that produces similar results across all of the Kokkos execution spaces. In the future we want to
+fix a few performance bottlenecks and utilize hierarchical parallelism to fully take advantage of Kokkos
+kernels.We also want to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
+compile time which algorithm to use for preconditioning. It will be interesting to compare performance
+between all of our preconditioning algorithms.
 \section{Acknowledgements}
 %Irina comment: I'll fill this section later 
 
-%Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
-\section{Conclusion}
-
-\section{Acknowledgements}
-%Irina comment: I'll fill this section later
-
-\section{Actual Content}
-As we saw in Section 1, we all like chocolate pudding. This is where I wish
-\textsf{$\setminus$jargonfill} worked. It would fill the page with meaningless technobabble so I could illustrate this
-package. Instead, I'll talk about how to use quotations in latex. "Never use these quotations." ``Always use these,
-instead.''
-\section{Conclusions}
-Herein, we repeat the abstract in past tense.
-Unlike many other baked goods, chocolate pudding is subject to a myriad of interesting (and unique) effects on both the
-meso and nano scales. Understanding these phenomena is critical, not only to America's restaurant industry, but to
-children everywhere. We have examined these effects and have proposed new potential models which accurately capture
-the material structure of chocolate pudding.
 \bibliographystyle{siam}
 % Edit the line below to be your first and last names.
 \nocite{ZAB:Mentor05}
