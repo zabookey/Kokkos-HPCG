@@ -21,7 +21,7 @@
 \title{Performance Portable HPCG}
 % List each author, their affiliation, and their e-mail address, as shown.
 \author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
-ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}}
+ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}\and Michael A. Heroux\thanks{Sandia National Laboratories, maherou@sandia.gov}}
 \begin{document}
 \maketitle
 % Include your abstract here.
@@ -36,9 +36,10 @@ package found in Trilinos, that can be optimally executed across several distinc
 performance computing architectures. This new code demonstrates an efficient programming
 approach that can be adopted by other programmers to write portable high performance software.
 \end{abstract}
+
 \section{Introduction}
 
-After generations of using the High Performance Linpack (HPL) benchmark to measure the
+After generations of using the High Performance Linpack (HPL), or Top 500, benchmark \cite{ZAB:Top500} to measure the
 performance of large computers it became necessary to use another benchmark to help better the
 direction that super computers were headed to more accurately reflect the types of applications
 that these machines were running.
@@ -50,17 +51,17 @@ they are not representative of all the operations usually performed in scientifi
 computations with lower computation-to-data-access ratios(computational intensity) and with
 irregular memory access are also very common.
 
-The High Performance Conjugate Gradient (HPCG) was created to fill the gap that HPL had created.
+The High Performance Conjugate Gradient (HPCG)\cite{ZAB:TechHPCG}\cite{ZAB:TechHPCG2} was created to fill the gap that HPL had created.
 HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
 
-Original, MPI-only,  HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
-And the goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers, by using Kokkos library from Trilinos.
+Original HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
+And the goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers, by using Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos}.
 
 % Irina comment: I think we can add related work here
 
-
 \section{HPCG}
+
 HPCG is a new and
 upcoming benchmark test to rank the worlds largest computers. On top
 of solving a large system of equations, HPCG also features a more irregular data access pattern
@@ -105,39 +106,47 @@ As different computer architectures are better with certain applications than ot
 become increasingly difficult to write code that will perform well across many different types of
 architectures. One solution to this problem is the C++ package, Kokkos. Kokkos acts as a wrapper
 around your code to allow you to specify at compile time where and how you want to run your
-application. Currently Kokkos supports the following execution spaces:
+application. Kokkos executes computational kernels in fine-grain data parallel within an 
+\texttt{Execution space}.
+Currently Kokkos supports the following \texttt{Execution spaces}:
 \begin{itemize}
-\item Serial
-\item PThreads
-\item OpenMP
-\item Cuda
+\item \texttt{Serial}
+\item \texttt{PThreads}\cite{ZAB:PThreads}
+\item \texttt{OpenMP}\cite{ZAB:OpenMP}
+\item \texttt{Cuda}\cite{ZAB:CUDA}
 \end{itemize}
-Kokkos has two main features, views and parallel kernels. A view is essentially a wrapper around
+
+Kokkos has two main features: \texttt{Kokkos::View} polymorphic Multidimensional  Arrays and data 
+parallel execution kernels.  \texttt{Kokkos::View} is essentially a wrapper around
 an array of data that gives you the option to specify which execution space you want to store the
 data on and allows you to choose what sort of memory access traits you wish this data to have.
-Views also handle their own memory management via reference counting so that the view
+\texttt{Kokkos::View}  also handle their own memory management via reference counting so that the view
 automatically deallocates itself when all of the variables that reference it go out of scope,
 thus making memory management much simpler across multiple devices.
 
-There are three main parallel kernels: parallel\_for, parallel\_reduce, and parallel\_scan. All 
-of these serve their own purpose and act as wrappers over how you would execute a section of 
-code in parallel over the respective execution space. For all of the parallel kernels you 
-initiate the kernel by passing in a functor that performs the desired parallel operation, as of 
-host to device.
-Parallel\_for is simply a generic for loop that will run all of the context of the loop in
+There are three main data parallel execution operations: parallel\_for,  parallel\_reduce, and parallel\_scan. 
+All of these serve their own purpose and act as wrappers over how you would execute a section of 
+code in parallel over the respective execution space. 
+For all of the data parallel executions kernels you initiate the kernel by passing in a functor 
+that performs the desired parallel operation, as of  host to device.
+
+\texttt{Parallel\_for} is simply a generic for loop that will run all of the context of the loop in
 parallel. This works well for parallel kernels like vector addition. Parallel\_reduce is for
 simultaneously updating a single value, this function guarantees that you avoid race conditions
-with the updated values. Parallel\_reduce works well for parallel kernels like finding the dot
-product of two vectors. Parallel\_scan is for taking a view and creating a running sum of values
-to replace the values of the view. Although parallel\_scan is useful it was only really needed
+with the updated values. \texttt{Parallel\_reduce} works well for parallel kernels like finding the dot
+product of two vectors. \texttt{Parallel\_scan} is for taking a view and creating a running sum of values
+to replace the values of the view. Although \texttt{parallel\_scan} is useful it was only really needed
 for setup phases in our HPCG.
+
 Kokkos allows for nested parallelism that involves creating a league of teams of threads.
-With this tool, a developer could launch a parallel\_reduce kernel that uses a parallel\_for to
+With this tool, a developer could launch a \texttt{parallel\_reduce} kernel that uses a \texttt{parallel\_for} to
 update some value that later gets added to the value that was initially included to be reduced.
 Although this has not been implemented in our project yet, there are places in our code that
 could and should benefit from nested parallelism and thus we intend to include it at a later
 time.
+
 \section{HPCG + Kokkos}
+
 The goal for our project was to create a version of HPCG that uses Kokkos features to be able to
 produce valid results across many architectures without sacrificing performance. First we needed
 to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
@@ -199,9 +208,45 @@ to converge due to the fact that although no two rows in the same color depend o
 that they depend on a row in a color that will be solved in a later iteration.
 
 \subsection{Performance evaluation result}
+We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
+Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
+
+\begin{table}[h]
+\centering
+\resizebox{2.7in}{!}{
+\begin{tabular}{lll}
+\hline    
+ Name & Compton & Shannon      \\
+ \hline    
+ \\
+ Nodes & 32 & 32  \\
+\\
+ CPU &2× Intel E5-2670 HT-on &2× Intel E5-2670 HT-off  \\
+ \\
+ Co-Processor &2× Intel Xeon Phi 57c  &2× K20x ECC on  \\
+ & 1.1 GHz &\\
+ Memory  &64 GB &  128 GB  \\
+ \\
+ Interconnect  & QDR IB &  QDR IB  \\
+ \\
+ OS  & RedHat 6.1 & RedHat 6.2   \\
+ \\
+ Compiler & ICC 13.1.2 & GCC 4.8.2+CUDA 6.5   \\
+ \\
+ MPI & IMPI 4.1.1.036  & MVAPICH2 1.9  \\
+ \\
+ Other &MPSS 2.1.3653-8 & Driver: 319.23  \\
+ \\
+ \hline    
+\end{tabular}}
+ \caption{Configurations of testbed clusters}
+ \label{testbeds}
+\end{table}
+
+
 Performance results coming soon!
-%Irina comment: I would remove "Future Work" as a section and just add the contect into conclusion
-%\section{Future Work}
+
+
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
 package found in Trilinos. This version of HPCG will be a useful for being able to run the reference
@@ -215,12 +260,19 @@ kernels.We also want to fix our coloring algorithm for the symmetric Gauss-Seide
 compile time which algorithm to use for preconditioning. It will be interesting to compare performance
 between all of our preconditioning algorithms.
 \section{Acknowledgements}
-%Irina comment: I'll fill this section later 
+Sandia National Laboratories is a multi-program laboratory managed and operated by Sandia Corporation, a wholly owned subsidiary of Lockheed Martin Corporation, for the US Department of Energy{'}s National Nuclear Security Administration under contract DE-AC04-94AL85000. This paper is cross-referenced at Sandia as SAND
 
 \bibliographystyle{siam}
 % Edit the line below to be your first and last names.
-\nocite{ZAB:Mentor05}
+%\nocite{ZAB:Mentor05}
 \nocite{ZAB:TechHPCG}
+\nocite{ZAB:TechHPCG2}
+\nocite{ZAB:Kokkos}
+\nocite{ZAB:Trilinos}
+\nocite{ZAB:Top500}
+\nocite{ZAB:CUDA}
+\nocite{ZAB:OpenMP}
+\nocite{ZAB:PThreads}
 \bibliography{ZacharyBookey}
 % Edit FirstnameLastname below to be your first and last names, but leave the line commented out.
 % This line will help me merge bibliographies for the proceedings.

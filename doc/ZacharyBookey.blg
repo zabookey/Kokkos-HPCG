@@ -1,47 +1,51 @@
-This is BibTeX, Version 0.99c (Web2C 7.5.6)
+This is BibTeX, Version 0.99d (TeX Live 2014)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: ZacharyBookey.aux
 The style file: siam.bst
 Database file #1: ZacharyBookey.bib
-Warning--empty year in ZAB:TechHPCG
-You've used 2 entries,
+Warning--entry type for "ZAB:PThreads" isn't style-file defined
+--line 12 of file ZacharyBookey.bib
+Warning--entry type for "ZAB:Top500" isn't style-file defined
+--line 35 of file ZacharyBookey.bib
+You've used 8 entries,
             2030 wiz_defined-function locations,
-            509 strings with 3972 characters,
-and the built_in function-call counts, 616 in all, are:
-= -- 57
-> -- 25
-< -- 0
-+ -- 10
-- -- 8
-* -- 50
-:= -- 106
-add.period$ -- 2
-call.type$ -- 2
-change.case$ -- 11
+            542 strings with 5043 characters,
+and the built_in function-call counts, 2374 in all, are:
+= -- 197
+> -- 160
+< -- 1
++ -- 65
+- -- 56
+* -- 201
+:= -- 413
+add.period$ -- 8
+call.type$ -- 8
+change.case$ -- 54
 chr.to.int$ -- 0
-cite$ -- 3
-duplicate$ -- 27
-empty$ -- 45
-format.name$ -- 8
-if$ -- 123
+cite$ -- 8
+duplicate$ -- 89
+empty$ -- 159
+format.name$ -- 56
+if$ -- 460
 int.to.chr$ -- 0
-int.to.str$ -- 2
-missing$ -- 1
-newline$ -- 9
-num.names$ -- 4
-pop$ -- 9
+int.to.str$ -- 8
+missing$ -- 2
+newline$ -- 27
+num.names$ -- 14
+pop$ -- 54
 preamble$ -- 1
-purify$ -- 8
+purify$ -- 45
 quote$ -- 0
-skip$ -- 20
+skip$ -- 64
 stack$ -- 0
-substring$ -- 37
-swap$ -- 10
-text.length$ -- 0
+substring$ -- 74
+swap$ -- 25
+text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 8
-warning$ -- 1
-while$ -- 7
-width$ -- 3
-write$ -- 19
-(There was 1 warning)
+type$ -- 32
+warning$ -- 0
+while$ -- 17
+width$ -- 9
+write$ -- 66
+(There were 2 warnings)
