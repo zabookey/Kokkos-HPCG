@@ -1,7 +1,8 @@
 \begin{thebibliography}{1}
 
 \bibitem{ZAB:Top500}
-{\sc J.~Dongarra and et~al.}, {\em Top 500 supercomputer sites}, 1999.
+{\sc J.~Dongarra and et~al.}, {\em Top 500 supercomputer sites}.
+\newblock \url{http://www.top500.org}, 1999.
 
 \bibitem{ZAB:Kokkos}
 {\sc H.~C. Edwards, C.~R. Trott, and D.~Sunderland}, {\em Kokkos: Enabling
@@ -26,6 +27,7 @@
 
 \bibitem{ZAB:PThreads}
 {\sc laise Barney}, {\em Posix threads programming}.
+\newblock \url{https://computing.llnl.gov/tutorials/pthreads/}.
 
 \bibitem{ZAB:CUDA}
 {\sc NVIDIA}, {\em Cuda programming guide version 3.0}, tech. rep., Nvidia

@@ -1,26 +1,23 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.4.13)  4 AUG 2015 13:46
+This is pdfTeXk, Version 3.141592-1.40.3 (Web2C 7.5.6) (format=pdflatex 2015.5.13)  4 AUG 2015 16:44
 entering extended mode
-**C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
-(C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
-LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
-abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
-croatian, czech, danish, dutch, esperanto, estonian, farsi, finnish, french, ga
-lician, german, german-x-2013-05-26, greek, gujarati, hindi, hungarian, iceland
-ic, indonesian, interlingua, irish, italian, kannada, kurmanji, latin, latvian,
- lithuanian, malayalam, marathi, mongolian, mongolianlmc, monogreek, ngerman, n
-german-x-2013-05-26, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
-ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
-an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
-ishmax, welsh, loaded.
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ccr15.cls
+ %&-line parsing enabled.
+**ZacharyBookey
+(./ZacharyBookey.tex
+LaTeX2e <2005/12/01>
+Babel <v3.8h> and hyphenation patterns for english, usenglishmax, dumylang, noh
+yphenation, arabic, basque, bulgarian, coptic, welsh, czech, slovak, german, ng
+erman, danish, esperanto, spanish, catalan, galician, estonian, farsi, finnish,
+ french, greek, monogreek, ancientgreek, croatian, hungarian, interlingua, ibyc
+us, indonesian, icelandic, italian, latin, mongolian, dutch, norsk, polish, por
+tuguese, pinyin, romanian, russian, slovenian, uppersorbian, serbian, swedish, 
+turkish, ukenglish, ukrainian, loaded.
+(./ccr15.cls
 Document Class: ccr15 2015/06/01 CCR 2015 Summer Report Class
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\siamltex.cls
+(./siamltex.cls
 Document Class: siamltex 1996/10/11 v1.2 LaTeX document class
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\base\leqno.clo
+(/usr/share/texmf/tex/latex/base/leqno.clo
 File: leqno.clo 1998/08/17 v1.1c Standard LaTeX option (left equation numbers)
-)
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\siam10.clo
+) (./siam10.clo
 File: siam10.clo 1994/10/01 v1.0 SIAM LaTeX file (size option)
 )
 \c@section=\count79
@@ -37,49 +34,49 @@ File: siam10.clo 1994/10/01 v1.0 SIAM LaTeX file (size option)
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
 ))
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\amsfonts.sty
-Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+(/usr/share/texmf/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2001/10/25 v2.2f
 \@emptytoks=\toks14
 \symAMSa=\mathgroup4
 \symAMSb=\mathgroup5
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
-(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 132.
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsmath.sty
-Package: amsmath 2013/01/14 v2.14 AMS math features
+(/usr/share/texmf/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2000/07/18 v2.13 AMS math features
 \@mathmargin=\skip43
 
 For additional information on amsmath, use the `?' option.
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amstext.sty
+(/usr/share/texmf/tex/latex/amsmath/amstext.sty
 Package: amstext 2000/06/29 v2.01
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsgen.sty
+(/usr/share/texmf/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks15
 \ex@=\dimen103
 ))
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsbsy.sty
+(/usr/share/texmf/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d
 \pmbraise@=\dimen104
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsopn.sty
+(/usr/share/texmf/tex/latex/amsmath/amsopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
 \inf@bad=\count89
-LaTeX Info: Redefining \frac on input line 210.
+LaTeX Info: Redefining \frac on input line 211.
 \uproot@=\count90
 \leftroot@=\count91
-LaTeX Info: Redefining \overline on input line 306.
+LaTeX Info: Redefining \overline on input line 307.
 \classnum@=\count92
 \DOTSCASE@=\count93
-LaTeX Info: Redefining \ldots on input line 378.
-LaTeX Info: Redefining \dots on input line 381.
-LaTeX Info: Redefining \cdots on input line 466.
+LaTeX Info: Redefining \ldots on input line 379.
+LaTeX Info: Redefining \dots on input line 382.
+LaTeX Info: Redefining \cdots on input line 467.
 \Mathstrutbox@=\box26
 \strutbox@=\box27
 \big@size=\dimen105
-LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
-LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OML on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
 \macc@depth=\count94
 \c@MaxMatrixCols=\count95
 \dotsspace@=\muskip10
@@ -100,43 +97,36 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
 \multlinegap=\skip44
 \multlinetaggap=\skip45
 \mathdisplay@stack=\toks19
-LaTeX Info: Redefining \[ on input line 2665.
-LaTeX Info: Redefining \] on input line 2666.
+LaTeX Info: Redefining \[ on input line 2666.
+LaTeX Info: Redefining \] on input line 2667.
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\graphicx.sty
+(/usr/share/texmf/tex/latex/graphics/graphicx.sty
 Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\keyval.sty
+(/usr/share/texmf/tex/latex/graphics/keyval.sty
 Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 \KV@toks@=\toks20
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\graphics.sty
-Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+(/usr/share/texmf/tex/latex/graphics/graphics.sty
+Package: graphics 2006/02/20 v1.0o Standard LaTeX Graphics (DPC,SPQR)
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\trig.sty
+(/usr/share/texmf/tex/latex/graphics/trig.sty
 Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\00miktex\graphics.cfg
+(/usr/share/texmf/tex/latex/config/graphics.cfg
 File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
 )
-Package graphics Info: Driver file: pdftex.def on input line 91.
+Package graphics Info: Driver file: pdftex.def on input line 90.
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\pdftex-def\pdftex.def
-File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
-
-(C:\Users\Zach\Documents\LATEXSRC\tex\generic\oberdiek\infwarerr.sty
-Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
-)
-(C:\Users\Zach\Documents\LATEXSRC\tex\generic\oberdiek\ltxcmds.sty
-Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
-)
+(/usr/share/texmf/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2007/01/08 v0.04d Graphics/color for pdfTeX
 \Gread@gobject=\count101
 ))
 \Gin@req@height=\dimen112
 \Gin@req@width=\dimen113
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\subfigure\subfigure.sty
-Package: subfigure 2002/07/30 v2.1.4 subfigure package
+(/usr/share/texmf/tex/latex/subfigure/subfigure.sty
+Package: subfigure 2002/03/15 v2.1.5 subfigure package
 \subfigtopskip=\skip46
 \subfigcapskip=\skip47
 \subfigcaptopadj=\dimen114
@@ -151,11 +141,11 @@ Package: subfigure 2002/07/30 v2.1.4 subfigure package
 ****************************************
 * Local config file subfigure.cfg used *
 ****************************************
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\subfigure\subfigure.cfg)
+(/usr/share/texmf/tex/latex/subfigure/subfigure.cfg)
 \subfig@top=\skip50
 \subfig@bottom=\skip51
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\listings.sty
+(/usr/share/texmf/tex/latex/listings/listings.sty
 \lst@mode=\count106
 \lst@gtempboxa=\box28
 \lst@token=\toks21
@@ -167,57 +157,51 @@ Package: subfigure 2002/07/30 v2.1.4 subfigure package
 \lst@width=\dimen118
 \lst@newlines=\count110
 \lst@lineno=\count111
+\c@lstlisting=\count112
 \lst@maxwidth=\dimen119
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\lstmisc.sty
-File: lstmisc.sty 2014/09/06 1.5e (Carsten Heinz)
-\c@lstnumber=\count112
-\lst@skipnumbers=\count113
+(/usr/share/texmf/tex/latex/listings/lstpatch.sty
+File: lstpatch.sty 2004/10/17 1.3b (Carsten Heinz)
+)
+(/usr/share/texmf/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2004/09/07 1.3 (Carsten Heinz)
+\c@lstnumber=\count113
+\lst@skipnumbers=\count114
 \lst@framebox=\box29
 )
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\listings.cfg
-File: listings.cfg 2014/09/06 1.5e listings configuration
+(/usr/share/texmf/tex/latex/listings/listings.cfg
+File: listings.cfg 2004/09/05 1.3 listings configuration
 ))
-Package: listings 2014/09/06 1.5e (Carsten Heinz)
+Package: listings 2004/10/17 1.3b (Carsten Heinz)
 
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
-LaTeX Font Info:    ... okay on input line 25.
+(/usr/share/texmf/tex/latex/ltxmisc/url.sty
+\Urlmuskip=\muskip11
+Package: url 2005/06/27  ver 3.2  Verb mode for urls, etc.
+) (./ZacharyBookey.aux)
+\openout1 = `ZacharyBookey.aux'.
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\context\base\supp-pdf.mkii
-[Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count114
-\scratchdimen=\dimen120
-\scratchbox=\box30
-\nofMPsegments=\count115
-\nofMParguments=\count116
-\everyMPshowfont=\toks22
-\MPscratchCnt=\count117
-\MPscratchDim=\dimen121
-\MPnumerator=\count118
-\makeMPintoPDFobject=\count119
-\everyMPtoPDFconversion=\toks23
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Try loading font information for U+msa on input line 27.
+
+(/usr/share/texmf/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2002/01/19 v2.2g AMS font definitions
 )
-\c@lstlisting=\count120
-LaTeX Font Info:    Try loading font information for U+msa on input line 26.
- (C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Try loading font information for U+msb on input line 26.
+LaTeX Font Info:    Try loading font information for U+msb on input line 27.
 
-(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\umsb.fd
-File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1{C:/Users/Zach/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
+(/usr/share/texmf/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2002/01/19 v2.2g AMS font definitions
+) [1{/usr/share/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 ] [2] [3]
 Missing character: There is no ï in font cmr10!
@@ -236,87 +220,54 @@ Missing character: There is no ½ in font cmr10!
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
+[4]
 
-! LaTeX Error: \begin{tabular} on input line 255 ended by \end{tabluar}.
+LaTeX Warning: `h' float specifier changed to `ht'.
 
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.265 \end{tabluar}
-                   
-? 
-! Missing } inserted.
-<inserted text> 
-                }
-l.265 \end{tabluar}
-                   
-? 
-! Missing } inserted.
-<inserted text> 
-                }
-l.265 \end{tabluar}
-                   
-? 
-! Missing \cr inserted.
-<inserted text> 
-                \cr 
-l.265 \end{tabluar}
-                   
-? 
-! Missing { inserted.
-<inserted text> 
-                {
-l.265 \end{tabluar}
-                   
-? 
-! Missing } inserted.
-<inserted text> 
-                }
-l.265 \end{tabluar}
-                   
-? 
-! Missing $ inserted.
-<inserted text> 
-                $
-l.265 \end{tabluar}
-                   
-? 
-! Missing } inserted.
-<inserted text> 
-                }
-l.265 \end{tabluar}
-                   
-? 
-[4] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.bbl [5])
-[6] [7] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+LaTeX Warning: `h' float specifier changed to `ht'.
 
- ) 
+[5] <plots/ZAB-VanillaSYMGS.png, id=29, 455.14723pt x 256.02032pt>
+File: plots/ZAB-VanillaSYMGS.png Graphic file (type png)
+
+<use plots/ZAB-VanillaSYMGS.png>
+<plots/ZAB-LevelSolve.png, id=30, 455.14723pt x 256.02032pt>
+File: plots/ZAB-LevelSolve.png Graphic file (type png)
+
+<use plots/ZAB-LevelSolve.png>
+<plots/ZAB-InexactSolve.png, id=31, 455.14723pt x 256.02032pt>
+File: plots/ZAB-InexactSolve.png Graphic file (type png)
+
+<use plots/ZAB-InexactSolve.png> (./ZacharyBookey.bbl [6]
+Underfull \hbox (badness 3343) in paragraph at lines 29--31
+[]\OT1/cmr/m/sc/8 laise Bar-ney\OT1/cmr/m/n/8 , \OT1/cmr/m/it/8 Posix threads p
+ro-gram-ming\OT1/cmr/m/n/8 .  $\OT1/cmtt/m/n/8 https : / / computing . llnl . g
+ov / tutorials /
+ []
+
+) [7] [8 <./plots/ZAB-VanillaSYMGS.png (PNG copy)> <./plots/ZAB-LevelSolve.png 
+(PNG copy)> <./plots/ZAB-InexactSolve.png (PNG copy)>] (./ZacharyBookey.aux) ) 
 Here is how much of TeX's memory you used:
- 3279 strings out of 493921
- 44121 string characters out of 3145280
- 112607 words of memory out of 3000000
- 6555 multiletter control sequences out of 15000+200000
- 9877 words of font info for 39 fonts, out of 3000000 for 9000
- 841 hyphenation exceptions out of 8191
- 29i,8n,32p,498b,280s stack positions out of 5000i,500n,10000p,200000b,50000s
-<C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx10.pfb><
-C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/U
-sers/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Use
-rs/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/
-Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Zach
-/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Zach/Docu
-ments/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Zach/Documents
-/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Zach/Documents/LATE
-XSRC/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Zach/Documents/LATEXSR
-C/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/Zach/Documents/LATEXSRC/fo
-nts/type1/public/amsfonts/cm/cmti8.pfb><C:/Users/Zach/Documents/LATEXSRC/fonts/
-type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on ZacharyBookey.pdf (7 pages, 189440 bytes).
+ 2820 strings out of 256216
+ 36327 string characters out of 1917072
+ 97084 words of memory out of 1500000
+ 6082 multiletter control sequences out of 10000+200000
+ 10054 words of font info for 40 fonts, out of 1200000 for 2000
+ 645 hyphenation exceptions out of 8191
+ 29i,8n,32p,447b,282s stack positions out of 5000i,500n,6000p,200000b,15000s
+<
+/usr/share/texmf/fonts/type1/bluesky/cm/cmbx10.pfb></usr/share/texmf/fonts/type
+1/bluesky/cm/cmbx8.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmcsc10.pfb></u
+sr/share/texmf/fonts/type1/bluesky/cm/cmmi10.pfb></usr/share/texmf/fonts/type1/
+bluesky/cm/cmr10.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmr6.pfb></usr/sh
+are/texmf/fonts/type1/bluesky/cm/cmr7.pfb></usr/share/texmf/fonts/type1/bluesky
+/cm/cmr8.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmsy10.pfb></usr/share/te
+xmf/fonts/type1/bluesky/cm/cmsy6.pfb></usr/share/texmf/fonts/type1/bluesky/cm/c
+mti8.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmtt10.pfb></usr/share/texmf/
+fonts/type1/bluesky/cm/cmtt8.pfb>
+Output written on ZacharyBookey.pdf (8 pages, 161934 bytes).
 PDF statistics:
- 74 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 84 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 131072)
+ 16 words of extra memory for PDF output out of 10000 (max. 10000000)
 

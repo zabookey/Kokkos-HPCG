@@ -2,6 +2,7 @@
 % PACKAGES ---------------------------------------------------------------
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
 \usepackage{listings}
+\usepackage{url}
 % ADD YOUR OWN PACKAGES HERE ---------------------------------------------
 %\usepackage{someotherpackage}
 % DEFINITIONS ------------------------------------------------------------
@@ -250,30 +251,42 @@ Comparing different variations of the preconditioner requires us to consider dif
 since some of our implementations will perform better on larger more sparse matrices than they will
 on smaller and denser matrices. 
 
-\begin{table}
+As you can see in Table \ref{SYMGS16} the serial version of symmetric Gauss-Seidel performs
+best since the level solve and the inexact solve only have limited parallelism. This is due to
+the fact that there aren't enough non-dependent rows to provide sufficient parallelism on each
+level and the inexact solve needs 18 iterations to get a solution for each triangular matrix that
+is close enough to the exact solution to maintain symmetry.
+
+\begin{table}[h]
 \begin{center}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c||c|c|c|}
 \hline
  & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
- \hline
+ \hline \hline
  Cuda (Shannon) & 0.408776 & 0.0634977 & 0.091606 \\
  \hline
  OpenMP (Shannon) & 1.67202 & 0.233525 & 0.295145 \\
  \hline
  Serial (Shannon) & 1.46676 & 0.22152 & 0.269744 \\
  \hline
-\end{tabluar}
+\end{tabular}
 \caption{SYMGS on Problem Size $16^3$}
 \label{SYMGS16}
 \end{center}
 \end{table}
 
-\begin{table}
+As seen in Table \ref{SYMGS64} the level solve begins to become the optimal preconditioner. This
+is similar to the issue with size $16^3$ where now our matrix is large and sparse enough that
+the level solve starts to see an increased amount of parallelism. The inexact method still lags
+behind since even though our matrix is less dense it still needs 12 Jacobi iterations to have
+a solution exact enough to pass the symmetry test.
+
+\begin{table}[h]
 \begin{center}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c||c|c|c|}
 \hline
 & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
-\hline
+\hline \hline
 Cuda (Shannon) & 0.64954 & 0.720434 & 0.560632 \\
 \hline
 OpenMP (Shannon) & 1.76462 & 2.42687 & 0.97734 \\
@@ -286,12 +299,17 @@ Serial (Shannon) & 1.45816 & 1.56839 & 0.485523 \\
 \end{center}
 \end{table}
 
-\begin{table}
+Table \ref{SYMGS128} shows us still that level solve is our most optimal preconditioner for
+similar reasons as stated before. However it makes sense to note that the inexact solve is
+steadily increasing performance as we our problem size increases. With a problem size of $128^3$
+we only need 5 jacobi iterations to achieve a near exact solution to each triangular solve.
+
+\begin{table}[h]
 \begin{center}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c||c|c|c|}
 \hline
 & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
-\hline
+\hline \hline
 Cuda (Shannon) & 0.660526 & 2.1373 & 1.39231 \\
 \hline
 OpenMP (Shannon) & 1.82678 & 4.19081 & 1.84878 \\
@@ -304,12 +322,14 @@ Serial (Shannon) & 1.49575 & 2.18794 & 0.810011 \\
 \end{center}
 \end{table}
 
-\begin{table}
+Coming back to Table \ref{SYMGS192} later. DON'T FORGET...
+
+\begin{table}[h]
 \begin{center}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c||c|c|c|}
 \hline
 & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
-\hline
+\hline \hline
 Cuda (Shannon) & 0.659346 & 2.89654 & ??? \\
 \hline
 OpenMP (Shannon) & 1.842 & 4.858 & ??? \\
@@ -321,6 +341,45 @@ Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
 \label{SYMGS192}
 \end{center}
 \end{table}
+
+Now we're going to look at how each preconditioning algorith performs overall on each execution
+space.
+
+As seen in Fig \ref{Vanilla} the vanilla symmetric Gauss-Seidel is dominant on the non-cuda
+execution spaces. This has to do with the fact every time this method is called we had to run
+a lot of memory copies between the host and device. When we aren't using Cuda all of our memory
+is located in one space and thus the memory copying is avoided and we don't see a huge
+performance hinderance.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-VanillaSYMGS.png}
+  \caption{Plot of GFLOPS for Vanilla SYMGS on each execution space.}
+	\label{Vanilla}
+\end{figure}
+
+In Fig \ref{Level} the results between execution spaces while using the level solve
+preconditioning method vary quite a bit. First, notice that there is a trend with the results and
+it appears that our max performance received from this preconditioner starts to taper off. With
+this trend in mind it appears that OpenMP will acheive better performance using this
+preconditioner than Cuda. However this could be because we haven't done much cuda optimizaitons
+in terms of memory.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{plots/ZAB-LevelSolve.png}
+	\caption{Plot of GFLOPS for level solve on each execution space.}
+	\label{Level}
+\end{figure}
+
+Reference Fig \ref{Inexact} soon. But not right now.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{plots/ZAB-InexactSolve.png}
+	\caption{Plot of GFLOPS for inexact solve on each execution space.}
+	\label{Inexact}
+\end{figure}
 
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
