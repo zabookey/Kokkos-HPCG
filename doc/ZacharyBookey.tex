@@ -250,10 +250,11 @@ Comparing different variations of the preconditioner requires us to consider dif
 since some of our implementations will perform better on larger more sparse matrices than they will
 on smaller and denser matrices. 
 
+\begin{table}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
- & Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+ & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
  \hline
  Cuda (Shannon) & 0.408776 & 0.0634977 & 0.091606 \\
  \hline
@@ -265,11 +266,13 @@ on smaller and denser matrices.
 \caption{SYMGS on Problem Size $16^3$}
 \label{SYMGS16}
 \end{center}
+\end{table}
 
+\begin{table}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
-& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline
 Cuda (Shannon) & 0.64954 & 0.720434 & 0.560632 \\
 \hline
@@ -281,11 +284,13 @@ Serial (Shannon) & 1.45816 & 1.56839 & 0.485523 \\
 \caption{SYMGS on Problem Size $64^3$}
 \label{SYMGS64}
 \end{center}
+\end{table}
 
+\begin{table}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
-& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline
 Cuda (Shannon) & 0.660526 & 2.1373 & 1.39231 \\
 \hline
@@ -297,11 +302,13 @@ Serial (Shannon) & 1.49575 & 2.18794 & 0.810011 \\
 \caption{SYMGS on Problem Size $128^3$}
 \label{SYMGS128}
 \end{center}
+\end{table}
 
+\begin{table}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
-& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline
 Cuda (Shannon) & 0.659346 & 2.89654 & ??? \\
 \hline
@@ -313,6 +320,7 @@ Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
 \caption{SYMGS on Problem Size $192^3$}
 \label{SYMGS192}
 \end{center}
+\end{table}
 
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos

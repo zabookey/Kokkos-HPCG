@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.4.13)  4 AUG 2015 13:17
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.4.13)  4 AUG 2015 13:46
 entering extended mode
 **C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
 (C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
@@ -180,18 +180,7 @@ File: listings.cfg 2014/09/06 1.5e listings configuration
 ))
 Package: listings 2014/09/06 1.5e (Carsten Heinz)
 
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux
-
-! SIAM Label Error: There were multiply-defined labels.
-
-Correct multiply-defined labels.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.22 \newlabel{SYMGS128}{{4.2}{5}}
-                                  
-? 
-)
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
 LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
@@ -204,7 +193,8 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
- (C:\Users\Zach\Documents\LATEXSRC\tex\context\base\supp-pdf.mkii
+
+(C:\Users\Zach\Documents\LATEXSRC\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count114
 \scratchdimen=\dimen120
@@ -247,149 +237,86 @@ Missing character: There is no ½ in font cmr10!
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-! LaTeX Error: \begin{tabular} on input line 254 ended by \end{tabluar}.
+! LaTeX Error: \begin{tabular} on input line 255 ended by \end{tabluar}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing \cr inserted.
 <inserted text> 
                 \cr 
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing { inserted.
 <inserted text> 
                 {
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing $ inserted.
 <inserted text> 
                 $
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.264 \end{tabluar}
+l.265 \end{tabluar}
                    
 ? 
+[4] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.bbl [5])
+[6] [7] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
 
-! LaTeX Error: \caption outside float.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.265 \caption
-              {SYMGS on Problem Size $16^3$}
-? 
-
-Overfull \hbox (11.49199pt too wide) in paragraph at lines 254--267
- [] |
- []
-
-
-Underfull \vbox (badness 3058) has occurred while \output is active []
-
- [4]
-
-! LaTeX Error: \caption outside float.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.281 \caption
-              {SYMGS on Problem Size $64^3$}
-? 
-
-Overfull \hbox (11.49199pt too wide) in paragraph at lines 270--283
- [] |
- []
-
-
-! LaTeX Error: \caption outside float.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.297 \caption
-              {SYMGS on Problem Size $128^3$}
-? 
-
-Overfull \hbox (11.49199pt too wide) in paragraph at lines 286--299
- [] |
- []
-
-
-! LaTeX Error: \caption outside float.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.313 \caption
-              {SYMGS on Problem Size $192^3$}
-? 
-
-Overfull \hbox (11.49199pt too wide) in paragraph at lines 302--315
- [] |
- []
-
-[5] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.bbl) [6]
-(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
-
-LaTeX Warning: Label `SYMGS128' multiply defined.
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  ) 
 Here is how much of TeX's memory you used:
  3279 strings out of 493921
  44121 string characters out of 3145280
- 108635 words of memory out of 3000000
+ 112607 words of memory out of 3000000
  6555 multiletter control sequences out of 15000+200000
  9877 words of font info for 39 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 29i,8n,32p,498b,220s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,8n,32p,498b,280s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx10.pfb><
 C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/U
 sers/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Use
 rs/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/
 Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Zach
-/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Zach/Docu
-ments/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Zach/Documents
-/LATEXSRC/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Zach/Documents/LA
-TEXSRC/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/Zach/Documents/LATEXS
-RC/fonts/type1/public/amsfonts/cm/cmti8.pfb><C:/Users/Zach/Documents/LATEXSRC/f
-onts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on ZacharyBookey.pdf (6 pages, 179347 bytes).
+/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Zach/Docu
+ments/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Zach/Documents
+/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Zach/Documents/LATE
+XSRC/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Zach/Documents/LATEXSR
+C/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/Zach/Documents/LATEXSRC/fo
+nts/type1/public/amsfonts/cm/cmti8.pfb><C:/Users/Zach/Documents/LATEXSRC/fonts/
+type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on ZacharyBookey.pdf (7 pages, 189440 bytes).
 PDF statistics:
- 65 PDF objects out of 1000 (max. 8388607)
+ 74 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
