@@ -1,18 +1,26 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  2 AUG 2015 15:12
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.4.13)  4 AUG 2015 13:17
 entering extended mode
- restricted \write18 enabled.
- %&-line parsing enabled.
-**ZacharyBookey
-(./ZacharyBookey.tex
-LaTeX2e <2014/05/01>
-Babel <3.9k> and hyphenation patterns for 78 languages loaded.
-(./ccr15.cls
+**C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
+(C:/Users/Zach/Documents/GitHub/Kokkos-HPCG/doc/ZacharyBookey.tex
+LaTeX2e <2011/06/27>
+Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
+abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
+croatian, czech, danish, dutch, esperanto, estonian, farsi, finnish, french, ga
+lician, german, german-x-2013-05-26, greek, gujarati, hindi, hungarian, iceland
+ic, indonesian, interlingua, irish, italian, kannada, kurmanji, latin, latvian,
+ lithuanian, malayalam, marathi, mongolian, mongolianlmc, monogreek, ngerman, n
+german-x-2013-05-26, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
+ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
+an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
+ishmax, welsh, loaded.
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ccr15.cls
 Document Class: ccr15 2015/06/01 CCR 2015 Summer Report Class
-(./siamltex.cls
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\siamltex.cls
 Document Class: siamltex 1996/10/11 v1.2 LaTeX document class
-(/usr/local/texlive/2014/texmf-dist/tex/latex/base/leqno.clo
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\base\leqno.clo
 File: leqno.clo 1998/08/17 v1.1c Standard LaTeX option (left equation numbers)
-) (./siam10.clo
+)
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\siam10.clo
 File: siam10.clo 1994/10/01 v1.0 SIAM LaTeX file (size option)
 )
 \c@section=\count79
@@ -29,7 +37,7 @@ File: siam10.clo 1994/10/01 v1.0 SIAM LaTeX file (size option)
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
 ))
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \@emptytoks=\toks14
 \symAMSa=\mathgroup4
@@ -37,24 +45,24 @@ Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsmath/amsmath.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsmath.sty
 Package: amsmath 2013/01/14 v2.14 AMS math features
 \@mathmargin=\skip43
 
 For additional information on amsmath, use the `?' option.
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsmath/amstext.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amstext.sty
 Package: amstext 2000/06/29 v2.01
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsmath/amsgen.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks15
 \ex@=\dimen103
 ))
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsmath/amsbsy.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d
 \pmbraise@=\dimen104
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsmath/amsopn.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsmath\amsopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
 \inf@bad=\count89
@@ -95,31 +103,31 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
 LaTeX Info: Redefining \[ on input line 2665.
 LaTeX Info: Redefining \] on input line 2666.
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/graphics/graphicx.sty
-Package: graphicx 2014/04/25 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/graphics/keyval.sty
-Package: keyval 2014/05/08 v1.15 key=value parser (DPC)
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 \KV@toks@=\toks20
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/graphics/graphics.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\graphics.sty
 Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/graphics/trig.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\graphics\trig.sty
 Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/latexconfig/graphics.cfg
-File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\00miktex\graphics.cfg
+File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
 )
 Package graphics Info: Driver file: pdftex.def on input line 91.
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/pdftex-def/pdftex.def
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\pdftex-def\pdftex.def
 File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
 
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\generic\oberdiek\infwarerr.sty
 Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
 )
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\generic\oberdiek\ltxcmds.sty
 Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 )
 \Gread@gobject=\count101
@@ -127,8 +135,8 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 \Gin@req@height=\dimen112
 \Gin@req@width=\dimen113
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/subfigure/subfigure.sty
-Package: subfigure 2002/03/15 v2.1.5 subfigure package
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\subfigure\subfigure.sty
+Package: subfigure 2002/07/30 v2.1.4 subfigure package
 \subfigtopskip=\skip46
 \subfigcapskip=\skip47
 \subfigcaptopadj=\dimen114
@@ -143,11 +151,11 @@ Package: subfigure 2002/03/15 v2.1.5 subfigure package
 ****************************************
 * Local config file subfigure.cfg used *
 ****************************************
-(/usr/local/texlive/2014/texmf-dist/tex/latex/subfigure/subfigure.cfg)
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\subfigure\subfigure.cfg)
 \subfig@top=\skip50
 \subfig@bottom=\skip51
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/listings.sty
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\listings.sty
 \lst@mode=\count106
 \lst@gtempboxa=\box28
 \lst@token=\toks21
@@ -161,20 +169,29 @@ Package: subfigure 2002/03/15 v2.1.5 subfigure package
 \lst@lineno=\count111
 \lst@maxwidth=\dimen119
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstmisc.sty
-File: lstmisc.sty 2014/03/04 1.5c (Carsten Heinz)
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\lstmisc.sty
+File: lstmisc.sty 2014/09/06 1.5e (Carsten Heinz)
 \c@lstnumber=\count112
 \lst@skipnumbers=\count113
 \lst@framebox=\box29
 )
-(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/listings.cfg
-File: listings.cfg 2014/03/04 1.5c listings configuration
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\listings\listings.cfg
+File: listings.cfg 2014/09/06 1.5e listings configuration
 ))
-Package: listings 2014/03/04 1.5c (Carsten Heinz)
+Package: listings 2014/09/06 1.5e (Carsten Heinz)
 
-(./ZacharyBookey.aux)
-\openout1 = `ZacharyBookey.aux'.
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux
 
+! SIAM Label Error: There were multiply-defined labels.
+
+Correct multiply-defined labels.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.22 \newlabel{SYMGS128}{{4.2}{5}}
+                                  
+? 
+)
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
 LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
@@ -187,8 +204,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
 LaTeX Font Info:    ... okay on input line 25.
-
-(/usr/local/texlive/2014/texmf-dist/tex/context/base/supp-pdf.mkii
+ (C:\Users\Zach\Documents\LATEXSRC\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count114
 \scratchdimen=\dimen120
@@ -201,100 +217,179 @@ LaTeX Font Info:    ... okay on input line 25.
 \MPnumerator=\count118
 \makeMPintoPDFobject=\count119
 \everyMPtoPDFconversion=\toks23
-) (/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
-Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
 )
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/ifluatex.sty
-Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
-Package ifluatex Info: LuaTeX not detected.
-)
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/ifpdf.sty
-Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
-Package ifpdf Info: pdfTeX in PDF mode is detected.
-)
-Package pdftexcmds Info: LuaTeX not detected.
-Package pdftexcmds Info: \pdf@primitive is available.
-Package pdftexcmds Info: \pdf@ifprimitive is available.
-Package pdftexcmds Info: \pdfdraftmode found.
-)
-(/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
-Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
-
-(/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/grfext.sty
-Package: grfext 2010/08/19 v1.1 Manage graphics extensions (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
-Package: kvdefinekeys 2011/04/07 v1.3 Define keys (HO)
-))
-(/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/kvoptions.sty
-Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
-Package: kvsetkeys 2012/04/25 v1.16 Key value parser (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/etexcmds.sty
-Package: etexcmds 2011/02/16 v1.5 Avoid name clashes with e-TeX commands (HO)
-Package etexcmds Info: Could not find \expanded.
-(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
-(etexcmds)             that some package has redefined \expanded.
-(etexcmds)             In the latter case, load this package earlier.
-)))
-Package grfext Info: Graphics extension search list:
-(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
-G,.JBIG2,.JB2,.eps]
-(grfext)             \AppendGraphicsExtensions on input line 452.
-
-(/usr/local/texlive/2014/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
-e
-))
 \c@lstlisting=\count120
 LaTeX Font Info:    Try loading font information for U+msa on input line 26.
-
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsa.fd
+ (C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Try loading font information for U+msb on input line 26.
 
-(/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsb.fd
+(C:\Users\Zach\Documents\LATEXSRC\tex\latex\amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
+) [1{C:/Users/Zach/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 ] [2] [3]
-Missing character: There is no × in font cmr10!
-Missing character: There is no × in font cmr10!
-Missing character: There is no × in font cmr10!
-Missing character: There is no × in font cmr10!
+Missing character: There is no ï in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ½ in font cmr10!
+Missing character: There is no ï in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ½ in font cmr10!
+Missing character: There is no ï in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ½ in font cmr10!
+Missing character: There is no ï in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ½ in font cmr10!
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[4] (./ZacharyBookey.bbl) [5] (./ZacharyBookey.aux) ) 
+
+! LaTeX Error: \begin{tabular} on input line 254 ended by \end{tabluar}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.264 \end{tabluar}
+                   
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.264 \end{tabluar}
+                   
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.264 \end{tabluar}
+                   
+? 
+! Missing \cr inserted.
+<inserted text> 
+                \cr 
+l.264 \end{tabluar}
+                   
+? 
+! Missing { inserted.
+<inserted text> 
+                {
+l.264 \end{tabluar}
+                   
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.264 \end{tabluar}
+                   
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.264 \end{tabluar}
+                   
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.264 \end{tabluar}
+                   
+? 
+
+! LaTeX Error: \caption outside float.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.265 \caption
+              {SYMGS on Problem Size $16^3$}
+? 
+
+Overfull \hbox (11.49199pt too wide) in paragraph at lines 254--267
+ [] |
+ []
+
+
+Underfull \vbox (badness 3058) has occurred while \output is active []
+
+ [4]
+
+! LaTeX Error: \caption outside float.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.281 \caption
+              {SYMGS on Problem Size $64^3$}
+? 
+
+Overfull \hbox (11.49199pt too wide) in paragraph at lines 270--283
+ [] |
+ []
+
+
+! LaTeX Error: \caption outside float.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.297 \caption
+              {SYMGS on Problem Size $128^3$}
+? 
+
+Overfull \hbox (11.49199pt too wide) in paragraph at lines 286--299
+ [] |
+ []
+
+
+! LaTeX Error: \caption outside float.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.313 \caption
+              {SYMGS on Problem Size $192^3$}
+? 
+
+Overfull \hbox (11.49199pt too wide) in paragraph at lines 302--315
+ [] |
+ []
+
+[5] (C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.bbl) [6]
+(C:\Users\Zach\Documents\GitHub\Kokkos-HPCG\doc\ZacharyBookey.aux)
+
+LaTeX Warning: Label `SYMGS128' multiply defined.
+
+ ) 
 Here is how much of TeX's memory you used:
- 3632 strings out of 493117
- 50169 string characters out of 6135433
- 121226 words of memory out of 5000000
- 7046 multiletter control sequences out of 15000+600000
- 9877 words of font info for 39 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 38i,8n,32p,447b,220s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/local/texlive/2014/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2014/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf
--dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-d
-ist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2014/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2014/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2014/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmtt10.pfb>
-Output written on ZacharyBookey.pdf (5 pages, 167576 bytes).
+ 3279 strings out of 493921
+ 44121 string characters out of 3145280
+ 108635 words of memory out of 3000000
+ 6555 multiletter control sequences out of 15000+200000
+ 9877 words of font info for 39 fonts, out of 3000000 for 9000
+ 841 hyphenation exceptions out of 8191
+ 29i,8n,32p,498b,220s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx10.pfb><
+C:/Users/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/U
+sers/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Use
+rs/Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/
+Zach/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Zach
+/Documents/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Zach/Docu
+ments/LATEXSRC/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Zach/Documents
+/LATEXSRC/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Zach/Documents/LA
+TEXSRC/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/Zach/Documents/LATEXS
+RC/fonts/type1/public/amsfonts/cm/cmti8.pfb><C:/Users/Zach/Documents/LATEXSRC/f
+onts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on ZacharyBookey.pdf (6 pages, 179347 bytes).
 PDF statistics:
- 64 PDF objects out of 1000 (max. 8388607)
- 45 compressed objects within 1 object stream
+ 65 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

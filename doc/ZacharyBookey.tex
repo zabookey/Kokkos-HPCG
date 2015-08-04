@@ -221,9 +221,9 @@ Results presented in this paper are for pre-production Intel Xeon Phi co-process
  \\
  Nodes & 32 & 32  \\
 \\
- CPU &2× Intel E5-2670 HT-on &2× Intel E5-2670 HT-off  \\
+ CPU &2ï¿½ Intel E5-2670 HT-on &2ï¿½ Intel E5-2670 HT-off  \\
  \\
- Co-Processor &2× Intel Xeon Phi 57c  &2× K20x ECC on  \\
+ Co-Processor &2ï¿½ Intel Xeon Phi 57c  &2ï¿½ K20x ECC on  \\
  & 1.1 GHz &\\
  Memory  &64 GB &  128 GB  \\
  \\
@@ -246,6 +246,73 @@ Results presented in this paper are for pre-production Intel Xeon Phi co-process
 
 Performance results coming soon!
 
+Comparing different variations of the preconditioner requires us to consider different problem sizes
+since some of our implementations will perform better on larger more sparse matrices than they will
+on smaller and denser matrices. 
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+ & Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+ \hline
+ Cuda (Shannon) & 0.408776 & 0.0634977 & 0.091606 \\
+ \hline
+ OpenMP (Shannon) & 1.67202 & 0.233525 & 0.295145 \\
+ \hline
+ Serial (Shannon) & 1.46676 & 0.22152 & 0.269744 \\
+ \hline
+\end{tabluar}
+\caption{SYMGS on Problem Size $16^3$}
+\label{SYMGS16}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+\hline
+Cuda (Shannon) & 0.64954 & 0.720434 & 0.560632 \\
+\hline
+OpenMP (Shannon) & 1.76462 & 2.42687 & 0.97734 \\
+\hline
+Serial (Shannon) & 1.45816 & 1.56839 & 0.485523 \\
+\hline
+\end{tabular}
+\caption{SYMGS on Problem Size $64^3$}
+\label{SYMGS64}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+\hline
+Cuda (Shannon) & 0.660526 & 2.1373 & 1.39231 \\
+\hline
+OpenMP (Shannon) & 1.82678 & 4.19081 & 1.84878 \\
+\hline
+Serial (Shannon) & 1.49575 & 2.18794 & 0.810011 \\
+\hline
+\end{tabular}
+\caption{SYMGS on Problem Size $128^3$}
+\label{SYMGS128}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+& Standard Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+\hline
+Cuda (Shannon) & 0.659346 & 2.89654 & ??? \\
+\hline
+OpenMP (Shannon) & 1.842 & 4.858 & ??? \\
+\hline
+Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
+\hline
+\end{tabular}
+\caption{SYMGS on Problem Size $192^3$}
+\label{SYMGS192}
+\end{center}
 
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
@@ -259,7 +326,7 @@ fix a few performance bottlenecks and utilize hierarchical parallelism to fully 
 kernels.We also want to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
 compile time which algorithm to use for preconditioning. It will be interesting to compare performance
 between all of our preconditioning algorithms.
-\section{Acknowledgements}
+\section{Acknowledgments}
 Sandia National Laboratories is a multi-program laboratory managed and operated by Sandia Corporation, a wholly owned subsidiary of Lockheed Martin Corporation, for the US Department of Energy{'}s National Nuclear Security Administration under contract DE-AC04-94AL85000. This paper is cross-referenced at Sandia as SAND
 
 \bibliographystyle{siam}
