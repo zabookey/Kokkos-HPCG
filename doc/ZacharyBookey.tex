@@ -57,7 +57,8 @@ HPCG uses a preconditioned conjugate gradient to solve a system of equations, th
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
 
 Original HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
-And the goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers, by using Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos}.
+The goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers. 
+We choose  Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos} as a tool to provide performance portability in HPCG code.
 
 % Irina comment: I think we can add related work here
 
@@ -117,15 +118,15 @@ Currently Kokkos supports the following \texttt{Execution spaces}:
 \item \texttt{Cuda}\cite{ZAB:CUDA}
 \end{itemize}
 
-Kokkos has two main features: \texttt{Kokkos::View} polymorphic Multidimensional  Arrays and data 
-parallel execution kernels.  \texttt{Kokkos::View} is essentially a wrapper around
+Kokkos has two main features: \texttt{Kokkos::View} polymorphic Multidimensional  Arrays and parallel dispatch.
+  \texttt{Kokkos::View} is essentially a wrapper around
 an array of data that gives you the option to specify which execution space you want to store the
 data on and allows you to choose what sort of memory access traits you wish this data to have.
 \texttt{Kokkos::View}  also handle their own memory management via reference counting so that the view
 automatically deallocates itself when all of the variables that reference it go out of scope,
 thus making memory management much simpler across multiple devices.
 
-There are three main data parallel execution operations: parallel\_for,  parallel\_reduce, and parallel\_scan. 
+There are three main parallel dispatch operations in Kokkos: \texttt{parallel\_for,}  \texttt{parallel\_reduce}, and \texttt{parallel\_scan}. 
 All of these serve their own purpose and act as wrappers over how you would execute a section of 
 code in parallel over the respective execution space. 
 For all of the data parallel executions kernels you initiate the kernel by passing in a functor 
@@ -139,6 +140,7 @@ product of two vectors. \texttt{Parallel\_scan} is for taking a view and creatin
 to replace the values of the view. Although \texttt{parallel\_scan} is useful it was only really needed
 for setup phases in our HPCG.
 
+%Irina comment: this explanation is not clear. Could you, please, add more details (we can use some from the Programming guide)
 Kokkos allows for nested parallelism that involves creating a league of teams of threads.
 With this tool, a developer could launch a \texttt{parallel\_reduce} kernel that uses a \texttt{parallel\_for} to
 update some value that later gets added to the value that was initially included to be reduced.
@@ -148,18 +150,25 @@ time.
 
 \section{HPCG + Kokkos}
 
-The goal for our project was to create a version of HPCG that uses Kokkos features to be able to
-produce valid results across many architectures without sacrificing performance. First we needed
-to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
-all of the code to work with Kokkos views, and finally we needed to make a few optimizations to
-avoid an unecessary amount of memory copying from the host to the device and vice versa.
-\subsection{Kokkos re-factoring}
-Rewriting the parallel kernels involved replacing the parallel loops with the correct type of
-Kokkos parallel kernel. This part of re-factoring was heavily focused on converting the
-computation algorithms into functors and lambdas. Completing this task didn't affect portability
-at all and due to some Kokkos restrictions actually caused a slight reduction of performance in
-the function ComputeResidual. Other kernels would later have to be changed to accomodate the fact
-that data was stored on a device but was being run on the host.
+The goal for our project was to create a version of HPCG that 
+produces valid results across many architectures without sacrificing performance.
+We believe that Kokkos library is the best available tool to provide performance portability for the C++ code, we choose to refactor HPCG to use it.
+
+General strategy for Kokkos re-factoring includes: 
+\begin{itemize}
+\item replacement custom data types with Kokkos multidimensional arrays; 
+\item replacement the parallel loops with Kokkos parallel kernels; 
+\item code optimizations to avoid an unnecessary communication overheads and improve usage of co-processors.
+\end{itemize}
+
+% First we needed to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
+%all of the code to work with Kokkos views, and finally we needed to make a few optimizations to
+%avoid an unecessary amount of memory copying from the host to the device and vice versa.
+
+
+%\subsection{Kokkos re-factoring}
+
+\subsection{Replacement custom data types with Kokkos multidimensional arrays}
 
 Restructuring the code involved a whole rewrite of HPCG to change how all of the structs stored
 their values. We replaced every array that would be used in a parallel kernel with an appropriate
@@ -173,11 +182,20 @@ go back and change how most of our computational kernels worked and created a no
 in performance. At this point the code was functional across all of Kokkos execution spaces but
 took a severe performance hit while trying to run on Cuda.
 
+\subsection{Replacement the parallel loops with Kokkos parallel kernels}
+
+Rewriting the parallel kernels involved replacing the parallel loops with the correct type of
+Kokkos parallel kernel. This part of re-factoring was heavily focused on converting the
+computation algorithms into functors and lambdas. Completing this task didn't affect portability
+at all and due to some Kokkos restrictions actually caused a slight reduction of performance in
+the function ComputeResidual. Other kernels would later have to be changed to accommodate the fact
+that data was stored on a device but was being run on the host.
+
 Computing the preconditioner using a symmetric Gauss-Seidel was initially done in serial and thus
 moving to Kokkos required us to copy memory from the device to the host every time we ran it,
 which was the reason performance was lost. We tried implementing many different ways to perform
 a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
-implemented an inexact solve, a level solve, and a colouring algorithm.
+implemented an inexact solve, a level solve, and a coloring algorithm.
 
 The inexact solve works by performing a few triangular matrix solves. We split our matrix $A$ into
 parts $L$, $U$, and $D$ where $L$ is the lower triangular matrix including the diagonal, $U$ is the upper
@@ -208,7 +226,9 @@ Gauss-Seidel in parallel over each color. While similar to the level solve, this
 to converge due to the fact that although no two rows in the same color depend on each other it is likely
 that they depend on a row in a color that will be solved in a later iteration.
 
-\subsection{Performance evaluation result}
+\subsection{code optimizations to avoid an unnecessary communication overheads and improve usage of co-processors}
+
+\section{Performance evaluation result}
 We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
 Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
 
