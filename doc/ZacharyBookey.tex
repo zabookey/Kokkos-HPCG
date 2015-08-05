@@ -226,7 +226,16 @@ Gauss-Seidel in parallel over each color. While similar to the level solve, this
 to converge due to the fact that although no two rows in the same color depend on each other it is likely
 that they depend on a row in a color that will be solved in a later iteration.
 
-\subsection{code optimizations to avoid an unnecessary communication overheads and improve usage of co-processors}
+\subsection{Optimizations}
+Aside from the symmetric Gauss-Seidel optimizations already made, we are looking to further these
+optimizations in the future by exploiting heirarchial parallelism. For example, in the inexact
+solve we can implement a three level parallelism technique that breaks our rows into chunks that 
+a team of threads each gets assigned. Now our teams of threads work on our chunk while in
+parallel we perform the matrix vector computation in parallel using the threads in the team. A
+near identical method can be applied to our level solve algorithm but since the level solve deals
+with fewer rows at a time we won't see as much of a performance increase in here. We're confident
+that these aren't the only places that can benefit from heirarchial parallelism and we plan to
+explore these options at a later time.
 
 \section{Performance evaluation result}
 We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
@@ -271,7 +280,7 @@ Comparing different variations of the preconditioner requires us to consider dif
 since some of our implementations will perform better on larger more sparse matrices than they will
 on smaller and denser matrices. 
 
-As you can see in Table \ref{SYMGS16} the serial version of symmetric Gauss-Seidel performs
+As you can see in Table \ref{SYMGS16} the standard version of symmetric Gauss-Seidel performs
 best since the level solve and the inexact solve only have limited parallelism. This is due to
 the fact that there aren't enough non-dependent rows to provide sufficient parallelism on each
 level and the inexact solve needs 18 iterations to get a solution for each triangular matrix that
@@ -281,7 +290,7 @@ is close enough to the exact solution to maintain symmetry.
 \begin{center}
 \begin{tabular}{|c||c|c|c|}
 \hline
- & Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+ & Standard SYMGS & Level Solve & Inexact Jacobi Solve \\
  \hline \hline
  Cuda (Shannon) & 0.408776 & 0.0634977 & 0.091606 \\
  \hline
@@ -305,7 +314,7 @@ a solution exact enough to pass the symmetry test.
 \begin{center}
 \begin{tabular}{|c||c|c|c|}
 \hline
-& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Standard SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline \hline
 Cuda (Shannon) & 0.64954 & 0.720434 & 0.560632 \\
 \hline
@@ -328,7 +337,7 @@ we only need 5 jacobi iterations to achieve a near exact solution to each triang
 \begin{center}
 \begin{tabular}{|c||c|c|c|}
 \hline
-& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Standard SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline \hline
 Cuda (Shannon) & 0.660526 & 2.1373 & 1.39231 \\
 \hline
@@ -342,13 +351,17 @@ Serial (Shannon) & 1.49575 & 2.18794 & 0.810011 \\
 \end{center}
 \end{table}
 
-Coming back to Table \ref{SYMGS192} later. DON'T FORGET...
+In Table \ref{SYMGS192} we tested our preconditioning algorithms on a problem size of $192^3$. As
+expected our standard Gauss-Seidel performed at the same level as before and our level solve
+starts to slow down its performance increases. The inexact solve left us with some abnormally
+high results that remained valid. For executing on OpenMP we witnessed results of 100+ GFLOPS
+and for Cuda we found high 90's. We are still investigating what may have caused these results.
 
 \begin{table}[h]
 \begin{center}
 \begin{tabular}{|c||c|c|c|}
 \hline
-& Serial SYMGS & Level Solve & Inexact Jacobi Solve \\
+& Standard SYMGS & Level Solve & Inexact Jacobi Solve \\
 \hline \hline
 Cuda (Shannon) & 0.659346 & 2.89654 & ??? \\
 \hline
@@ -392,7 +405,11 @@ in terms of memory.
 	\label{Level}
 \end{figure}
 
-Reference Fig \ref{Inexact} soon. But not right now.
+Looking at Fig \ref{Inexact} it seems we have a trend that increases our performance based on
+problem size. I'm confident this has to do with the fact that when our problem size is larger our
+matrix is less dense and so we need less jacobi iterations to produce an answer exact enough to
+pass the symmetry tests. However we opt to leave out problem size $192^3$ due to the abnormal
+results mentioned before.
 
 \begin{figure}[H]
 	\centering
