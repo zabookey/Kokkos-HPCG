@@ -257,7 +257,7 @@ class applyD{
 
 	KOKKOS_INLINE_FUNCTION
 	void operator()(const int & i)const{
-		z(i) = z(i)/A.values(diag(i));
+		z(i) = z(i)*A.values(diag(i));
 	}
 };
 
