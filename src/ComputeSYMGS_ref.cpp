@@ -168,6 +168,7 @@ class colouredBackSweep{
 #ifdef KOKKOS_TEAM
 typedef Kokkos::TeamPolicy<>              team_policy ;
 typedef team_policy::member_type team_member ;
+int rows_per_team=4;
 
 class LowerTrisolve{
         public:
@@ -186,19 +187,27 @@ class LowerTrisolve{
 
         KOKKOS_INLINE_FUNCTION
         void operator()(const team_member &  thread) const{
-             
-              Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, localNumberOfRows), [=] (int& i){
+              int row_indx=thread.league_rank()* rows_per_team;
+              Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, row_indx, row_indx+rows_per_team), [=] (int& irow){
                 //const int i=thread.league_rank()*thread.team_size()+thread.team_rank();
                 double rowDot = 0.0;
                 double z_tmp;
                 int diag_tmp;
-                diag_tmp=A.values(diag(i));
-                z_tmp=r(i)/diag_tmp;
-                z_tmp += z_old(i);
-                for(int k = A.graph.row_map(i); k <= diag(i); k++)
-                        rowDot += A.values(k) * z_old(A.graph.entries(k));
-                 z_tmp -=rowDot/diag_tmp;
-                z_new(i)=z_tmp;
+                diag_tmp=A.values(diag(irow));
+                z_tmp=r(irow)/diag_tmp;
+                z_tmp += z_old(irow);
+                const int vector_range=(diag(irow)-1)-A.graph.row_map(irow);
+                Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, vector_range),
+                               KOKKOS_LAMBDA(const int& ivec, double& lrowDot){
+                           const int k=ivec+A.graph.row_map(irow);
+                           lrowDot += A.values(k) * z_old(A.graph.entries(k));
+                  }, rowDot);
+//                for(int k = A.graph.row_map(i); k <= diag(i); k++)
+//                        rowDot += A.values(k) * z_old(A.graph.entries(k));
+                Kokkos::single(Kokkos::PerThread(thread),[&](){
+                z_tmp -=rowDot/diag_tmp;
+                z_new(irow)=z_tmp;
+                });
               });
         }
 };
@@ -360,7 +369,8 @@ for(int j = 0; j < 10; j++){
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 #ifdef KOKKOS_TEAM
-         const team_policy policy( 4 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ) );
+          const int team_size=localNumberOfRows/rows_per_team;
+         const team_policy policy( 512 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ), 16 );
           Kokkos::parallel_for(policy, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old,  localNumberOfRows));
 #else
 		Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old));
