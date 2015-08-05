@@ -324,6 +324,13 @@ int main(int argc, char * argv[]) {
   // Report results to YAML file
   ReportResults(A, numberOfMgLevels, numberOfCgSets, refMaxIters, optMaxIters, &times[0], testcg_data, testsymmetry_data, testnorms_data, global_failure);
 
+std::cout << "Dot Product: " << (times[1]/times[0])*100 << "%" << std::endl;
+std::cout << "WAXPBY: " << (times[2]/times[0])*100 << "%" << std::endl;
+std::cout << "SPMV: " << (times[3]/times[0])*100 << "%" << std::endl;
+std::cout << "AllReduce: " << (times[4]/times[0])*100 << "%" << std::endl;
+std::cout << "Precondtioning: " << (times[5]/times[0])*100 << "%" << std::endl;
+std::cout << "Total time for CG: " << times[0] << std::endl;
+
   // Clean up
   DeleteMatrix(A); // This delete will recursively delete all coarse grid data
   DeleteCGData(data);

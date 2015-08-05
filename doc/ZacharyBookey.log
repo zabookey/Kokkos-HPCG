@@ -1,4 +1,4 @@
-This is pdfTeXk, Version 3.141592-1.40.3 (Web2C 7.5.6) (format=pdflatex 2015.5.13)  4 AUG 2015 16:44
+This is pdfTeXk, Version 3.141592-1.40.3 (Web2C 7.5.6) (format=pdflatex 2015.5.13)  5 AUG 2015 08:56
 entering extended mode
  %&-line parsing enabled.
 **ZacharyBookey
@@ -203,7 +203,13 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 27.
 File: umsb.fd 2002/01/19 v2.2g AMS font definitions
 ) [1{/usr/share/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
-] [2] [3]
+] [2]
+Overfull \hbox (5.96396pt too wide) in paragraph at lines 187--193
+ \OT1/cmr/bx/n/10 4.2. Re-place-ment the par-al-lel loops with Kokkos par-al-le
+l ker-nels.[] \OT1/cmr/m/n/10 Rewrit-|
+ []
+
+[3]
 Missing character: There is no ï in font cmr10!
 Missing character: There is no ¿ in font cmr10!
 Missing character: There is no ½ in font cmr10!
@@ -216,18 +222,7 @@ Missing character: There is no ½ in font cmr10!
 Missing character: There is no ï in font cmr10!
 Missing character: There is no ¿ in font cmr10!
 Missing character: There is no ½ in font cmr10!
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[4]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[5] <plots/ZAB-VanillaSYMGS.png, id=29, 455.14723pt x 256.02032pt>
+ [4] [5] <plots/ZAB-VanillaSYMGS.png, id=29, 455.14723pt x 256.02032pt>
 File: plots/ZAB-VanillaSYMGS.png Graphic file (type png)
 
 <use plots/ZAB-VanillaSYMGS.png>
@@ -238,7 +233,7 @@ File: plots/ZAB-LevelSolve.png Graphic file (type png)
 <plots/ZAB-InexactSolve.png, id=31, 455.14723pt x 256.02032pt>
 File: plots/ZAB-InexactSolve.png Graphic file (type png)
 
-<use plots/ZAB-InexactSolve.png> (./ZacharyBookey.bbl [6]
+<use plots/ZAB-InexactSolve.png> [6] (./ZacharyBookey.bbl
 Underfull \hbox (badness 3343) in paragraph at lines 29--31
 []\OT1/cmr/m/sc/8 laise Bar-ney\OT1/cmr/m/n/8 , \OT1/cmr/m/it/8 Posix threads p
 ro-gram-ming\OT1/cmr/m/n/8 .  $\OT1/cmtt/m/n/8 https : / / computing . llnl . g
@@ -250,11 +245,11 @@ ov / tutorials /
 Here is how much of TeX's memory you used:
  2820 strings out of 256216
  36327 string characters out of 1917072
- 97084 words of memory out of 1500000
+ 96084 words of memory out of 1500000
  6082 multiletter control sequences out of 10000+200000
  10054 words of font info for 40 fonts, out of 1200000 for 2000
  645 hyphenation exceptions out of 8191
- 29i,8n,32p,447b,282s stack positions out of 5000i,500n,6000p,200000b,15000s
+ 29i,8n,32p,447b,273s stack positions out of 5000i,500n,6000p,200000b,15000s
 <
 /usr/share/texmf/fonts/type1/bluesky/cm/cmbx10.pfb></usr/share/texmf/fonts/type
 1/bluesky/cm/cmbx8.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmcsc10.pfb></u
@@ -265,7 +260,7 @@ are/texmf/fonts/type1/bluesky/cm/cmr7.pfb></usr/share/texmf/fonts/type1/bluesky
 xmf/fonts/type1/bluesky/cm/cmsy6.pfb></usr/share/texmf/fonts/type1/bluesky/cm/c
 mti8.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmtt10.pfb></usr/share/texmf/
 fonts/type1/bluesky/cm/cmtt8.pfb>
-Output written on ZacharyBookey.pdf (8 pages, 161934 bytes).
+Output written on ZacharyBookey.pdf (8 pages, 163166 bytes).
 PDF statistics:
  84 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 131072)
