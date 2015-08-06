@@ -197,15 +197,15 @@ class LowerTrisolve{
                 z_tmp=r(irow)/diag_tmp;
                 z_tmp += z_old(irow);
                 const int k_start=A.graph.row_map(irow);
-                const int k_end=diag(irow);
+                const int k_end=diag(irow)+1;
                 const int vector_range=k_end-k_start;
                 //Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, k_start, k_end),
                 //KOKKOS_LAMBDA(const int& k, double& lrowDot){
-                 Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, vector_range),
+                Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, vector_range),
                                KOKKOS_LAMBDA(const int& lk, double& lrowDot){
                            const int k=k_start+lk;
                            lrowDot += A.values(k) * z_old(A.graph.entries(k));
-                  }, rowDot);
+                }, rowDot);
 //                for(int k = A.graph.row_map(irow); k <= diag(irow); k++)
 //                        rowDot += A.values(k) * z_old(A.graph.entries(k));
                // Kokkos::single(Kokkos::PerThread(thread),[&](){
@@ -369,10 +369,11 @@ for(int j = 0; j < 10; j++){
 #else
 #ifdef SYMGS_INEXACT
 	const local_int_t localNumberOfRows = A.localNumberOfRows;
-	const int iterations = 18;
+	const int iterations = 8;
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 #ifdef KOKKOS_TEAM
+std::cout << "KOKKOS_TEAM" << std::endl;
           const int team_size=localNumberOfRows/rows_per_team;
 //           const team_policy policy( 512 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ), 4 );
 

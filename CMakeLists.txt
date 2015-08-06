@@ -50,7 +50,7 @@ ENDIF()
 # -DHPCG_Kokkos_Cuda
 # -DHPCG_Kokkos_Serial (Default)
 ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
-
+ADD_DEFINITIONS(-DKOKKOS_TEAM)
 # Change this definition to specify which Gauss Seidel to use
 # -DSYMGS_COLOR Solve using graph Colouring. (Doesn't Produce valid results)
 # -DSYMGS_LEVEL Level solve.
