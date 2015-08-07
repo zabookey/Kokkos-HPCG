@@ -168,7 +168,7 @@ class colouredBackSweep{
 #ifdef KOKKOS_TEAM
 typedef Kokkos::TeamPolicy<>              team_policy ;
 typedef team_policy::member_type team_member ;
-int rows_per_team=4;
+int rows_per_team=104;
 
 class LowerTrisolve{
         public:
@@ -178,6 +178,7 @@ class LowerTrisolve{
         double_1d_type z_new;
         double_1d_type z_old;
         int localNumberOfRows;
+		int rpt = rows_per_team;
 
         LowerTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& r_,
                 double_1d_type& z_new_, const double_1d_type& z_old_, const int localNumberOfRows_):
@@ -187,9 +188,9 @@ class LowerTrisolve{
 
         KOKKOS_INLINE_FUNCTION
         void operator()(const team_member &  thread) const{
-              int row_indx=thread.league_rank()* rows_per_team;
+              int row_indx=thread.league_rank()* rpt;
             //   int row_indx=   thread.league_rank()*thread.team_size(); //+thread.team_rank();
-              Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, row_indx, row_indx+rows_per_team), [=] (int& irow){
+              Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, row_indx, row_indx+rpt), [=] (int& irow){
                 double rowDot = 0.0;
                 double z_tmp;
                 int diag_tmp;
@@ -208,10 +209,10 @@ class LowerTrisolve{
                 }, rowDot);
 //                for(int k = A.graph.row_map(irow); k <= diag(irow); k++)
 //                        rowDot += A.values(k) * z_old(A.graph.entries(k));
-               // Kokkos::single(Kokkos::PerThread(thread),[&](){
+//                Kokkos::single(Kokkos::PerThread(thread),[&](){
                 z_tmp -=rowDot/diag_tmp;
                 z_new(irow)=z_tmp;
-               // });
+//                });
               });
         }
 };
@@ -373,11 +374,10 @@ for(int j = 0; j < 10; j++){
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 #ifdef KOKKOS_TEAM
-std::cout << "KOKKOS_TEAM" << std::endl;
           const int team_size=localNumberOfRows/rows_per_team;
 //           const team_policy policy( 512 , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ), 4 );
 
-        const team_policy policy( team_size , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ), 16 );
+        const team_policy policy( team_size , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ),16 );
 //         const team_policy policy( team_size , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ), 16 );
           Kokkos::parallel_for(policy, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old,  localNumberOfRows));
 #else
