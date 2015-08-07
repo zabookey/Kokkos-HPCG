@@ -27,14 +27,15 @@ ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Labora
 \maketitle
 % Include your abstract here.
 \begin{abstract}
-%Irina comment: we can't use acronyms in abstarct
 The High Performance Conjugate Gradients Benchmark is an international project to create a
 more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
 parallel applications. In this project we are developing a version of HPCG, using the Kokkos
 package found in Trilinos, that can be optimally executed across several distinct high
-performance computing architectures. This new code demonstrates an efficient programming
+performance computing architectures. 
+%Irina comment: the last sentence of the abstract should outline the main goal/result of of this work. So we might want to change it.
+This new code demonstrates an efficient programming
 approach that can be adopted by other programmers to write portable high performance software.
 \end{abstract}
 
@@ -56,7 +57,7 @@ The High Performance Conjugate Gradient (HPCG)\cite{ZAB:TechHPCG}\cite{ZAB:TechH
 HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
 
-Original HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use it for performance measurement.
+Original HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use HPCG for performance measurement on architectures with accelerators/co-processors.
 The goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers. 
 We choose  Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos} as a tool to provide performance portability in HPCG code.
 
@@ -120,7 +121,7 @@ Currently Kokkos supports the following \texttt{Execution spaces}:
 
 Kokkos has two main features: \texttt{Kokkos::View} polymorphic Multidimensional  Arrays and parallel dispatch.
   \texttt{Kokkos::View} is essentially a wrapper around
-an array of data that gives you the option to specify which execution space you want to store the
+an array of data that gives you the option to specify which \texttt{Execution space} you want to store the
 data on and allows you to choose what sort of memory access traits you wish this data to have.
 \texttt{Kokkos::View}  also handle their own memory management via reference counting so that the view
 automatically deallocates itself when all of the variables that reference it go out of scope,
@@ -128,15 +129,19 @@ thus making memory management much simpler across multiple devices.
 
 There are three main parallel dispatch operations in Kokkos: \texttt{parallel\_for,}  \texttt{parallel\_reduce}, and \texttt{parallel\_scan}. 
 All of these serve their own purpose and act as wrappers over how you would execute a section of 
-code in parallel over the respective execution space. 
+code in parallel over the respective \texttt{Execution space}. 
 For all of the data parallel executions kernels you initiate the kernel by passing in a functor 
 that performs the desired parallel operation, as of  host to device.
 
 \texttt{Parallel\_for} is simply a generic for loop that will run all of the context of the loop in
-parallel. This works well for parallel kernels like vector addition. Parallel\_reduce is for
+parallel. This works well for parallel kernels like vector addition. 
+
+\texttt{Parallel\_reduce} is for
 simultaneously updating a single value, this function guarantees that you avoid race conditions
 with the updated values. \texttt{Parallel\_reduce} works well for parallel kernels like finding the dot
-product of two vectors. \texttt{Parallel\_scan} is for taking a view and creating a running sum of values
+product of two vectors. 
+
+\texttt{Parallel\_scan} is for taking a view and creating a running sum of values
 to replace the values of the view. Although \texttt{parallel\_scan} is useful it was only really needed
 for setup phases in our HPCG.
 
@@ -144,9 +149,12 @@ for setup phases in our HPCG.
 Kokkos allows for nested parallelism that involves creating a league of teams of threads.
 With this tool, a developer could launch a \texttt{parallel\_reduce} kernel that uses a \texttt{parallel\_for} to
 update some value that later gets added to the value that was initially included to be reduced.
-Although this has not been implemented in our project yet, there are places in our code that
-could and should benefit from nested parallelism and thus we intend to include it at a later
-time.
+
+%Irina comment: we need to change following since we have already implemented this in HPCG.
+
+%Although this has not been implemented in our project yet, there are places in our code that
+%could and should benefit from nested parallelism and thus we intend to include it at a later
+%time.
 
 \section{HPCG + Kokkos}
 
@@ -158,7 +166,7 @@ General strategy for Kokkos re-factoring includes:
 \begin{itemize}
 \item replacement custom data types with Kokkos multidimensional arrays; 
 \item replacement the parallel loops with Kokkos parallel kernels; 
-\item code optimizations to avoid an unnecessary communication overheads and improve usage of co-processors.
+\item code optimizations to improve usage of co-processors.
 \end{itemize}
 
 % First we needed to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
@@ -166,7 +174,6 @@ General strategy for Kokkos re-factoring includes:
 %avoid an unecessary amount of memory copying from the host to the device and vice versa.
 
 
-%\subsection{Kokkos re-factoring}
 
 \subsection{Replacement custom data types with Kokkos multidimensional arrays}
 
@@ -184,7 +191,7 @@ took a severe performance hit while trying to run on Cuda.
 
 \subsection{Replacement the parallel loops with Kokkos parallel kernels}
 
-Rewriting the parallel kernels involved replacing the parallel loops with the correct type of
+Re-writing the parallel kernels involved replacing the parallel loops with the correct type of
 Kokkos parallel kernel. This part of re-factoring was heavily focused on converting the
 computation algorithms into functors and lambdas. Completing this task didn't affect portability
 at all and due to some Kokkos restrictions actually caused a slight reduction of performance in
@@ -195,18 +202,20 @@ Computing the preconditioner using a symmetric Gauss-Seidel was initially done i
 moving to Kokkos required us to copy memory from the device to the host every time we ran it,
 which was the reason performance was lost. We tried implementing many different ways to perform
 a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
-implemented an inexact solve, a level solve, and a coloring algorithm.
+implemented an \emph{inexact solve}, a \emph{level solve}, and a \emph{coloring algorithm}.
+%Irina comment: do we have any references for inexact solve, a level solve, and a coloring algorithm.
 
-The inexact solve works by performing a few triangular matrix solves. We split our matrix $A$ into
+
+The \emph{inexact solve} works by performing a few triangular matrix solves. We split our matrix $A$ into
 parts $L$, $U$, and $D$ where $L$ is the lower triangular matrix including the diagonal, $U$ is the upper
-triangular matrix including the diagonal and $D$ is the diagonal. The inexact solve is done by solving three
+triangular matrix including the diagonal and $D$ is the diagonal. The \emph{inexact solve} is done by solving three
 different equations. Given our problem $A x = b$, to simulate a symmetric Gauss-Seidel sweep we solve
 $L z = b$ then $D w = z$ and finally $U x = w$. All of these solves are done using a parallel Jacobi solve.
 Although this version of symmetric Gauss-Seidel is run in parallel and avoid all device to host memory
 copies it still performs slowly since each Jacobi solve needs to be run a certain amount of time depending
 on problem density and results in more parallel kernels being launched than is ideal.
 
-Our level solve algorithm splits our matrix $A$ into parts $L$, $U$, and $D$ where $L$ is the
+Our \emph{level solve} algorithm splits our matrix $A$ into parts $L$, $U$, and $D$ where $L$ is the
 lower triangular part of $A$ that includes the diagonal, $U$ is similar to $L$ since it is just
 the upper triangular part of $A$ that includes the diagonal. $D$ is just the diagonal of A. For
 this algorithm we introduce another data structure, levels, to our SparseMatrix that stores all 
@@ -219,7 +228,7 @@ then the rows in level 2 in parallel and repeat until we solve all of our levels
 have a Symmetric Gauss-Seidel that has introduced a deal of parallelism and performs well
 compared to the original implementation.
 
-At the time of writing our coloring algorithm does not work. We are in the process of debugging and
+At the time of writing our \emph{coloring algorithm} does not work. We are in the process of debugging and
 determining what a good fix will be. The algorithm works by coloring our matrix $A$ so that all rows
 with a certain color have no dependencies on one another. This way we can run a sweep of symmetric
 Gauss-Seidel in parallel over each color. While similar to the level solve, this method requires more iterations
@@ -228,14 +237,16 @@ that they depend on a row in a color that will be solved in a later iteration.
 
 \subsection{Optimizations}
 Aside from the symmetric Gauss-Seidel optimizations already made, we are looking to further these
-optimizations in the future by exploiting heirarchial parallelism. For example, in the inexact
-solve we can implement a three level parallelism technique that breaks our rows into chunks that 
+optimizations in the future by exploiting hierarchical parallelism. For example, in the \emph{inexact
+solve} we can implement a three level parallelism technique that breaks our rows into chunks that 
 a team of threads each gets assigned. Now our teams of threads work on our chunk while in
 parallel we perform the matrix vector computation in parallel using the threads in the team. A
-near identical method can be applied to our level solve algorithm but since the level solve deals
+near identical method can be applied to our \emph{level solve algorithm} but since the level solve deals
 with fewer rows at a time we won't see as much of a performance increase in here. We're confident
-that these aren't the only places that can benefit from heirarchial parallelism and we plan to
+that these aren't the only places that can benefit from hierarchical parallelism and we plan to
 explore these options at a later time.
+%Irina comment: should we add a code example for the hierarchical parallelism?
+
 
 \section{Performance evaluation result}
 We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
