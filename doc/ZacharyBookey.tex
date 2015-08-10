@@ -10,16 +10,16 @@
 % BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
 % This controls the table-of-contents entry in the proceedings. Edit it
 % to include your article title followed by the authors' names, as shown.
-\addcontentsline{toc}{chapter}{Performance Portable HPCG\\
+\addcontentsline{toc}{chapter}{Performance Portable High Performance Conjugate Gradient Benchmark\\
 {\em Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}}
 \pagestyle{myheadings}
 \thispagestyle{plain}
 % This gives the running head. Usually you list a shortened version of
 % your article title (unless it's already very short) along with
 % the author's names, as shown.
-\markboth{Performance Portable HPCG}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
+\markboth{Performance Portable High Performance Conjugate Gradient Benchmark}{Z.B.\ Student and I.D.\ Mentor and S.R \ Mentor}
 % Put your article title in here
-\title{Performance Portable HPCG}
+\title{Performance Portable High Performance Conjugate Gradient Benchmark}
 % List each author, their affiliation, and their e-mail address, as shown.
 \author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
 ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}\and Michael A. Heroux\thanks{Sandia National Laboratories, maherou@sandia.gov}}
@@ -27,12 +27,12 @@ ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Labora
 \maketitle
 % Include your abstract here.
 \begin{abstract}
-The High Performance Conjugate Gradients Benchmark is an international project to create a
+The High Performance Conjugate Gradient Benchmark (HPCG) is an international project to create a
 more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
 parallel applications. In this project we are developing a version of HPCG, using the Kokkos
-package found in Trilinos, that can be optimally executed across several distinct high
+package in Trilinos. Kokkos can be optimally executed across several distinct high
 performance computing architectures. 
 %Irina comment: the last sentence of the abstract should outline the main goal/result of of this work. So we might want to change it.
 This new code demonstrates an efficient programming
@@ -57,7 +57,7 @@ The High Performance Conjugate Gradient (HPCG)\cite{ZAB:TechHPCG}\cite{ZAB:TechH
 HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
 
-Original HPCG benchmark doesn't exploit full parallelism available on existing Supercomputers which makes it unfair to use HPCG for performance measurement on architectures with accelerators/co-processors.
+Original HPCG benchmark doesn't exploit full parallelism available on existing supercomputers which makes it unfair to use HPCG for performance measurement on architectures with accelerators/co-processors.
 The goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers. 
 We choose  Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos} as a tool to provide performance portability in HPCG code.
 
@@ -66,11 +66,11 @@ We choose  Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos} as a
 \section{HPCG}
 
 HPCG is a new and
-upcoming benchmark test to rank the worlds largest computers. On top
+upcoming benchmark test to rank the world's largest computers. On top
 of solving a large system of equations, HPCG also features a more irregular data access pattern
 so that data access affects results as well as matrix computations.
 
-HPCG begins by creating a symmetric positive definite matrix and it's corresponding multi grid
+HPCG begins by creating a symmetric positive definite matrix and it's corresponding multigrid
 to be used in the preconditioning phase. For the preconditioner it uses a Symmetric Gauss-Seidel
 forward sweep and back sweep to solve the lower and upper triangular matrices. For the actual
 solve of $A x = b$, HPCG uses the conjugate gradient method after the preconditioning phase.
@@ -83,7 +83,7 @@ sparse matrix with up to 27 nonzero entries per row depending on the local locat
 made produce valid results. Specifically it checks to make sure that both the unpreconditioned
 and preconditioned conjugate gradient converge in around 12 and 2 iterations respectively. It
 also makes sure that after performing both a sparse matrix vector multiplication and a symmetric
-Gauss-Seidel sweep that we preserve symmetry by using two pseudorandomly filled vectors and
+Gauss-Seidel sweep that we preserve symmetry by using two randomly filled vectors and
 performing simple operations that should be zero due to the nature of our symmetric matrix A.
 \item \textbf{Reference Sparse Matrix Vector Multiplication and Multigrid Timing:} This
 portion of the code times how long it takes to perform the reference versionts of SPMV and
@@ -105,7 +105,7 @@ HPCG gives you the option to run with MPI, OpenMP, both, or in serial. Running w
 extra dimension to the problem and requires processes to exchange values on their borders to
 perform. This results in a tradeoff between more overhead and more parallelism.
 \section{Kokkos}
-As different computer architectures are better with certain applications than others it has
+As computer architectures differ in their features for best parallel performance it has
 become increasingly difficult to write code that will perform well across many different types of
 architectures. One solution to this problem is the C++ package, Kokkos. Kokkos acts as a wrapper
 around your code to allow you to specify at compile time where and how you want to run your
@@ -131,7 +131,7 @@ There are three main parallel dispatch operations in Kokkos: \texttt{parallel\_f
 All of these serve their own purpose and act as wrappers over how you would execute a section of 
 code in parallel over the respective \texttt{Execution space}. 
 For all of the data parallel executions kernels you initiate the kernel by passing in a functor 
-that performs the desired parallel operation, as of  host to device.
+that performs the desired parallel operation, such as from host to device.
 
 \texttt{Parallel\_for} is simply a generic for loop that will run all of the context of the loop in
 parallel. This works well for parallel kernels like vector addition. 
@@ -187,7 +187,7 @@ While restructuring we decided to change how our SparseMatrix stored the data an
 as a sort of overlying structure on top of a Kokkos CSRMatrix. This change required us to again
 go back and change how most of our computational kernels worked and created a noticeable increase
 in performance. At this point the code was functional across all of Kokkos execution spaces but
-took a severe performance hit while trying to run on Cuda.
+took a severe performance hit while trying to run on Cuda. (TODO : Due to host to device copies for sequential kernels? )
 
 \subsection{Replacement the parallel loops with Kokkos parallel kernels}
 
@@ -212,7 +212,7 @@ triangular matrix including the diagonal and $D$ is the diagonal. The \emph{inex
 different equations. Given our problem $A x = b$, to simulate a symmetric Gauss-Seidel sweep we solve
 $L z = b$ then $D w = z$ and finally $U x = w$. All of these solves are done using a parallel Jacobi solve.
 Although this version of symmetric Gauss-Seidel is run in parallel and avoid all device to host memory
-copies it still performs slowly since each Jacobi solve needs to be run a certain amount of time depending
+copies it still performs slowly since each Jacobi solve needs to be run a certain number of sweeps depending
 on problem density and results in more parallel kernels being launched than is ideal.
 
 Our \emph{level solve} algorithm splits our matrix $A$ into parts $L$, $U$, and $D$ where $L$ is the
@@ -228,8 +228,9 @@ then the rows in level 2 in parallel and repeat until we solve all of our levels
 have a Symmetric Gauss-Seidel that has introduced a deal of parallelism and performs well
 compared to the original implementation.
 
-At the time of writing our \emph{coloring algorithm} does not work. We are in the process of debugging and
-determining what a good fix will be. The algorithm works by coloring our matrix $A$ so that all rows
+At the time of writing our \emph{coloring algorithm} is not fully implemented. We are in the process of finishing it to provide it as part of HPCG+Kokkos
+implementation.
+The algorithm works by coloring our matrix $A$ so that all rows
 with a certain color have no dependencies on one another. This way we can run a sweep of symmetric
 Gauss-Seidel in parallel over each color. While similar to the level solve, this method requires more iterations
 to converge due to the fact that although no two rows in the same color depend on each other it is likely
@@ -248,7 +249,7 @@ explore these options at a later time.
 %Irina comment: should we add a code example for the hierarchical parallelism?
 
 
-\section{Performance evaluation result}
+\section{Performance evaluation}
 We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
 Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
 
@@ -386,7 +387,7 @@ Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
 \end{center}
 \end{table}
 
-Now we're going to look at how each preconditioning algorith performs overall on each execution
+Now we're going to look at how each preconditioning algorithm performs overall on each execution
 space.
 
 As seen in Fig \ref{Vanilla} the vanilla symmetric Gauss-Seidel is dominant on the non-cuda
