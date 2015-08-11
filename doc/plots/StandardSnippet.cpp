@@ -26,3 +26,7 @@ class LowerTrisolve{
 		z_new(i)=z_tmp;
 	}
 };
+
+...
+Kokkos::parallel_for(localNumberOfRows, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old));
+..

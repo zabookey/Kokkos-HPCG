@@ -1,7 +1,3 @@
-typedef Kokkos::TeamPolicy<>              team_policy ;
-typedef team_policy::member_type team_member ;
-int rows_per_team=104;
-
 class LowerTrisolve{
     public:
     local_matrix_type A;
@@ -41,3 +37,8 @@ class LowerTrisolve{
         });
     }
 };
+
+..
+  const int team_size=localNumberOfRows/rows_per_team;
+  const team_policy policy( team_size , team_policy::team_size_max( LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows) ),vector_lenght);
+  Kokkos::parallel_for(policy, LowerTrisolve(A.localMatrix, A.matrixDiagonal, r.values, z, A.old, localNumberOfRows));
