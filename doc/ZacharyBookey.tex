@@ -1,6 +1,7 @@
 \documentclass{ccr15}
 % PACKAGES ---------------------------------------------------------------
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
+\usepackage{subfig}
 \usepackage{listings}
 \usepackage{url}
 \usepackage{color}
@@ -401,44 +402,31 @@ Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
 Now we're going to look at how each preconditioning algorithm performs overall on each execution
 space.
 
-As seen in Fig \ref{Vanilla} the vanilla symmetric Gauss-Seidel is dominant on the non-cuda
+As seen in Fig \ref{CombineSYMGS}(a) the vanilla symmetric Gauss-Seidel is dominant on the non-cuda
 execution spaces. This has to do with the fact every time this method is called we had to run
 a lot of memory copies between the host and device. When we aren't using Cuda all of our memory
 is located in one space and thus the memory copying is avoided and we don't see a huge
 performance hindrance.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=10cm]{plots/ZAB-VanillaSYMGS.png}
-  \caption{Plot of GFLOPS for Vanilla SYMGS on each execution space.}
-  \label{Vanilla}
-\end{figure}
-
-In Fig \ref{Level} the results between execution spaces while using the level solve
+In Fig \ref{CombineSYMGS}(b) the results between execution spaces while using the level solve
 preconditioning method vary quite a bit. First, notice that there is a trend with the results and
 it appears that our max performance received from this preconditioner starts to taper off. With
 this trend in mind it appears that OpenMP will achieve better performance using this
 preconditioner than Cuda. However this could be because we haven't done much cuda optimizations
 in terms of memory.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=10cm]{plots/ZAB-LevelSolve.png}
-  \caption{Plot of GFLOPS for level solve on each execution space.}
-  \label{Level}
-\end{figure}
-
-Looking at Fig \ref{Inexact} it seems we have a trend that increases our performance based on
+Looking at Fig \ref{CombineSYMGS}(c) it seems we have a trend that increases our performance based on
 problem size. I'm confident this has to do with the fact that when our problem size is larger our
 matrix is less dense and so we need less jacobi iterations to produce an answer exact enough to
 pass the symmetry tests. However we opt to leave out problem size $192^3$ due to the abnormal
 results mentioned before.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=10cm]{plots/ZAB-InexactSolve.png}
-  \caption{Plot of GFLOPS for inexact solve on each execution space.}
-  \label{Inexact}
+\begin{figure}[h]
+\subfloat[Simple SYMGS]{\includegraphics[width = 4.3cm]{plots/ZAB-VanillaSYMGS.png}}
+\subfloat[Level Solve]{\includegraphics[width = 4.3cm]{plots/ZAB-LevelSolve.png}}
+\subfloat[Inexact Solve]{\includegraphics[width = 4.3cm]{plots/ZAB-InexactSolve.png}}
+\caption{Plots of GFLOPS over the Various SYMGS Algorithms}
+\label{CombineSYMGS}
 \end{figure}
 
 \subsection{Optimizations}
@@ -516,7 +504,7 @@ are highly preliminary and we are going to investigate performance for different
 Below is a code snippet that demonstrates how we used Kokkos hierarchical parallelism in the lower trisolve
 kernel for the inexact solve version of the symmetric Gauss-Seidel.
 
-\begin{figure}
+\begin{figure}[h]
   \centering
   \includegraphics[width=10cm]{plots/ZAB-CombinedVectorLength.png}
   \caption{Plot of GFLOPS for different vector lengths used in lowerTrisolve}
