@@ -3,10 +3,33 @@
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
 \usepackage{listings}
 \usepackage{url}
+\usepackage{color}
 % ADD YOUR OWN PACKAGES HERE ---------------------------------------------
 %\usepackage{someotherpackage}
 % DEFINITIONS ------------------------------------------------------------
 % ADD YOUR OWN DEFINITIONS HERE ------------------------------------------
+\definecolor{hellgelb} {rgb}{1.0,1.0,0.8}   % background color for C++ listings
+\definecolor{darkgreen}{rgb}{0.0,0.2,0.13}
+\lstset{
+  backgroundcolor=\color{hellgelb},
+  basicstyle=\ttfamily\tiny,
+  breakautoindent=true,
+  breaklines=true,
+  captionpos=b,
+  columns=flexible,
+  commentstyle=\color{darkgreen},
+  extendedchars=true,
+  float=hbp,
+  frame=single,
+  identifierstyle=\color{black},
+  keywordstyle=\color{blue},
+  numbers=none,
+  numberstyle=\tiny,
+  showspaces=false,
+  showstringspaces=false,
+  stringstyle=\color{purple},
+  tabsize=2,
+}
 % BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
 % This controls the table-of-contents entry in the proceedings. Edit it
 % to include your article title followed by the authors' names, as shown.
@@ -243,20 +266,6 @@ Gauss-Seidel in parallel over each color. While similar to the level solve, this
 to converge due to the fact that although no two rows in the same color depend on each other it is likely
 that they depend on a row in a color that will be solved in a later iteration.
 
-<<<<<<< HEAD
-\subsection{Optimizations}
-Aside from the symmetric Gauss-Seidel optimizations already made, we are looking to further these
-optimizations in the future by exploiting hierarchical parallelism. For example, in the \emph{inexact
-solve} we can implement a three level parallelism technique that breaks our rows into chunks that 
-a team of threads each gets assigned. Now our teams of threads work on our chunk while in
-parallel we perform the matrix vector computation in parallel using the threads in the team. A
-near identical method can be applied to our \emph{level solve algorithm} but since the level solve deals
-with fewer rows at a time we won't see as much of a performance increase in here. We're confident
-that these aren't the only places that can benefit from hierarchical parallelism and we plan to
-explore these options at a later time.
-%Irina comment: should we add a code example for the hierarchical parallelism?
-
-
 \section{Performance evaluation}
 We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
 Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
@@ -292,9 +301,6 @@ Results presented in this paper are for pre-production Intel Xeon Phi co-process
  \caption{Configurations of testbed clusters}
  \label{testbeds}
 \end{table}
-
-
-Performance results coming soon!
 
 Comparing different variations of the preconditioner requires us to consider different problem sizes
 since some of our implementations will perform better on larger more sparse matrices than they will
@@ -460,6 +466,11 @@ were only able to launch 4 vector lanes max and the kernel itself would not run 
 are highly preliminary as we intend to explore what the optimal number of rows per chunk is and as we figure out
 why we're only allowed to launch 4 vector lanes from a thread.
 
+Below is a code snippet that demonstrates how we used Kokkos heirarchial parallelism in the lower trisolve
+kernel for the inexact solve version of the symmetric Gauss-Seidel.
+\lstset{language=[Visual]C++}
+\lstinputlisting{plots/HeirarchialSnippet.cpp}
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=10cm]{plots/ZAB-VectorLengthCuda.png}
@@ -500,6 +511,7 @@ Sandia National Laboratories is a multi-program laboratory managed and operated 
 \nocite{ZAB:CUDA}
 \nocite{ZAB:OpenMP}
 \nocite{ZAB:PThreads}
+\nocite{ZAB:SYMGS}
 \bibliography{ZacharyBookey}
 % Edit FirstnameLastname below to be your first and last names, but leave the line commented out.
 % This line will help me merge bibliographies for the proceedings.
