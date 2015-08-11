@@ -217,6 +217,47 @@ class LowerTrisolve{
         }
 };
 
+class UpperTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type w;
+	double_1d_type x_new;
+	double_1d_type x_old;
+	int localNumberOfRows;
+	int rpt = rows_per_team;
+
+	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& w_,
+		double_1d_type& x_new_,const double_1d_type& x_old_, const int localNumberOfRows_):
+		A(A_), diag(diag_), w(w_), x_new(x_new_), x_old(x_old_), localNumberOfRows(localNumberOfRows_){
+		Kokkos::deep_copy(x_old, x_new_);
+		}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const team_member & thread) const{
+		int row_indx = thread.league_rank()* rpt;
+		Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, row_indx, row_indx+rpt), [=] (int& irow){
+			double rowDot = 0.0;
+			double x_tmp;
+			int diag_tmp;
+			diag_tmp = A.values(diag(irow));
+			x_tmp = w(irow)/diag_tmp;
+			x_tmp += x_old(irow);
+			const int k_start = diag(irow);
+			const int k_end = A.graph.row_map(irow + 1);
+			const int vector_range = k_end - k_start;
+			Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, vector_range),
+					KOKKOS_LAMBDA(const int& lk, double& lrowDot){
+				const int k = k_start+lk;
+				lrowDot += A.values(k) * x_old(A.graph.entries(k));
+					}, rowDot);
+
+			x_tmp -= rowDot/diag_tmp;
+			x_new(irow)=x_tmp;
+		});
+	}
+};
+
 #else
 class LowerTrisolve{
 	public:
@@ -249,6 +290,35 @@ class LowerTrisolve{
                 z_new(i)=z_tmp;
 	}
 };
+
+class UpperTrisolve{
+	public:
+	local_matrix_type A;
+	const_int_1d_type diag;
+	const_double_1d_type w;
+	double_1d_type x_new;
+	double_1d_type x_old;
+
+	UpperTrisolve(const local_matrix_type& A_,const const_int_1d_type& diag_, const const_double_1d_type& w_,
+		double_1d_type& x_new_,const double_1d_type& x_old_):
+		A(A_), diag(diag_), w(w_), x_new(x_new_), x_old(x_old_){
+		Kokkos::deep_copy(x_old, x_new_);
+		}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		double rowDot = 0.0;
+		double x_tmp;
+		int diag_tmp;
+		diag_tmp = A.values(diag(i));
+		x_tmp = w(i)/diag_tmp;
+		x_tmp += x_old(i);
+		for(int k = diag(i); k < A.graph.row_map(i+1); k++)
+			rowDot += A.values(k) * x_old(A.graph.entries(k));
+		x_tmp -= rowDot/diag_tmp;
+		x_new(i)=x_tmp;
+	}
+};
 #endif
 
 class applyD{
@@ -265,7 +335,7 @@ class applyD{
 		z(i) = z(i)*A.values(diag(i));
 	}
 };
-
+/*
 class UpperTrisolve{
 	public:
 	local_matrix_type A;
@@ -290,6 +360,7 @@ class UpperTrisolve{
 		x_new(i) -= rowDot/A.values(diag(i));
 	}
 };
+*/
 #endif
 
 int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
@@ -387,7 +458,13 @@ for(int j = 0; j < 10; j++){
 	}
 	Kokkos::parallel_for(localNumberOfRows, applyD(A.localMatrix, A.matrixDiagonal, z));
 	for(int i = 0; i < iterations; i++){
+#ifdef KOKKOS_TEAM
+		const int team_size = localNumberOfRows/rows_per_team;
+		const team_policy policy(team_size, team_policy::team_size_max(UpperTrisolve(A.localMatrix, A.matrixDiagonal, z, x.values, A.old, localNumberOfRows)), 16);
+		Kokkos::parallel_for(policy, UpperTrisolve(A.localMatrix, A.matrixDiagonal, z, x.values, A.old, localNumberOfRows));
+#else
 		Kokkos::parallel_for(localNumberOfRows, UpperTrisolve(A.localMatrix, A.matrixDiagonal, z, x.values, A.old));
+#endif
 		Kokkos::fence();
 	}
 #else

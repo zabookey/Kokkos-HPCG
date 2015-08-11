@@ -146,11 +146,16 @@ to replace the values of the view. Although \texttt{parallel\_scan} is useful it
 for setup phases in our HPCG.
 
 %Irina comment: this explanation is not clear. Could you, please, add more details (we can use some from the Programming guide)
-Kokkos allows for nested parallelism that involves creating a league of teams of threads.
-With this tool, a developer could launch a \texttt{parallel\_reduce} kernel that uses a \texttt{parallel\_for} to
-update some value that later gets added to the value that was initially included to be reduced.
+%Zach comment: Is this any better?
+Kokkos allows for nested parallelism. This allows us to run up to three level parallelism inside a single kernel. This
+happens by creating a league of thread teams so that each team of threads has a specified number of threads.
+Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel kernel on the 
+league and then another parallel kernel on the teams and finally a parallel kernel on the vector lanes of the thread.
+Depending on the type of problem you're working on this could introduce unnecessary overhead and you'd be better
+off with one level of parallelism. We'll explore this further in HPCG later.
 
 %Irina comment: we need to change following since we have already implemented this in HPCG.
+%Zach comment: Addressed above.
 
 %Although this has not been implemented in our project yet, there are places in our code that
 %could and should benefit from nested parallelism and thus we intend to include it at a later
@@ -204,6 +209,8 @@ which was the reason performance was lost. We tried implementing many different 
 a sweep of symmetric Gauss-Seidel in parallel to eliminate the need of copying data. We
 implemented an \emph{inexact solve}, a \emph{level solve}, and a \emph{coloring algorithm}.
 %Irina comment: do we have any references for inexact solve, a level solve, and a coloring algorithm.
+%Zach comment: This is a Siva question. I have the book he lent me and I'll cite that, otherwise I don't know
+%where these algorithms came from.
 
 
 The \emph{inexact solve} works by performing a few triangular matrix solves. We split our matrix $A$ into
@@ -236,6 +243,7 @@ Gauss-Seidel in parallel over each color. While similar to the level solve, this
 to converge due to the fact that although no two rows in the same color depend on each other it is likely
 that they depend on a row in a color that will be solved in a later iteration.
 
+<<<<<<< HEAD
 \subsection{Optimizations}
 Aside from the symmetric Gauss-Seidel optimizations already made, we are looking to further these
 optimizations in the future by exploiting hierarchical parallelism. For example, in the \emph{inexact
@@ -428,6 +436,42 @@ results mentioned before.
 	\includegraphics[width=10cm]{plots/ZAB-InexactSolve.png}
 	\caption{Plot of GFLOPS for inexact solve on each execution space.}
 	\label{Inexact}
+\end{figure}
+
+\subsection{Optimizations}
+Aside from the symmetric Gauss-Seidel optimizations already made, we are looking to further these
+optimizations in the future by exploiting hierarchical parallelism. For example, in the \emph{inexact
+solve} we can implement a three level parallelism technique that breaks our rows into chunks that 
+a team of threads each gets assigned. Now our teams of threads work on our chunk while in
+parallel we perform the matrix vector computation in parallel using the threads in the team. A
+near identical method can be applied to our \emph{level solve algorithm} but since the level solve deals
+with fewer rows at a time we won't see as much of a performance increase in here. We're confident
+that these aren't the only places that can benefit from hierarchical parallelism and we plan to
+explore these options at a later time.
+%Irina comment: should we add a code example for the hierarchical parallelism?
+%Zach comment: I'll find a way to add a code snippet of nested parallelism when I'm in the office.
+
+We have started implementing some nested parallelism into our inexact solve method for symmetric gauss-seidel.
+And looking at figures \ref{vlength_cuda} and \ref{vlength_openmp} it is clear that Cuda receives a huge benefit
+from this as it allows us to finely tune how we want to parallelize this method. This nested implementation works as described
+above and for our figures it chooses chunks of size $n$ for a problem of size $n^3$. This assures us that we 
+actually work with every row in our matrix and gives us decent results. We encountered an issue as our threads
+were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. These results
+are highly preliminary as we intend to explore what the optimal number of rows per chunk is and as we figure out
+why we're only allowed to launch 4 vector lanes from a thread.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{plots/ZAB-VectorLengthCuda.png}
+	\caption{Plot of GFlops for diffenet vector lengths, used in inexact solve, across problem sizes in Cuda}
+	\label{vlength_cuda}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{plots/ZAB-VectorLengthOpenMP.png}
+	\caption{Plot of GFlops for different vector lengths, used in inexact solve, across problem sizes in OpenMP}
+	\label{vlength_openmp}
 \end{figure}
 
 \section{Conclusion}
