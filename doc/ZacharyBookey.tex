@@ -30,7 +30,7 @@
   showspaces=false,
   showstringspaces=false,
   stringstyle=\color{purple},
-  tabsize=2,
+  tabsize=2
 }
 % BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
 % This controls the table-of-contents entry in the proceedings. Edit it
@@ -220,6 +220,22 @@ at all and due to some Kokkos restrictions actually caused a slight reduction of
 the function ComputeResidual. Other kernels would later have to be changed to accommodate the fact
 that data was stored on a device but was being run on the host.
 
+An example of "nested loop to Kokkos  kernel" conversion is presented in the Figure \ref{Kokkos_kernel}.
+Here we replace outer loop with the \texttt{Kokkos::parallel\_for} and put internal part of the loop to the Kokkos kernel (see right  part of the Figure \ref{Kokkos_kernel}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=13cm]{plots/kernel_creation.png}
+  \caption{An example of "nested loop to Kokkos  kernel" conversion.}
+  \label{Kokkos_kernel}
+\end{figure}
+
+
+%\lstset{language=[Visual]C++}
+%\lstinputlisting{plots/OriginalSnippet.cpp}
+%\label{StandartSnippet}
+
+
 Computing the preconditioner using a symmetric Gauss-Seidel was initially done in serial and thus
 moving to Kokkos required us to copy memory from the device to the host every time we ran it,
 which was the reason performance was lost. We tried implementing many different ways to perform
@@ -262,7 +278,7 @@ that they depend on a row in a color that will be solved in a later iteration.
 
 \section{Performance evaluation}
 
-We evaluate performance for our implementation of the HPCG code on our Shannon testbed cluster.  Shannon has 32 nodes with  2 Intel SnadyBridge CPUs and 2 Nvidia GPUs per node.
+We evaluate performance for our implementation of the HPCG code on our Shannon testbed cluster.  Shannon has 32 nodes with  2 Intel SnadyBridge CPUs and 2 Nvidia K40/K80 GPUs per node.
 
 
 
@@ -440,28 +456,37 @@ near identical method can be applied to our \emph{level solve algorithm} but sin
 with fewer rows at a time we won't see as much of a performance increase in here. We're confident
 that these aren't the only places that can benefit from hierarchical parallelism and we plan to
 explore these options at a later time.
-%Irina comment: should we add a code example for the hierarchical parallelism?
-%Zach comment: I'll find a way to add a code snippet of nested parallelism when I'm in the office.
 
-If we start by looking at our original LowerTrisolve kernel used in the inexact solve algorithm we have this.
-
-\lstset{language=[Visual]C++}
-\lstinputlisting{plots/StandardSnippet.cpp}
-
-We see that there is a for loop inside of our parallel kernel that doesn't update any outer values and
+If we start by looking at our original LowerTrisolve kernel used in the inexact solve algorithm (see Figure \ref{Kokkos_kernel}) 
+we see that there is a for loop inside of our parallel kernel that doesn't update any outer values and
 could benefit from being parallelized. If you are even more clever you can take advantage of the third level by
 assigning chunks to teams as described above. Thus taking full advantage of three level parallelism we are left
 with the following.
 
+Below is a code snippet that demonstrates how we used Kokkos hierarchical parallelism in the lower trisolve
+kernel for the inexact solve version of the symmetric Gauss-Seidel.
+
 \lstset{language=[Visual]C++}
 \lstinputlisting{plots/HeirarchialSnippet.cpp}
+
+
+
 
 Using the above implementation of nested parallelism in our inexact solve method for symmetric gauss-seidel, we see performance results as in Figures \ref{vlength}, and Tables \ref{VLC} and \ref{VLO}.
  It is clear that Cuda receives a huge benefit
 from this as it allows us to finely tune how we want to parallelize this method. This nested implementation works as described
 above and for our figures it chooses chunks of size $n$ for a problem of size $n^3$. This assures us that we 
-actually work with every row in our matrix and gives us decent results. We encountered an issue as our threads
-were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. 
+actually work with every row in our matrix and gives us decent results. 
+%We encountered an issue as our threads
+%were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. 
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-CombinedVectorLength.png}
+  \caption{Plot of GFLOPS for different vector lengths used in lowerTrisolve}
+  \label{vlength}
+\end{figure}
 
 \begin{table}[h]
 \begin{center}
@@ -502,15 +527,8 @@ $N=128$ & 1.09584 & 1.11385 & 1.11723\\
 
 These results
 are highly preliminary and we are going to investigate performance for different combinations of the number of rows per team, vector length and problem size.
-Below is a code snippet that demonstrates how we used Kokkos hierarchical parallelism in the lower trisolve
-kernel for the inexact solve version of the symmetric Gauss-Seidel.
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=10cm]{plots/ZAB-CombinedVectorLength.png}
-  \caption{Plot of GFLOPS for different vector lengths used in lowerTrisolve}
-  \label{vlength}
-\end{figure}
+
 
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
@@ -521,9 +539,12 @@ specific machine being benchmarked.
 Our work here is not completed but we have made great headway on this project and currently have
 code that produces similar results across all of the Kokkos execution spaces. In the future we plan to
 fix a few performance bottlenecks and utilize hierarchical parallelism to fully take advantage of Kokkos
-kernels.We also plan to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
+kernels.
+
+We also plan to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
 compile time which algorithm to use for preconditioning. It will be interesting to compare performance
 between all of our preconditioning algorithms.
+
 \section{Acknowledgments}
 Sandia National Laboratories is a multi-program laboratory managed and operated by Sandia Corporation, a wholly owned subsidiary of Lockheed Martin Corporation, for the US Department of Energy{'}s National Nuclear Security Administration under contract DE-AC04-94AL85000. This paper is cross-referenced at Sandia as SAND
 
