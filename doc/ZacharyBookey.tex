@@ -54,7 +54,7 @@ The High Performance Conjugate Gradient Benchmark (HPCG) is an international pro
 more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
-parallel applications. HPCG is designed to execise computations and data access patterns more commonly found in applications.
+parallel applications. HPCG is designed to exercise computations and data access patterns more commonly found in applications.
 Original version  of  the HPCG benchmark doesn't exploit full parallelism available on existing supercomputers and the main focus of this work 
 was to create a performance portable version of HPCG that gives reasonable performance on hybrid architectures.
 
@@ -113,7 +113,7 @@ also makes sure that after performing both a sparse matrix vector multiplication
 Gauss-Seidel sweep that we preserve symmetry by using two randomly filled vectors and
 performing simple operations that should be zero due to the nature of our symmetric matrix A.
 \item \textbf{Reference Sparse Matrix Vector Multiplication and Multigrid Timing:} This
-portion of the code times how long it takes to perform the reference versionts of SPMV and
+portion of the code times how long it takes to perform the reference versions of SPMV and
 Symmetric Gauss-Seidel.
 \item \textbf{Reference Conjugate Gradient Timing:} Here we run 50 iterations of the reference
 version of the conjugate gradient method and record the resulting residual. This residual must be
@@ -130,7 +130,7 @@ to display the results which can then be submitted if all the requirements are m
 \end{enumerate}
 HPCG gives you the option to run with MPI, OpenMP, both, or in serial. Running with MPI adds an
 extra dimension to the problem and requires processes to exchange values on their borders to
-perform. This results in a tradeoff between more overhead and more parallelism.
+perform. This results in a trade-off between more overhead and more parallelism.
 \section{Kokkos}
 As computer architectures differ in their features for best parallel performance it has
 become increasingly difficult to write code that will perform well across many different types of
@@ -172,7 +172,7 @@ product of two vectors.
 to replace the values of the view. Although \texttt{parallel\_scan} is useful it was only really needed
 for setup phases in our HPCG.
 
-One of the useful features of Kokkos is that parallel operations can be nestested. This allows us to run up to three level parallelism inside a single kernel. This
+One of the useful features of Kokkos is that parallel operations can be nested. This allows us to run up to three level parallelism inside a single kernel. This
 happens by creating a league of thread teams so that each team of threads has a specified number of threads.
 Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel kernel on the 
 league and then another parallel kernel on the teams and finally a parallel kernel on the vector lanes of the thread.
@@ -183,7 +183,7 @@ be significant for the problems with no enough parallelism. We'll explore this f
 
 The goal for our project was to create a version of HPCG that 
 produces valid results across many architectures without sacrificing performance.
-We believe that Kokkos library is the best available tool to provide performance portability for the C++ code, we choose to refactor HPCG to use it.
+We believe that Kokkos library is the best available tool to provide performance portability for the C++ code, we choose to re-factor HPCG to use it.
 
 General strategy for Kokkos re-factoring includes: 
 \begin{itemize}
@@ -405,7 +405,7 @@ As seen in Fig \ref{Vanilla} the vanilla symmetric Gauss-Seidel is dominant on t
 execution spaces. This has to do with the fact every time this method is called we had to run
 a lot of memory copies between the host and device. When we aren't using Cuda all of our memory
 is located in one space and thus the memory copying is avoided and we don't see a huge
-performance hinderance.
+performance hindrance.
 
 \begin{figure}[H]
   \centering
@@ -417,8 +417,8 @@ performance hinderance.
 In Fig \ref{Level} the results between execution spaces while using the level solve
 preconditioning method vary quite a bit. First, notice that there is a trend with the results and
 it appears that our max performance received from this preconditioner starts to taper off. With
-this trend in mind it appears that OpenMP will acheive better performance using this
-preconditioner than Cuda. However this could be because we haven't done much cuda optimizaitons
+this trend in mind it appears that OpenMP will achieve better performance using this
+preconditioner than Cuda. However this could be because we haven't done much cuda optimizations
 in terms of memory.
 
 \begin{figure}[H]
@@ -459,7 +459,7 @@ If we start by looking at our original LowerTrisolve kernel used in the inexact 
 \lstset{language=[Visual]C++}
 \lstinputlisting{plots/StandardSnippet.cpp}
 
-Clearly we see that there is a for loop inside of our parallel kernel that doesn't update any outer values and
+We see that there is a for loop inside of our parallel kernel that doesn't update any outer values and
 could benefit from being parallelized. If you are even more clever you can take advantage of the third level by
 assigning chunks to teams as described above. Thus taking full advantage of three level parallelism we are left
 with the following.
@@ -467,7 +467,7 @@ with the following.
 \lstset{language=[Visual]C++}
 \lstinputlisting{plots/HeirarchialSnippet.cpp}
 
-Using the above implementation of nested parallelism in our inexact solve method for symmetric gauss-seidel, we see performance results as in Figures \ref{vlength_cuda}, and \ref{vlength_openmp}, and Tables \ref{VLC} and \ref{VLO}.
+Using the above implementation of nested parallelism in our inexact solve method for symmetric gauss-seidel, we see performance results as in Figures \ref{vlength}, and Tables \ref{VLC} and \ref{VLO}.
  It is clear that Cuda receives a huge benefit
 from this as it allows us to finely tune how we want to parallelize this method. This nested implementation works as described
 above and for our figures it chooses chunks of size $n$ for a problem of size $n^3$. This assures us that we 
@@ -513,21 +513,14 @@ $N=128$ & 1.09584 & 1.11385 & 1.11723\\
 
 These results
 are highly preliminary and we are going to investigate performance for different combinations of the number of rows per team, vector length and problem size.
-Below is a code snippet that demonstrates how we used Kokkos heirarchial parallelism in the lower trisolve
+Below is a code snippet that demonstrates how we used Kokkos hierarchical parallelism in the lower trisolve
 kernel for the inexact solve version of the symmetric Gauss-Seidel.
 
-\begin{figure}[H]
+\begin{figure}
   \centering
-  \includegraphics[width=10cm]{plots/ZAB-VectorLengthCuda.png}
-  \caption{Plot of GFlops for diffenet vector lengths, used in inexact solve, across problem sizes in Cuda}
-  \label{vlength_cuda}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=10cm]{plots/ZAB-VectorLengthOpenMP.png}
-  \caption{Plot of GFlops for different vector lengths, used in inexact solve, across problem sizes in OpenMP}
-  \label{vlength_openmp}
+  \includegraphics[width=10cm]{plots/ZAB-CombinedVectorLength.png}
+  \caption{Plot of GFLOPS for different vector lengths used in lowerTrisolve}
+  \label{vlength}
 \end{figure}
 
 \section{Conclusion}
