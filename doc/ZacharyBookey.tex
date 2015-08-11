@@ -54,12 +54,16 @@ The High Performance Conjugate Gradient Benchmark (HPCG) is an international pro
 more appropriate benchmark test for the world's largest computers. The current LINPACK benchmark,
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
-parallel applications. In this project we are developing a version of HPCG, using the Kokkos
-package in Trilinos. Kokkos can be optimally executed across several distinct high
-performance computing architectures. 
+parallel applications. HPCG is designed to execise computations and data access patterns more commonly found in applications.
+Original version  of  the HPCG benchmark doesn't exploit full parallelism available on existing supercomputers and the main focus of this work 
+was to create a performance portable version of HPCG that gives reasonable performance on hybrid architectures.
+
+%In this project we are developing a version of HPCG, using the Kokkos
+%package in Trilinos. Kokkos can be optimally executed across several distinct high
+%performance computing architectures. 
 %Irina comment: the last sentence of the abstract should outline the main goal/result of of this work. So we might want to change it.
-This new code demonstrates an efficient programming
-approach that can be adopted by other programmers to write portable high performance software.
+%This new code demonstrates an efficient programming
+%approach that can be adopted by other programmers to write portable high performance software.
 \end{abstract}
 
 \section{Introduction}
@@ -168,21 +172,12 @@ product of two vectors.
 to replace the values of the view. Although \texttt{parallel\_scan} is useful it was only really needed
 for setup phases in our HPCG.
 
-%Irina comment: this explanation is not clear. Could you, please, add more details (we can use some from the Programming guide)
-%Zach comment: Is this any better?
-Kokkos allows for nested parallelism. This enables us to run up to three level parallelism inside a single kernel.
-This happens by creating a league of thread teams so that each team of threads has a specified number of threads.
-Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel 
-kernel on the league and then another parallel kernel on the teams and finally a parallel kernel on the vector 
-lanes of the thread. Depending on the type of problem you're working on this could introduce unnecessary overhead 
-and you'd be better off with one level of parallelism. We'll explore this further in HPCG later.
-
-%Irina comment: we need to change following since we have already implemented this in HPCG.
-%Zach comment: Addressed above.
-
-%Although this has not been implemented in our project yet, there are places in our code that
-%could and should benefit from nested parallelism and thus we intend to include it at a later
-%time.
+One of the useful features of Kokkos is that parallel operations can be nestested. This allows us to run up to three level parallelism inside a single kernel. This
+happens by creating a league of thread teams so that each team of threads has a specified number of threads.
+Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel kernel on the 
+league and then another parallel kernel on the teams and finally a parallel kernel on the vector lanes of the thread.
+Depending on the type of problem nested parallelism can significantly improve performance of the Kokkos kernels, but, at the same time, is introduces some overheads that can 
+be significant for the problems with no enough parallelism. We'll explore this further in HPCG later.
 
 \section{HPCG + Kokkos}
 
@@ -197,17 +192,12 @@ General strategy for Kokkos re-factoring includes:
 \item code optimizations to improve usage of co-processors.
 \end{itemize}
 
-% First we needed to rewrite the parallel kernels to use Kokkos parallel kernels, then we needed to restructure 
-%all of the code to work with Kokkos views, and finally we needed to make a few optimizations to
-%avoid an unecessary amount of memory copying from the host to the device and vice versa.
-
-
 
 \subsection{Replacement custom data types with Kokkos multidimensional arrays}
 
 Restructuring the code involved a whole rewrite of HPCG to change how all of the structs stored
 their values. We replaced every array that would be used in a parallel kernel with an appropriate
-view. Once this was functional we had to go back to some of the compute algorithms and change
+\texttt{Kokkos::View}. Once this was functional we had to go back to some of the compute algorithms and change
 how the data was accessed as to not try to access device data from the host or the
 other way around.
 
@@ -215,7 +205,9 @@ While restructuring we decided to change how our SparseMatrix stored the data an
 as a sort of overlying structure on top of a Kokkos CSRMatrix. This change required us to again
 go back and change how most of our computational kernels worked and created a noticeable increase
 in performance. At this point the code was functional across all of Kokkos execution spaces but
-took a severe performance hit while trying to run on Cuda. (TODO : Due to host to device copies for sequential kernels? )
+took a severe performance hit while trying to run on Cuda. 
+
+%(TODO : Due to host to device copies for sequential kernels? )
 
 \subsection{Replacement the parallel loops with Kokkos parallel kernels}
 
@@ -267,40 +259,45 @@ to converge due to the fact that although no two rows in the same color depend o
 that they depend on a row in a color that will be solved in a later iteration.
 
 \section{Performance evaluation}
-We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
-Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
 
-\begin{table}[h]
-\centering
-\resizebox{2.7in}{!}{
-\begin{tabular}{lll}
-\hline    
- Name & Compton & Shannon      \\
- \hline    
- \\
- Nodes & 32 & 32  \\
-\\
- CPU &2� Intel E5-2670 HT-on &2� Intel E5-2670 HT-off  \\
- \\
- Co-Processor &2� Intel Xeon Phi 57c  &2� K20x ECC on  \\
- & 1.1 GHz &\\
- Memory  &64 GB &  128 GB  \\
- \\
- Interconnect  & QDR IB &  QDR IB  \\
- \\
- OS  & RedHat 6.1 & RedHat 6.2   \\
- \\
- Compiler & ICC 13.1.2 & GCC 4.8.2+CUDA 6.5   \\
- \\
- MPI & IMPI 4.1.1.036  & MVAPICH2 1.9  \\
- \\
- Other &MPSS 2.1.3653-8 & Driver: 319.23  \\
- \\
- \hline    
-\end{tabular}}
- \caption{Configurations of testbed clusters}
- \label{testbeds}
-\end{table}
+We evaluate performance for our implementation of the HPCG code on our Shannon testbed cluster.  Shannon has 32 nodes with  2 Intel SnadyBridge CPUs and 2 Nvidia GPUs per node.
+
+
+
+%We evaluate performance for our implementation of the HPCG code on our Compton and Shannon testbed clusters. Compton is used for Intel Xeon and Intel Xeon Phi tests, and Shannon is used for NVIDIA Kepler (K20x) tests. Testbed configuration details are given in Table \ref{testbeds}. Note that in these configurations device refers to a dual socket Xeon node, a single Xeon Phi, and a single Kepler GPU respectively.
+%Results presented in this paper are for pre-production Intel Xeon Phi co-processors (codenamed Knights Corner) and pre-production versions of Intel{'}s Xeon Phi software stack. Performance and configuration of the co-processors may be different in final production releases.
+
+%\begin{table}[h]
+%\centering
+%\resizebox{2.7in}{!}{
+%\begin{tabular}{lll}
+%\hline    
+% Name & Compton & Shannon      \\
+ %\hline    
+ %\\
+% Nodes & 32 & 32  \\
+%\\
+ %CPU &2� Intel E5-2670 HT-on &2� Intel E5-2670 HT-off  \\
+ %\\
+ %Co-Processor &2� Intel Xeon Phi 57c  &2� K20x ECC on  \\
+ %& 1.1 GHz &\\
+% Memory  &64 GB &  128 GB  \\
+ %\\
+ %Interconnect  & QDR IB &  QDR IB  \\
+ %\\
+% OS  & RedHat 6.1 & RedHat 6.2   \\
+ %\\
+% Compiler & ICC 13.1.2 & GCC 4.8.2+CUDA 6.5   \\
+ %\\
+% MPI & IMPI 4.1.1.036  & MVAPICH2 1.9  \\
+ %\\
+% Other &MPSS 2.1.3653-8 & Driver: 319.23  \\
+ %\\
+% \hline    
+%\end{tabular}}
+% \caption{Configurations of testbed clusters}
+% \label{testbeds}
+%\end{table}
 
 Comparing different variations of the preconditioner requires us to consider different problem sizes
 since some of our implementations will perform better on larger more sparse matrices than they will
@@ -414,7 +411,7 @@ performance hinderance.
   \centering
   \includegraphics[width=10cm]{plots/ZAB-VanillaSYMGS.png}
   \caption{Plot of GFLOPS for Vanilla SYMGS on each execution space.}
-	\label{Vanilla}
+  \label{Vanilla}
 \end{figure}
 
 In Fig \ref{Level} the results between execution spaces while using the level solve
@@ -425,10 +422,10 @@ preconditioner than Cuda. However this could be because we haven't done much cud
 in terms of memory.
 
 \begin{figure}[H]
-	\centering
-	\includegraphics[width=10cm]{plots/ZAB-LevelSolve.png}
-	\caption{Plot of GFLOPS for level solve on each execution space.}
-	\label{Level}
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-LevelSolve.png}
+  \caption{Plot of GFLOPS for level solve on each execution space.}
+  \label{Level}
 \end{figure}
 
 Looking at Fig \ref{Inexact} it seems we have a trend that increases our performance based on
@@ -438,10 +435,10 @@ pass the symmetry tests. However we opt to leave out problem size $192^3$ due to
 results mentioned before.
 
 \begin{figure}[H]
-	\centering
-	\includegraphics[width=10cm]{plots/ZAB-InexactSolve.png}
-	\caption{Plot of GFLOPS for inexact solve on each execution space.}
-	\label{Inexact}
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-InexactSolve.png}
+  \caption{Plot of GFLOPS for inexact solve on each execution space.}
+  \label{Inexact}
 \end{figure}
 
 \subsection{Optimizations}
@@ -457,68 +454,32 @@ explore these options at a later time.
 %Irina comment: should we add a code example for the hierarchical parallelism?
 %Zach comment: I'll find a way to add a code snippet of nested parallelism when I'm in the office.
 
-We have started implementing some nested parallelism into our inexact solve method for symmetric gauss-seidel.
-And looking at figures \ref{vlength_cuda} and \ref{vlength_openmp} it is clear that Cuda receives a huge benefit
+We have started implementing some nested parallelism into our inexact solve method for symmetric gauss-seidel (see Fig. \ref{vlength_cuda} and \ref{vlength_openmp}).
+ It is clear that Cuda receives a huge benefit
 from this as it allows us to finely tune how we want to parallelize this method. This nested implementation works as described
 above and for our figures it chooses chunks of size $n$ for a problem of size $n^3$. This assures us that we 
 actually work with every row in our matrix and gives us decent results. We encountered an issue as our threads
-were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. These results
-are highly preliminary as we intend to explore what the optimal number of rows per chunk is and as we figure out
-why we're only allowed to launch 4 vector lanes from a thread.
+were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. 
 
-\begin{table}[h]
-\begin{center}
-\begin{tabular}{|c||c|c|c|}
-\hline
-& Vector Length 1 & Vector Length 2 & Vector Length 4 \\
-\hline
-$N=16$ & 0.087516 & 0.0857736 & 0.0834751 \\
-\hline
-$N=64$ & 0.611932 & 1.41309 & 1.17325 \\
-\hline
-$N=128$ & 1.2713 & 3.51299 & 4.07047 \\
-\hline
-\end{tabular}
-\caption{Nested Parallelism Using Cuda and Specified Vector Length on Problem Size $N^3$}
-\label{VLC}
-\end{center}
-\end{table}
-
-\begin{table}[h]
-\begin{center}
-\begin{tabular}{|c||c|c|c|}
-\hline
-& Vector Length 1 & Vector Length 2 & Vector Length 4 \\
-\hline
-$N=16$ & 0.110544 & 0.111938 & 0.111116 \\
-\hline
-$N=64$ & 0.50259 & 0.502229 & 0.495932 \\
-\hline
-$N=128$ & 1.09584 & 1.11385 & 1.11723 \\
-\hline
-\end{tabular}
-\caption{Nested Parallelism Using OpenMP and Specified Vector Length on Problem Size $N^3$}
-\label{VLO}
-\end{center}
-\end{table}
-
+These results
+are highly preliminary and we are going to investigate performance for different combinations of the number of rows per team, vector length and problem size.
 Below is a code snippet that demonstrates how we used Kokkos heirarchial parallelism in the lower trisolve
 kernel for the inexact solve version of the symmetric Gauss-Seidel.
 \lstset{language=[Visual]C++}
 \lstinputlisting{plots/HeirarchialSnippet.cpp}
 
 \begin{figure}[H]
-	\centering
-	\includegraphics[width=10cm]{plots/ZAB-VectorLengthCuda.png}
-	\caption{Plot of GFlops for diffenet vector lengths, used in inexact solve, across problem sizes in Cuda}
-	\label{vlength_cuda}
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-VectorLengthCuda.png}
+  \caption{Plot of GFlops for diffenet vector lengths, used in inexact solve, across problem sizes in Cuda}
+  \label{vlength_cuda}
 \end{figure}
 
 \begin{figure}[H]
-	\centering
-	\includegraphics[width=10cm]{plots/ZAB-VectorLengthOpenMP.png}
-	\caption{Plot of GFlops for different vector lengths, used in inexact solve, across problem sizes in OpenMP}
-	\label{vlength_openmp}
+  \centering
+  \includegraphics[width=10cm]{plots/ZAB-VectorLengthOpenMP.png}
+  \caption{Plot of GFlops for different vector lengths, used in inexact solve, across problem sizes in OpenMP}
+  \label{vlength_openmp}
 \end{figure}
 
 \section{Conclusion}
@@ -528,9 +489,9 @@ version of HPCG out of the box and not need to configure the code to be compatib
 specific machine being benchmarked.
 
 Our work here is not completed but we have made great headway on this project and currently have
-code that produces similar results across all of the Kokkos execution spaces. In the future we want to
+code that produces similar results across all of the Kokkos execution spaces. In the future we plan to
 fix a few performance bottlenecks and utilize hierarchical parallelism to fully take advantage of Kokkos
-kernels.We also want to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
+kernels.We also plan to fix our coloring algorithm for the symmetric Gauss-Seidel so we can choose at
 compile time which algorithm to use for preconditioning. It will be interesting to compare performance
 between all of our preconditioning algorithms.
 \section{Acknowledgments}
