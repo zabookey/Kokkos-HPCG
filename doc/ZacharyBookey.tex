@@ -170,12 +170,12 @@ for setup phases in our HPCG.
 
 %Irina comment: this explanation is not clear. Could you, please, add more details (we can use some from the Programming guide)
 %Zach comment: Is this any better?
-Kokkos allows for nested parallelism. This allows us to run up to three level parallelism inside a single kernel. This
-happens by creating a league of thread teams so that each team of threads has a specified number of threads.
-Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel kernel on the 
-league and then another parallel kernel on the teams and finally a parallel kernel on the vector lanes of the thread.
-Depending on the type of problem you're working on this could introduce unnecessary overhead and you'd be better
-off with one level of parallelism. We'll explore this further in HPCG later.
+Kokkos allows for nested parallelism. This enables us to run up to three level parallelism inside a single kernel.
+This happens by creating a league of thread teams so that each team of threads has a specified number of threads.
+Then we can assign vector lanes to each thread that can run in parallel as well. This allows us to call a parallel 
+kernel on the league and then another parallel kernel on the teams and finally a parallel kernel on the vector 
+lanes of the thread. Depending on the type of problem you're working on this could introduce unnecessary overhead 
+and you'd be better off with one level of parallelism. We'll explore this further in HPCG later.
 
 %Irina comment: we need to change following since we have already implemented this in HPCG.
 %Zach comment: Addressed above.
@@ -465,6 +465,42 @@ actually work with every row in our matrix and gives us decent results. We encou
 were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. These results
 are highly preliminary as we intend to explore what the optimal number of rows per chunk is and as we figure out
 why we're only allowed to launch 4 vector lanes from a thread.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c||c|c|c|}
+\hline
+& Vector Length 1 & Vector Length 2 & Vector Length 4 \\
+\hline
+$N=16$ & 0.087516 & 0.0857736 & 0.0834751 \\
+\hline
+$N=64$ & 0.611932 & 1.41309 & 1.17325 \\
+\hline
+$N=128$ & 1.2713 & 3.51299 & 4.07047 \\
+\hline
+\end{tabular}
+\caption{Nested Parallelism Using Cuda and Specified Vector Length on Problem Size $N^3$}
+\label{VLC}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c||c|c|c|}
+\hline
+& Vector Length 1 & Vector Length 2 & Vector Length 4 \\
+\hline
+$N=16$ & 0.110544 & 0.111938 & 0.111116 \\
+\hline
+$N=64$ & 0.50259 & 0.502229 & 0.495932 \\
+\hline
+$N=128$ & 1.09584 & 1.11385 & 1.11723 \\
+\hline
+\end{tabular}
+\caption{Nested Parallelism Using OpenMP and Specified Vector Length on Problem Size $N^3$}
+\label{VLO}
+\end{center}
+\end{table}
 
 Below is a code snippet that demonstrates how we used Kokkos heirarchial parallelism in the lower trisolve
 kernel for the inexact solve version of the symmetric Gauss-Seidel.
