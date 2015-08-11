@@ -454,19 +454,67 @@ explore these options at a later time.
 %Irina comment: should we add a code example for the hierarchical parallelism?
 %Zach comment: I'll find a way to add a code snippet of nested parallelism when I'm in the office.
 
-We have started implementing some nested parallelism into our inexact solve method for symmetric gauss-seidel (see Fig. \ref{vlength_cuda} and \ref{vlength_openmp}).
+If we start by looking at our original LowerTrisolve kernel used in the inexact solve algorithm we have this.
+
+\lstset{language=[Visual]C++}
+\lstinputlisting{plots/StandardSnippet.cpp}
+
+Clearly we see that there is a for loop inside of our parallel kernel that doesn't update any outer values and
+could benefit from being parallelized. If you are even more clever you can take advantage of the third level by
+assigning chunks to teams as described above. Thus taking full advantage of three level parallelism we are left
+with the following.
+
+\lstset{language=[Visual]C++}
+\lstinputlisting{plots/HeirarchialSnippet.cpp}
+
+Using the above implementation of nested parallelism in our inexact solve method for symmetric gauss-seidel, we see performance results as in Figures \ref{vlength_cuda}, and \ref{vlength_openmp}, and Tables \ref{VLC} and \ref{VLO}.
  It is clear that Cuda receives a huge benefit
 from this as it allows us to finely tune how we want to parallelize this method. This nested implementation works as described
 above and for our figures it chooses chunks of size $n$ for a problem of size $n^3$. This assures us that we 
 actually work with every row in our matrix and gives us decent results. We encountered an issue as our threads
 were only able to launch 4 vector lanes max and the kernel itself would not run if we tried to launch more. 
 
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c||c|c|c|}
+\hline
+Vector Levels: & 1 & 2 & 4 \\
+\hline \hline
+$N=16$ & 0.087516 & 0.0857736 & 0.0834751 \\
+\hline
+$N=64$ & 0.611932 & 1.41309 & 1.17325 \\
+\hline
+$N=128$ & 1.2713 & 3.51299 & 4.07047 \\
+\hline
+\end{tabular}
+\caption{Number of Levels and Problem Size $N^3$ Affect Cuda Performance}
+\label{VLC}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c||c|c|c|}
+\hline
+Vector Levels: & 1 & 2 & 4 \\
+\hline \hline
+$N=16$ & 0.110544 & 0.111938 & 0.111116 \\
+\hline
+$N=64$ & 0.50259 & 0.502229 & 0.495932 \\
+\hline
+$N=128$ & 1.09584 & 1.11385 & 1.11723\\
+\hline
+\end{tabular}
+\caption{Number of Levels and Problem Size $N^3$ Affect OpenMP Performance}
+\label{VLO}
+\end{center}
+\end{table}
+
+
 These results
 are highly preliminary and we are going to investigate performance for different combinations of the number of rows per team, vector length and problem size.
 Below is a code snippet that demonstrates how we used Kokkos heirarchial parallelism in the lower trisolve
 kernel for the inexact solve version of the symmetric Gauss-Seidel.
-\lstset{language=[Visual]C++}
-\lstinputlisting{plots/HeirarchialSnippet.cpp}
 
 \begin{figure}[H]
   \centering
