@@ -3,10 +3,33 @@
 \usepackage{amsfonts,amsmath,graphicx,subfigure}
 \usepackage{listings}
 \usepackage{url}
+\usepackage{color}
 % ADD YOUR OWN PACKAGES HERE ---------------------------------------------
 %\usepackage{someotherpackage}
 % DEFINITIONS ------------------------------------------------------------
 % ADD YOUR OWN DEFINITIONS HERE ------------------------------------------
+\definecolor{hellgelb} {rgb}{1.0,1.0,0.8}   % background color for C++ listings
+\definecolor{darkgreen}{rgb}{0.0,0.2,0.13}
+\lstset{
+%  backgroundcolor=\color{hellgelb},
+  basicstyle=\ttfamily\small,
+  breakautoindent=true,
+  breaklines=true,
+  captionpos=b,
+  columns=flexible,
+  commentstyle=\color{darkgreen},
+  extendedchars=true,
+  float=hbp,
+  frame=single,
+  identifierstyle=\color{black},
+  keywordstyle=\color{blue},
+  numbers=none,
+  numberstyle=\tiny,
+  showspaces=false,
+  showstringspaces=false,
+  stringstyle=\color{purple},
+  tabsize=2,
+}
 % BE SURE TO PREFACE LABEL WITH YOUR OWN INITIALS (ZAB in this example) --
 % This controls the table-of-contents entry in the proceedings. Edit it
 % to include your article title followed by the authors' names, as shown.
@@ -192,7 +215,8 @@ While restructuring we decided to change how our SparseMatrix stored the data an
 as a sort of overlying structure on top of a Kokkos CSRMatrix. This change required us to again
 go back and change how most of our computational kernels worked and created a noticeable increase
 in performance. At this point the code was functional across all of Kokkos execution spaces but
-took a severe performance hit while trying to run on Cuda.
+took a severe performance hit while trying to run on Cuda due to host to device copies for sequential kernels.
+
 
 \subsection{Replacement the parallel loops with Kokkos parallel kernels}
 
@@ -277,9 +301,6 @@ Results presented in this paper are for pre-production Intel Xeon Phi co-process
  \caption{Configurations of testbed clusters}
  \label{testbeds}
 \end{table}
-
-
-Performance results coming soon!
 
 Comparing different variations of the preconditioner requires us to consider different problem sizes
 since some of our implementations will perform better on larger more sparse matrices than they will
@@ -458,6 +479,12 @@ why we're only allowed to launch 4 vector lanes from a thread.
 	\caption{Plot of GFlops for different vector lengths, used in inexact solve, across problem sizes in OpenMP}
 	\label{vlength_openmp}
 \end{figure}
+
+\lstset{language=[ISO]C++}
+\lstinputlisting{plots/HeirarchialSnippet.cpp}
+
+\lstset{language=[ISO]C++}
+\lstinputlisting{plots/StandardSnippet.cpp}
 
 \section{Conclusion}
 In the end we have worked towards creating a version of HPCG that works alongside the Kokkos
