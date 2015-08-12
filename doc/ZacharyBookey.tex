@@ -46,8 +46,8 @@
 % Put your article title in here
 \title{Performance Portable High Performance Conjugate Gradient Benchmark}
 % List each author, their affiliation, and their e-mail address, as shown.
-\author{Zachary A.\ Bookey\thanks{Saint John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
-ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}\and Michael A. Heroux\thanks{Sandia National Laboratories, maherou@sandia.gov}}
+\author{Zachary A.\ Bookey\thanks{St. John's University, zabookey@csbsju.edu} \and Irina P.\ Demeshko\thanks{Sandia National Laboratories,
+ipdemes@sandia.gov} \and Sivasankaran Rajamanickam\thanks{Sandia National Laboratories, srajama@sandia.gov}\and Michael A. Heroux\thanks{Sandia National Laboratories, maherou@sandia.gov; St. John's University, mheroux@csbsju.edu}}
 \begin{document}
 \maketitle
 % Include your abstract here.
@@ -57,7 +57,7 @@ more appropriate benchmark test for the world's largest computers. The current L
 which is the standard for measuring the performance of the top 500 fastest computers in the
 world, is moving computers in a direction that is no longer beneficial to many important
 parallel applications. HPCG is designed to exercise computations and data access patterns more commonly found in applications.
-Original version  of  the HPCG benchmark doesn't exploit full parallelism available on existing supercomputers and the main focus of this work 
+The reference version of HPCG exploitx only some parallelism available on existing supercomputers and the main focus of this work 
 was to create a performance portable version of HPCG that gives reasonable performance on hybrid architectures.
 
 %In this project we are developing a version of HPCG, using the Kokkos
@@ -70,23 +70,10 @@ was to create a performance portable version of HPCG that gives reasonable perfo
 
 \section{Introduction}
 
-After generations of using the High Performance Linpack (HPL), or Top 500, benchmark \cite{ZAB:Top500} to measure the
-performance of large computers it became necessary to use another benchmark to help better the
-direction that super computers were headed to more accurately reflect the types of applications
-that these machines were running.
-
-HPL is a simple program that factors and solves a large dense system of linear equations using
-Gaussian Elimination with partial pivoting.
-While dense matrix - matrix multiplication and related kernels are commonly used in scientific applications,
-they are not representative of all the operations usually performed in scientific computing:
-computations with lower computation-to-data-access ratios(computational intensity) and with
-irregular memory access are also very common.
-
-The High Performance Conjugate Gradient (HPCG)\cite{ZAB:TechHPCG}\cite{ZAB:TechHPCG2} was created to fill the gap that HPL had created.
+The High Performance Conjugate Gradient (HPCG)\cite{ZAB:TechHPCG}\cite{ZAB:TechHPCG2} is emerging as a complement to the High Performance Linpack (HPL) benchmark for ranking the top computing systems in the world.
 HPCG uses a preconditioned conjugate gradient to solve a system of equations, that executes both
 dense computations with high computational intensity and computations with low computational intensity such as sparse matrix-matrix multiplications.
 
-Original HPCG benchmark doesn't exploit full parallelism available on existing supercomputers which makes it unfair to use HPCG for performance measurement on architectures with accelerators/co-processors.
 The goal of our project was to create a performance portable version of HPCG that gives reasonable performance on all existing supercomputers. 
 We choose  Kokkos\cite{ZAB:Kokkos} library from Trilinos\cite{ZAB:Trilinos} as a tool to provide performance portability in HPCG code.
 
@@ -189,9 +176,9 @@ We believe that Kokkos library is the best available tool to provide performance
 
 General strategy for Kokkos re-factoring includes: 
 \begin{itemize}
-\item replacement custom data types with Kokkos multidimensional arrays; 
-\item replacement the parallel loops with Kokkos parallel kernels; 
-\item code optimizations to improve usage of co-processors.
+\item Replace custom data types with Kokkos multidimensional arrays; 
+\item Replace the parallel loops with Kokkos parallel kernels; 
+\item Code optimizations to improve usage of co-processors.
 \end{itemize}
 
 
@@ -220,13 +207,13 @@ at all and due to some Kokkos restrictions actually caused a slight reduction of
 the function ComputeResidual. Other kernels would later have to be changed to accommodate the fact
 that data was stored on a device but was being run on the host.
 
-An example of "nested loop to Kokkos  kernel" conversion is presented in the Figure \ref{Kokkos_kernel}.
+An example of ``nested loop to Kokkos'' kernel conversion is presented in the Figure \ref{Kokkos_kernel}.
 Here we replace outer loop with the \texttt{Kokkos::parallel\_for} and put internal part of the loop to the Kokkos kernel (see right  part of the Figure \ref{Kokkos_kernel}).
 
 \begin{figure}[h]
   \centering
   \includegraphics[width=13cm]{plots/kernel_creation.png}
-  \caption{An example of "nested loop to Kokkos  kernel" conversion.}
+  \caption{An example of ``nested loop to Kokkos kernel'' conversion.}
   \label{Kokkos_kernel}
 \end{figure}
 
@@ -246,8 +233,9 @@ implemented an \emph{inexact solve}, a \emph{level solve}, and a \emph{coloring 
 %where these algorithms came from.
 
 
-The \emph{inexact solve} works by performing a few triangular matrix solves. We split our matrix $A$ into
-parts $L$, $U$, and $D$ where $L$ is the lower triangular matrix including the diagonal, $U$ is the upper
+The \emph{inexact solve}\footnote{We understand that the inexact solve violates the policies of the benchmark, but
+is included for comparison anyways.} works by performing a few triangular matrix solves. We split our matrix $A$
+into parts $L$, $U$, and $D$ where $L$ is the lower triangular matrix including the diagonal, $U$ is the upper
 triangular matrix including the diagonal and $D$ is the diagonal. The \emph{inexact solve} is done by solving three
 different equations. Given our problem $A x = b$, to simulate a symmetric Gauss-Seidel sweep we solve
 $L z = b$ then $D w = z$ and finally $U x = w$. All of these solves are done using a parallel Jacobi solve.
@@ -267,7 +255,6 @@ we do for the inexact solve except we start by solving for the rows in level 1 i
 then the rows in level 2 in parallel and repeat until we solve all of our levels. In the end we
 have a Symmetric Gauss-Seidel that has introduced a deal of parallelism and performs well
 compared to the original implementation.
-
 At the time of writing our \emph{coloring algorithm} is not fully implemented. We are in the process of finishing it to provide it as part of HPCG+Kokkos
 implementation.
 The algorithm works by coloring our matrix $A$ so that all rows
@@ -278,7 +265,7 @@ that they depend on a row in a color that will be solved in a later iteration.
 
 \section{Performance evaluation}
 
-We evaluate performance for our implementation of the HPCG code on our Shannon testbed cluster.  Shannon has 32 nodes with  2 Intel SnadyBridge CPUs and 2 Nvidia K40/K80 GPUs per node.
+We evaluate performance for our implementation of the HPCG code on our Shannon testbed cluster. Shannon has 32 nodes with 2 Intel SnadyBridge CPUs and 2 Nvidia K40/K80 GPUs per node.
 
 
 
@@ -340,7 +327,7 @@ is close enough to the exact solution to maintain symmetry.
  Serial (Shannon) & 1.46676 & 0.22152 & 0.269744 \\
  \hline
 \end{tabular}
-\caption{SYMGS on Problem Size $16^3$}
+\caption{GFLOPS Results for various SYMGS on Problem Size $16^3$}
 \label{SYMGS16}
 \end{center}
 \end{table}
@@ -364,7 +351,7 @@ OpenMP (Shannon) & 1.76462 & 2.42687 & 0.97734 \\
 Serial (Shannon) & 1.45816 & 1.56839 & 0.485523 \\
 \hline
 \end{tabular}
-\caption{SYMGS on Problem Size $64^3$}
+\caption{GFLOPS Results for various SYMGS on Problem Size $64^3$}
 \label{SYMGS64}
 \end{center}
 \end{table}
@@ -387,7 +374,7 @@ OpenMP (Shannon) & 1.82678 & 4.19081 & 1.84878 \\
 Serial (Shannon) & 1.49575 & 2.18794 & 0.810011 \\
 \hline
 \end{tabular}
-\caption{SYMGS on Problem Size $128^3$}
+\caption{GFLOPS Results for various SYMGS on Problem Size $128^3$}
 \label{SYMGS128}
 \end{center}
 \end{table}
@@ -411,7 +398,7 @@ OpenMP (Shannon) & 1.842 & 4.858 & ??? \\
 Serial (Shannon) & 1.5048 & 2.37896 & ??? \\
 \hline
 \end{tabular}
-\caption{SYMGS on Problem Size $192^3$}
+\caption{GFLOPS Results for various SYMGS on Problem Size $192^3$}
 \label{SYMGS192}
 \end{center}
 \end{table}
@@ -433,15 +420,13 @@ preconditioner than Cuda. However this could be because we haven't done much cud
 in terms of memory.
 
 Looking at Fig \ref{CombineSYMGS}(c) it seems we have a trend that increases our performance based on
-problem size. I'm confident this has to do with the fact that when our problem size is larger our
+problem size. We are confident this has to do with the fact that when our problem size is larger our
 matrix is less dense and so we need less jacobi iterations to produce an answer exact enough to
 pass the symmetry tests. However we opt to leave out problem size $192^3$ due to the abnormal
 results mentioned before.
 
 \begin{figure}[h]
-\subfloat[Simple SYMGS]{\includegraphics[width = 4.3cm, height=3.3cm]{plots/ZAB-VanillaSYMGS.png}}
-\subfloat[Level Solve]{\includegraphics[width = 4.3cm, height=3.3cm]{plots/ZAB-LevelSolve.png}}
-\subfloat[Inexact Solve]{\includegraphics[width = 4.3cm, height=3.3cm]{plots/ZAB-InexactSolve.png}}
+\includegraphics[width=13cm]{plots/ZAB-Trigraph.png}
 \caption{Plots of GFLOPS over the Various SYMGS Algorithms}
 \label{CombineSYMGS}
 \end{figure}
@@ -501,7 +486,7 @@ $N=64$ & 0.611932 & 1.41309 & 1.17325 \\
 $N=128$ & 1.2713 & 3.51299 & 4.07047 \\
 \hline
 \end{tabular}
-\caption{Number of Levels and Problem Size $N^3$ Affect Cuda Performance}
+\caption{GFLOPS for Number of Levels and Problem Size $N^3$ Affect Cuda Performance}
 \label{VLC}
 \end{center}
 \end{table}
@@ -519,7 +504,7 @@ $N=64$ & 0.50259 & 0.502229 & 0.495932 \\
 $N=128$ & 1.09584 & 1.11385 & 1.11723\\
 \hline
 \end{tabular}
-\caption{Number of Levels and Problem Size $N^3$ Affect OpenMP Performance}
+\caption{GFLOPS for Number of Levels and Problem Size $N^3$ Affect OpenMP Performance}
 \label{VLO}
 \end{center}
 \end{table}
