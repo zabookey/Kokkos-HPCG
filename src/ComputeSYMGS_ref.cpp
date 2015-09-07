@@ -441,7 +441,7 @@ for(int j = 0; j < 10; j++){
 #else
 #ifdef SYMGS_INEXACT
 	const local_int_t localNumberOfRows = A.localNumberOfRows;
-	const int iterations = 8;
+	const int iterations = 20;
 	double_1d_type z("z", x.values.dimension_0());
 	for(int i = 0; i < iterations; i++){
 #ifdef KOKKOS_TEAM
