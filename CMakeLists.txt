@@ -50,7 +50,7 @@ ENDIF()
 # -DHPCG_Kokkos_Cuda
 # -DHPCG_Kokkos_Serial (Default)
 ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
-#ADD_DEFINITIONS(-DKOKKOS_TEAM)
+ADD_DEFINITIONS(-DKOKKOS_TEAM)
 # Change this definition to specify which Gauss Seidel to use
 # -DSYMGS_COLOR Solve using graph Colouring. (Doesn't Produce valid results)
 # -DSYMGS_LEVEL Level solve.
@@ -58,7 +58,7 @@ ADD_DEFINITIONS(-DHPCG_Kokkos_OpenMP)
 #		for your problem size.)
 # Default is serial Gauss Seidel used in Vanilla HPCG
 # If nothing is specified the defualt serial Gauss Seidel will be used.
-ADD_DEFINITIONS(-DSYMGS_INEXACT)
+ADD_DEFINITIONS(-DSYMGS_LEVEL)
 
 include_directories("${Trilinos_PREFIX}/include")
 #This will run the cmakelists in the src directory. This is where I want things to compile.

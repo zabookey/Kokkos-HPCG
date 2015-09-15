@@ -17,7 +17,8 @@ struct LevelScheduler{
 	local_int_1d_type f_row_level;
 	local_int_1d_type b_row_level;
 };
-#endif/*
+#endif
+/*
 
 // Step 1. Find (D+L)z=r
 	host_double_1d_type z("z", xv.dimension_0());
