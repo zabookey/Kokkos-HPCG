@@ -59,17 +59,6 @@ class leveledForwardSweep{
 		matrixDiagonal(matrixDiagonal_), localNumberOfRows(localNumberOfRows_), rpt(rpt_) {}
 
 	KOKKOS_INLINE_FUNCTION
-	void operator()(const int & i)const{
-		local_int_t currentRow = f_lev_ind(f_lev_start+i);
-		int start = A.graph.row_map(currentRow);
-		const int diagIdx = matrixDiagonal(currentRow);
-		double sum = rv(currentRow);
-		for(int j = start; j < diagIdx; j++)
-			sum -= zv(A.graph.entries(j))*A.values(j);
-		zv(currentRow) = sum/A.values(diagIdx);
-	}
-
-	KOKKOS_INLINE_FUNCTION
 	void operator()(const team_member & thread) const{
 		// Need to find a way to assign rows to a team.
 		// NEEDS:
