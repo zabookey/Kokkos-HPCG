@@ -83,16 +83,17 @@ class leveledForwardSweep{
 		// May be difficult if the number of rows in the level is prime or really small.
 		Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, row_idx, row_idx+rpt), [=](int& irow){
 			// This makes our team run parallel over all the rows i where row_idx <= i < row_idx+rpt
-			int start = A.graph.row_map(irow);
-			const int diagIdx = matrixDiagonal(irow);
+			local_int_t currentRow = f_lev_ind(irow); // I think that irow is between row_idx and row_idx+rpt
+			int start = A.graph.row_map(currentRow);
+			const int diagIdx = matrixDiagonal(currentRow);
 			const int vector_range = diagIdx - start;
-			double sum = rv(irow);
+			double sum = rv(currentRow);
 			Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, vector_range),
 					KOKKOS_LAMBDA(const int& lk, double& lrowDot){
 						const int k = lk + start;
 						lrowDot -= zv(A.graph.entries(k))*A.values(k);
 					}, sum);
-			zv(irow) = sum / A.values(diagIdx);
+			zv(currentRow) = sum / A.values(diagIdx);
 		});
 	}
 };
@@ -509,8 +510,9 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 #ifdef KOKKOS_TEAM
 	for(int i = 0; i < f_numLevels; i++){
 		const int numrows = A.levels.f_lev_map(i+1) - A.levels.f_lev_map(i);
-		const int numTeams = 1;
-		assert(numTeams % numrows == 0);
+		const int numTeams = numrows;
+		//std::cout<<numrows << std::endl;
+		assert(numrows % numteams == 0);
 		const int row_per_team = numrows/numTeams;
 		const team_policy policy(numTeams, team_policy::team_size_max(leveledForwardSweep(
 			A.levels.f_lev_map(i), A.levels.f_lev_ind, A.localMatrix, r.values, z,
@@ -524,6 +526,8 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 		int end = A.levels.b_lev_map(i+1);
 		Kokkos::parallel_for(end - start, leveledBackSweep(start, A.levels.b_lev_ind, A.localMatrix, z, x.values, A.matrixDiagonal));
 	}
+
+	
 #else
 	for(int i = 0; i < f_numLevels; i++){
 		int start = A.levels.f_lev_map(i);
