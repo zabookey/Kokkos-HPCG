@@ -578,8 +578,8 @@ for(int j = 0; j < 10; j++){
 	}
 	assert(dummy == A.localNumberOfRows);
  // Back Sweep!
-	for(int i = 0; i < numColors; i++){
-		int currentColor = A.b_colors_order(i);
+	for(int i = numColors -1; i >= 0; --i){
+		int currentColor = A.f_colors_order(i);
 		int start = A.colors_map(currentColor - 1); // Colors start at 1, i starts at 0
 		int end = A.colors_map(currentColor);
 		Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
