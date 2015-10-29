@@ -65,7 +65,6 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
 #endif
 	 // Forward Sweep!
   const int numColors = A.numColors;
-for(int j = 0; j < 10; j++){
   local_int_t dummy = 0;
   for(int i = 0; i < numColors; i++){
     int currentColor = A.f_colors_order(i);
@@ -83,7 +82,6 @@ for(int j = 0; j < 10; j++){
     Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
   }
 
-} 
 return(0);
 }
 #endif
