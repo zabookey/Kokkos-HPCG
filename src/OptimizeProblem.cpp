@@ -516,16 +516,6 @@ std::cout<< "here" << std::endl;
 	A.numColors = numColors;
 	A.f_colors_order = f_colors_order;
 	A.b_colors_order = b_colors_order;
-// Test our color job
-	for(int row = 0; row < A.localNumberOfRows; row++){
-		int currentColor = colors(row);
-		int start = A.localMatrix.graph.row_map(row);
-		int end = A.localMatrix.graph.row_map(row+1);
-		for(int i = start; i < end; i++){
-			int testRow = A.localMatrix.graph.entries(i);
-			assert(currentColor != colors(testRow));
-		}
-	}
 // Make sure we color our coarse matrices as well.
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);//TODO data, b, x, and xexact are never used but if that changes they may need to be changed.
 	else return(0);

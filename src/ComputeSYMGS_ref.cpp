@@ -36,6 +36,7 @@ using Kokkos::ALL;
 
   @see ComputeSYMGS
 */
+ /*
 #ifdef SYMGS_LEVEL
 #ifdef KOKKOS_TEAM
 typedef Kokkos::TeamPolicy<>              team_policy ;
@@ -481,9 +482,9 @@ class UpperTrisolve{
 		x_new(i) -= rowDot/A.values(diag(i));
 	}
 };
-*/
-#endif
 
+#endif
+*/
 int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 
 	assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
@@ -492,8 +493,9 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 	ExchangeHalo(A,x);
 #endif
 //	for(int i = 0; i < 10; i++) std::cout << "Before SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
-#ifdef SYMGS_LEVEL
 /*
+#ifdef SYMGS_LEVEL
+
 
 // Step 1. Find (D+L)z=r
 	host_double_1d_type z("z", xv.dimension_0());
@@ -520,7 +522,7 @@ int ComputeSYMGS_ref(const SparseMatrix & A, const Vector & r, Vector & x){
 			sum -= xv(entries(j))*values(j);
 		xv(i) = sum/values(diagIdx);
 	}
-*/
+
 	const int f_numLevels = A.levels.f_numberOfLevels;
 	const int b_numLevels = A.levels.b_numberOfLevels;
 	double_1d_type z("z", x.values.dimension_0());
@@ -615,6 +617,7 @@ for(int j = 0; j < 10; j++){
 		Kokkos::fence();
 	}
 #else
+*/
 	const local_int_t nrow = A.localNumberOfRows;
 	host_int_1d_type matrixDiagonal = create_mirror_view(A.matrixDiagonal); //Host Mirror to A.matrixDiagonal.
 	host_const_double_1d_type rv = create_mirror_view(r.values); // Host Mirror to r.values
@@ -694,9 +697,9 @@ for(int j = 0; j < 10; j++){
 
 	deep_copy(x.values, xv); // Copy the updated xv on the host back to x.values.
 	// All of the mirrors should go out of scope here and deallocate themselves.
-#endif // SYMGS_INEXACT
-#endif // SYMGS_COLOR
-#endif // SYMGS_LEVEL
+//#endif // SYMGS_INEXACT
+//#endif // SYMGS_COLOR
+//#endif // SYMGS_LEVEL
 //for(int i = 0; i < 10; i++) std::cout << "After SYMGS: " << x.values(i) << "    " << r.values(i) << std::endl;
 	return(0);
 }

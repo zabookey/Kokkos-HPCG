@@ -6,7 +6,7 @@ set(SOURCES
   ExchangeHalo.cpp  finalize.cpp  GenerateCoarseProblem.cpp  GenerateGeometry.cpp  GenerateProblem.cpp
   init.cpp  mytimer.cpp  OptimizeProblem.cpp  ReadHpcgDat.cpp  ReportResults.cpp  SetupHalo.cpp
   TestCG.cpp  TestNorms.cpp  TestSymmetry.cpp  WriteProblem.cpp  YAML_Doc.cpp
-  YAML_Element.cpp
+  YAML_Element.cpp LevelSYMGS.cpp ColorSYMGS.cpp InexactSYMGS.cpp
   )
 
 set(HEADERS
@@ -18,7 +18,7 @@ set(HEADERS
   GenerateProblem.hpp  Geometry.hpp  hpcg.hpp KokkosSetup.hpp  MGData.hpp  mytimer.hpp
   OptimizeProblem.hpp  ReadHpcgDat.hpp  ReportResults.hpp  SetupHalo.hpp  SparseMatrix.hpp  TestCG.hpp
   TestNorms.hpp  TestSymmetry.hpp  Vector.hpp  WriteProblem.hpp  YAML_Doc.hpp  YAML_Element.hpp
-	Levels.hpp
+	Levels.hpp LevelSYMGS.cpp ColorSYMGS.cpp InexactSYMGS.cpp
   )
 
 message("Compiler Flags: ${CMAKE_CXX_FLAGS}")

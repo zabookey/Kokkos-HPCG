@@ -7,6 +7,18 @@
 #include "ComputeSYMGS.hpp"
 #include "ComputeSYMGS_ref.hpp"
 
+#ifdef SYMGS_LEVEL
+#include "LevelSYMGS.hpp"
+#endif
+
+#ifdef SYMGS_COLOR
+#include "ColorSYMGS.hpp"
+#endif
+
+#ifdef SYMGS_INEXACT
+#include "InexactSYMGS.hpp"
+#endif
+
 /*!
   Routine to one step of symmetrix Gauss-Seidel:
 
@@ -31,9 +43,25 @@
 
   @see ComputeSYMGS_ref
 */
+
 int ComputeSYMGS( const SparseMatrix & A, const Vector & x, Vector & y) {
+#ifdef SYMGS_LEVEL
 
-  // This line and the next two lines should be removed and your version of ComputeSYMGS should be used.
-  return(ComputeSYMGS_ref(A, x, y));
+return (LevelSYMGS(A, x, y));
 
+#else
+#ifdef SYMGS_COLOR
+
+return(ColorSYMGS(A, x, y));
+
+#else
+#ifdef SYMGS_INEXACT
+
+return(InexactSYMGS(A, x, y));
+
+#else
+return(ComputeSYMGS_ref(A, x, y));
+#endif // SYMGS_INEXACT
+#endif // SYMGS_COLOR
+#endif // SYMGS_LEVEL
 }
