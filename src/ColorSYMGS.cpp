@@ -1,3 +1,4 @@
+#ifdef SYMGS_COLOR
 #include "ColorSYMGS.hpp"
 
 class colouredForwardSweep{
@@ -56,7 +57,7 @@ class colouredBackSweep{
   }
 };
 
-int ColorSYMGS( const SparseMatrix & A, const Vector & x, Vector & y){
+int ColorSYMGS( const SparseMatrix & A, const Vector & r, Vector & x){
 assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
 
 #ifndef HPCG_NOMPI
@@ -82,6 +83,7 @@ for(int j = 0; j < 10; j++){
     Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
   }
 
-  return(0);
 } 
+return(0);
 }
+#endif

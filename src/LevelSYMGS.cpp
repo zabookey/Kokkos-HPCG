@@ -1,3 +1,4 @@
+#ifdef SYMGS_LEVEL
 #include "LevelSYMGS.hpp"
 
 #ifdef KOKKOS_TEAM
@@ -192,7 +193,7 @@ class leveledBackSweep{
 
 
 
-int LevelSYMGS( const SparseMatrix & A, const Vector & x, Vector & y){
+int LevelSYMGS( const SparseMatrix & A, const Vector & r, Vector & x){
 assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
 
 #ifndef HPCG_NOMPI
@@ -243,3 +244,4 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
 
   return (0);
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef SYMGS_INEXACT
 #include "InexactSYMGS.hpp"
 
 #ifdef KOKKOS_TEAM
@@ -197,7 +198,7 @@ class UpperTrisolve{
 };
 */
 
-int InexactSYMGS( const SparseMatrix & A, const Vector & x, Vector & y){
+int InexactSYMGS( const SparseMatrix & A, const Vector & r, Vector & x){
 	
 assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
 
@@ -234,3 +235,4 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
   }
   return(0);
 }
+#endif
