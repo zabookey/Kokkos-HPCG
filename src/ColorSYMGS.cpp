@@ -16,6 +16,7 @@ class colouredForwardSweep{
     colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
     matrixDiagonal(matrixDiagonal_) {}
 
+KOKKOS_INLINE_FUNCTION
   void operator()(const int & i)const{
     local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
     int start = A.graph.row_map(currentRow);
@@ -43,7 +44,7 @@ class colouredBackSweep{
       const int_1d_type matrixDiagonal_):
       colors_row(colors_row_), colors_ind(colors_ind_), A(A_), rv(rv_), xv(xv_),
       matrixDiagonal(matrixDiagonal_) {}
-
+KOKKOS_INLINE_FUNCTION
   void operator()(const int & i)const{
     local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
     int start = A.graph.row_map(currentRow);
