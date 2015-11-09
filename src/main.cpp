@@ -103,7 +103,6 @@ int main(int argc, char * argv[]) {
 
   SparseMatrix A;
   InitializeSparseMatrix(A, *geom);
-
   Vector b, x, xexact;
   GenerateProblem(A, b, x, xexact);
   SetupHalo(A);
@@ -114,7 +113,6 @@ int main(int argc, char * argv[]) {
 	  curLevelMatrix = curLevelMatrix->Ac; // Make the just-constructed coarse grid the next level
   }
 
-
   CGData data;
   InitializeSparseCGData(A, data);
 
@@ -124,6 +122,7 @@ int main(int argc, char * argv[]) {
 
   // Call user-tunable set up function.
   double t7 = mytimer(); OptimizeProblem(A, data, b, x, xexact); t7 = mytimer() - t7;
+std::cout << "Problem Optimized" << std::endl;
   times[7] = t7;
 #ifdef HPCG_DEBUG
   if (rank==0) HPCG_fout << "Total problem setup time in main (sec) = " << mytimer() - t1 << endl;

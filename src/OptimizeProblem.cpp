@@ -200,20 +200,26 @@ class Coloring{
   ordinal_type _vertexListLength;  // 0-dim Kokkos::View, so really Ordinal
   ordinal_type _recolorListLength; // 0-dim Kokkos::View, so really Ordinal	
 
+  ordinal_type::HostMirror host_vertexListLength;
+  ordinal_type::HostMirror host_recolorListLength;
+
 	Coloring(Ordinal nvtx, array_type idx, array_type adj, array_type colors):
 		_size(nvtx), _idx(idx), _adj(adj), _colors(colors){
 		// vertexList contains all initial vertices
 		_vertexList = array_type("vertexList", nvtx);
 		_vertexListLength = ordinal_type("vertexListLength");
-		_vertexListLength = nvtx;
+		host_vertexListLength = Kokkos::create_mirror_view(_vertexListLength);
+		host_vertexListLength = nvtx;
+		Kokkos::deep_copy(_vertexListLength, host_vertexListLength);
 		// Initialize _vertexList (natural order)
 		functorInitList<Ordinal, ExecSpace> init(_vertexList);
 		Kokkos::parallel_for(nvtx, init);
-
 		// Vertices to recolor. Will swap with vertexList
 		_recolorList = array_type("recolorList", nvtx);
 		_recolorListLength = ordinal_type("recolorListLength");
-		_recolorListLength() = 0;
+		host_recolorListLength = Kokkos::create_mirror_view(_recolorListLength);
+		host_recolorListLength() = 0;
+		Kokkos::deep_copy(_recolorListLength, host_recolorListLength);
 	}
 
 	void color(bool useConflictList, bool serialConflictResolution, bool ticToc){
@@ -259,13 +265,21 @@ class Coloring{
 			timer.reset();
 			}
 			if (serialConflictResolution) break; // Break after first iteration
-
-			if(_conflictType == CONFLICT_LIST){
+/*			if(_conflictType == CONFLICT_LIST){
 				array_type temp = _vertexList;
 				_vertexList = _recolorList;
 				_vertexListLength() = _recolorListLength();
 				_recolorList = temp;
 				_recolorListLength() = 0;
+			}
+*/			if(_conflictType == CONFLICT_LIST){
+				array_type temp = _vertexList;
+				_vertexList = _recolorList;
+				host_vertexListLength() = host_recolorListLength();
+				_recolorList = temp;
+				host_recolorListLength() = 0;
+				Kokkos::deep_copy(_vertexListLength, host_vertexListLength);
+				Kokkos::deep_copy(_recolorListLength, host_recolorListLength);
 			}
 		}
 
@@ -286,21 +300,23 @@ class Coloring{
 
 	void colorGreedy(){
 		Ordinal chunkSize = 8; // Process chunkSize vertices in one chunk
-		if(_vertexListLength < 100*chunkSize)
+		if(host_vertexListLength < 100*chunkSize)
 			chunkSize = 1;
 
-		functorGreedyColor<Ordinal, ExecSpace> gc(_idx, _adj, _colors, _vertexList, _vertexListLength, chunkSize);
-		Kokkos::parallel_for(_vertexListLength/chunkSize+1, gc);	
+		functorGreedyColor<Ordinal, ExecSpace> gc(_idx, _adj, _colors, _vertexList, host_vertexListLength, chunkSize);
+		Kokkos::parallel_for(host_vertexListLength/chunkSize+1, gc);
+		Kokkos::deep_copy(host_vertexListLength, _vertexListLength);
 	}
 
 	Ordinal findConflicts(){
 		functorFindConflicts<Ordinal, ExecSpace> conf(_idx, _adj, _colors, _vertexList, _recolorList, _recolorListLength, _conflictType);
 		Ordinal numUncolored;
-		Kokkos::parallel_reduce(_vertexListLength(), conf, numUncolored);
+		Kokkos::parallel_reduce(host_vertexListLength(), conf, numUncolored);
+		Kokkos::deep_copy(host_recolorListLength, _recolorListLength);
 		std::cout<< "Number of uncolored vertices: " << numUncolored << std::endl;
 #ifdef DEBUG
 		if(_conflictType == CONFLICT_LIST)
-			std::cout << "findConflicts: recolorListLength = " << _recolorListLength() << std::endl;
+			std::cout << "findConflicts: recolorListLength = " << host_recolorListLength() << std::endl;
 #endif
 		return numUncolored;
 	}
@@ -314,7 +330,7 @@ class Coloring{
 		Ordinal i = 0;
 		for(Ordinal k = 0; k < _size; k++){
 			if(_conflictType == CONFLICT_LIST){
-				if(k == _recolorListLength()) break;
+				if(k == host_recolorListLength()) break;
 				i = _recolorList[k];
 			}
 			else {
@@ -459,11 +475,9 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 	Coloring::array_type adj("adj", A.localMatrix.graph.entries.dimension_0()); // Should be A.LocalNumberOfNonzeros.
 	Kokkos::parallel_for(A.localMatrix.graph.row_map.dimension_0(), fillIdx(idx, A.localMatrix.graph.row_map));
 	Kokkos::parallel_for(A.localMatrix.graph.entries.dimension_0(), fillAdj(adj, A.localMatrix.graph.entries));
-
 	Coloring c(A.localNumberOfRows, idx, adj, colors);
-	c.color(false, false, true); // Flags are as follows... Use conflict List, Serial Resolve Conflict, Time and show.
+	c.color(false, false, false); // Flags are as follows... Use conflict List, Serial Resolve Conflict, Time and show.
 	int numColors = c.getNumColors();
-	std::cout<<"Number of colors used: " << numColors << std::endl;
 	local_int_1d_type colors_map("Colors Map", numColors + 1);
 	local_int_1d_type colors_ind("Colors Idx", A.localNumberOfRows);
 // Fill colors_map so that colors_map(i) contains the number of entries with color i
@@ -473,6 +487,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 // Use colors_map to fill fill out colors_ind.
 	Kokkos::parallel_for(numColors, fillColorsInd(colors_ind, colors_map, colors));
 // Prepare to fill out our _colors_order
+
 	Coloring::array_type::HostMirror host_colors = Kokkos::create_mirror_view(colors);
 	Kokkos::deep_copy(host_colors, colors);
 //	for(int i = 0; i < colors.dimension_0(); i++) std::cout << "Row " << i << " got color: " << colors(i) << std::endl;
@@ -488,7 +503,6 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 			host_f_colors_order(numColors-colorsToFill) = currentColor;
 			marked[currentColor-1] = true;
 			colorsToFill--;
-			std::cout<< "Used color: " << currentColor << " Colors Remaining: " << colorsToFill << std::endl;
 		}
 	}
 	Kokkos::deep_copy(f_colors_order, host_f_colors_order);
@@ -506,10 +520,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 			colorsToFill--;
 		}
 	}
-std::cout<< "here" << std::endl;
 	Kokkos::deep_copy(b_colors_order, host_b_colors_order);
-	for(int i = 0; i < numColors; i++)
-		std::cout<< "F(i): " << host_f_colors_order(i) << " B(i): " << host_b_colors_order(i) << std::endl;
 // Assign everything back to A now.
 	A.colors_map = colors_map;
 	A.colors_ind = colors_ind;
