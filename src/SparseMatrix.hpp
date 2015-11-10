@@ -67,6 +67,10 @@ struct SparseMatrix_STRUCT {
 	int numColors;
 	local_int_1d_type f_colors_order;
 	local_int_1d_type b_colors_order;
+	host_local_int_1d_type host_colors_ind;
+	host_local_int_1d_type host_colors_map;
+	host_local_int_1d_type host_f_colors_order;
+	host_local_int_1d_type host_b_colors_order;
 #else
 #ifdef SYMGS_INEXACT // Fixed Trisolve Option
 	double_1d_type z;

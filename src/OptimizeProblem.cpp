@@ -527,6 +527,12 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 	A.numColors = numColors;
 	A.f_colors_order = f_colors_order;
 	A.b_colors_order = b_colors_order;
+	A.host_f_colors_order = host_f_colors_order;
+	A.host_b_colors_order = host_b_colors_order;
+	A.host_colors_map = Kokkos::create_mirror_view(colors_map);
+	Kokkos::deep_copy(A.host_colors_map, colors_map);
+	A.host_colors_ind = Kokkos::create_mirror_view(colors_ind);
+	Kokkos::deep_copy(A.host_colors_ind, colors_ind);
 // Make sure we color our coarse matrices as well.
 	if(A.Ac != 0) return OptimizeProblem(*A.Ac, data, b, x, xexact);//TODO data, b, x, and xexact are never used but if that changes they may need to be changed.
 	else return(0);
