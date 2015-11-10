@@ -16,7 +16,7 @@ public:
   ColouredSweep(const local_int_t color_set_begin_, const local_int_t color_set_end_, 
     const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_):
     color_set_begin(color_set_begin_), color_set_end(color_set_end_), A(A_), rv(rv_), xv(xv_) {}
-
+KOKKOS_INLINE_FUNCTION
   void operator()(const team_member & teamMember) const{
     int ii = teamMember.league_rank() * teamMember.team_size() + teamMember.team_rank() + color_set_begin;
     if(ii >= color_set_end) return;
