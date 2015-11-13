@@ -78,7 +78,7 @@ class leveledBackSweep{
   leveledBackSweep(const local_int_t b_lev_start_, const local_int_1d_type & b_lev_ind_, 
     const local_matrix_type& A_, const double_1d_type& zv_, double_1d_type& xv_,
     const int_1d_type& matrixDiagonal_, const int localNumberOfRows_, const int rpt_):
-    b_lev_start(b_lev_start_), b_lev_ind(b_lev_ind_), A(A_), zv(rv_), xv(zv_),
+    b_lev_start(b_lev_start_), b_lev_ind(b_lev_ind_), A(A_), zv(zv_), xv(xv_),
     matrixDiagonal(matrixDiagonal_), localNumberOfRows(localNumberOfRows_), rpt(rpt_) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -222,9 +222,9 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
   for(int i = 0; i < b_numLevels; i++){
     const int numrows = A.levels.b_lev_map(i+1) - A.levels.f_lev_map(i);
     const int numTeams = (numrows+row_per_team-1)/row_per_team;
-    const team_policy(numTeams, 1, 16);
+    const team_policy policy(numTeams, 1, 16);
     Kokkos::parallel_for(policy, leveledBackSweep(A.levels.b_lev_map(i), A.levels.b_lev_ind,
-      A.localMatrix, z, x.values, A.localNumberOfRows, row_per_team));
+      A.localMatrix, z, x.values, A.matrixDiagonal, A.localNumberOfRows, row_per_team));
   }
 
   
