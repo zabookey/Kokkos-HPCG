@@ -120,37 +120,33 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
     int color_index_begin = A.host_colors_map(i);
     int color_index_end = A.host_colors_map(i + 1);
     int numberOfTeams = color_index_end - color_index_begin;
-
     Kokkos::parallel_for(team_policy(numberOfTeams / teamSizeMax + 1, teamSizeMax, vector_size),
       ColouredSweep(color_index_begin, color_index_end, A.localMatrix, r.values, x.values));
 
     execution_space::fence();
   }
-
-  for(int i = A.numColors - 1; i >= 0; i++){
+  for(int i = A.numColors - 1; i >= 0; i--){
     int color_index_begin = A.host_colors_map(i);
     int color_index_end = A.host_colors_map(i+1);
     int numberOfTeams = color_index_end - color_index_begin;
-
     Kokkos::parallel_for(team_policy(numberOfTeams / teamSizeMax + 1, teamSizeMax, vector_size),
       ColouredSweep(color_index_begin, color_index_end, A.localMatrix, r.values, x.values));
-
     execution_space::fence();
   }
 #else
   const int numColors = A.numColors;
   local_int_t dummy = 0;
   for(int i = 0; i < numColors; i++){
-    int currentColor = A.f_colors_order(i);
+    int currentColor = A.host_f_colors_order(i);
     int start = A.host_colors_map(currentColor - 1); // Colors start at 1, i starts at 0
     int end = A.host_colors_map(currentColor);
-    dummy += end - start;
+   dummy += end - start;
     Kokkos::parallel_for(end - start, colouredForwardSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));
   }
   assert(dummy == A.localNumberOfRows);
  // Back Sweep!
   for(int i = numColors -1; i >= 0; --i){
-    int currentColor = A.f_colors_order(i);
+    int currentColor = A.host_f_colors_order(i);
     int start = A.host_colors_map(currentColor - 1); // Colors start at 1, i starts at 0
     int end = A.host_colors_map(currentColor);
     Kokkos::parallel_for(end - start, colouredBackSweep(start, A.colors_ind, A.localMatrix, r.values, x.values, A.matrixDiagonal));

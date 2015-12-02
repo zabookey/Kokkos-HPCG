@@ -51,7 +51,6 @@ return (LevelSYMGS(A, x, y));
 
 #else
 #ifdef SYMGS_COLOR
-
 return(ColorSYMGS(A, x, y));
 
 #else
