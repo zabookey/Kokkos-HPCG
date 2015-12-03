@@ -11,18 +11,22 @@ public:
   local_int_t color_set_begin;
   local_int_t color_set_end;
 
+  local_int_1d_type colors_ind;
+
   double_1d_type rv, xv;
 
   ColouredSweep(const local_int_t color_set_begin_, const local_int_t color_set_end_, 
-    const local_matrix_type& A_, const double_1d_type& rv_, double_1d_type& xv_):
-    color_set_begin(color_set_begin_), color_set_end(color_set_end_), A(A_), rv(rv_), xv(xv_) {}
+    const local_matrix_type& A_, const local_int_1d_type& colors_ind_, const double_1d_type& rv_, double_1d_type& xv_):
+    color_set_begin(color_set_begin_), color_set_end(color_set_end_), A(A_), colors_ind(colors_ind_), rv(rv_), xv(xv_) {}
 KOKKOS_INLINE_FUNCTION
   void operator()(const team_member & teamMember) const{
     int ii = teamMember.league_rank() * teamMember.team_size() + teamMember.team_rank() + color_set_begin;
     if(ii >= color_set_end) return;
 
-    int row_begin = A.graph.row_map(ii);
-    int row_end = A.graph.row_map(ii+1);
+	int crow = colors_ind(ii);
+
+    int row_begin = A.graph.row_map(crow);
+    int row_end = A.graph.row_map(crow+1);
 
     bool am_i_the_diagonal = false;
     double diagonal = 1;
@@ -33,7 +37,7 @@ KOKKOS_INLINE_FUNCTION
         int adjind = i + row_begin;
         int colIndex = A.graph.entries(adjind);
         double val = A.values(adjind);
-        if(colIndex == ii){
+        if(colIndex == crow){
           diagonal = val;
           am_i_the_diagonal = true;
         }
@@ -43,7 +47,7 @@ KOKKOS_INLINE_FUNCTION
       }, sum);
 
     if(am_i_the_diagonal){
-      xv(ii) = (rv(ii) - sum)/diagonal;
+      xv(crow) = (rv(crow) - sum)/diagonal;
     }
   }
 };
@@ -114,14 +118,14 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
 #endif
 	 // Forward Sweep!
 #ifdef KOKKOS_TEAM
-  int vector_size = 32;
+  int vector_size = 64;
   int teamSizeMax = 8;
   for(int i = 0; i < A.numColors; i++){
     int color_index_begin = A.host_colors_map(i);
     int color_index_end = A.host_colors_map(i + 1);
     int numberOfTeams = color_index_end - color_index_begin;
     Kokkos::parallel_for(team_policy(numberOfTeams / teamSizeMax + 1, teamSizeMax, vector_size),
-      ColouredSweep(color_index_begin, color_index_end, A.localMatrix, r.values, x.values));
+      ColouredSweep(color_index_begin, color_index_end, A.localMatrix, A.colors_ind, r.values, x.values));
 
     execution_space::fence();
   }
@@ -130,7 +134,7 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
     int color_index_end = A.host_colors_map(i+1);
     int numberOfTeams = color_index_end - color_index_begin;
     Kokkos::parallel_for(team_policy(numberOfTeams / teamSizeMax + 1, teamSizeMax, vector_size),
-      ColouredSweep(color_index_begin, color_index_end, A.localMatrix, r.values, x.values));
+      ColouredSweep(color_index_begin, color_index_end, A.localMatrix, A.colors_ind, r.values, x.values));
     execution_space::fence();
   }
 #else
