@@ -1,0 +1,17 @@
+Problem size 104x104x104
+All runs done on a stella node from Shannon
+1) Serial Coloring: 2.4967
+2) Serial Level Solve: 1.82554
+3) OpenMP Coloring Flat parallel: 6.99363
+4) OpenMP Coloring Nested Parallel: 2.03233
+5) OpenMP Level Solve Flat Parallel: 3.18209
+6) OpenMP Level Solve Nested Parallel: 1.82556
+7) Cuda Coloring Flat Parallel: 2.52016
+8) Cuda Coloring Nested Parallel: 9.63252
+9) Cuda Level Solve Flat Parallel: 1.67787
+10) Cuda Level Solve Nested Parallel: .105756
+
+THINGS TO DO:
+Make generateproblem legal :(
+Matrix reordering to improve results
+
